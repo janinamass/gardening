@@ -74,7 +74,7 @@ def readEnsemblMap(infile, outfile, numSp):
             "Warning: 1:many relation for "+tmp[0]+" gene will be excluded.\n"
             seen.pop(tmp[0])
         else:
-            seen[tmp0]=tmp
+            seen[tmp[0]]=tmp
         #out.write(str(id)+"\t"+"\t".join(tmp)+"\n")
         #id+=1
     inf.close()
