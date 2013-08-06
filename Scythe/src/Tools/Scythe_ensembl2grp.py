@@ -56,30 +56,43 @@ def printInfo(numSp, numLoc, outfile=outfile, verb=False):
 
 
 def readEnsemblMap(infile, outfile, numSp):
-    seen = dict()
+    seen = []
+    many = set()
+    one = set()
+    seenDct={}
     result = ""
     id = 0
     inf = open(infile, "r")
     out = open(outfile,"w")
     for l in inf:
-        if (id == 0):
-            id+=1
+        if l.startswith("Ensembl "):
             continue
+        #if (id == 0):
+        #    id+=1
+        #    continue
         l = l.rstrip("\n")
         tmp = l.split("\t")
+        
         if (len(tmp)<2 or (len(tmp)>int(numSp))):
             print("Check your input file", infile)
             usage()
-        if tmp[0] in seen:
-            "Warning: 1:many relation for "+tmp[0]+" gene will be excluded.\n"
-            seen.pop(tmp[0])
+        tmp = [t for t in tmp if t !=""]
+        if (len(tmp)<2):   
+            pass
+            #print("no orthologs, skip "+" ".join(tmp))
+            
         else:
-            seen[tmp[0]]=tmp
-        #out.write(str(id)+"\t"+"\t".join(tmp)+"\n")
-        #id+=1
+            new = [t for t in tmp if t not in one]
+            for n in new:
+                one.add(n)
+            if(len(new)<len(tmp)):
+                pass
+            else:
+                seen.append("\t".join(new))
+                     
     inf.close()
-    for k,v in seen:
-        out.write(str(id)+"\t"+"\t".join(v)+"\n")
+    for l in seen:
+        out.write(str(id)+"\t"+l+"\n")
         id+=1
     out.close()
     printInfo(verb=VERB,numLoc=id+1, numSp=numSp)
