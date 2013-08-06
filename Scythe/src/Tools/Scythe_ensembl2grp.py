@@ -56,6 +56,8 @@ def printInfo(numSp, numLoc, outfile=outfile, verb=False):
 
 
 def readEnsemblMap(infile, outfile, numSp):
+    seen = dict()
+    result = ""
     id = 0
     inf = open(infile, "r")
     out = open(outfile,"w")
@@ -68,13 +70,17 @@ def readEnsemblMap(infile, outfile, numSp):
         if (len(tmp)<2 or (len(tmp)>int(numSp))):
             print("Check your input file", infile)
             usage()
-        #for k in range(0,len(tmp)):
-        #    if not tmp[k]:
-        #        tmp[k] ="*"
-        #        print(tmp[k])
-        out.write(str(id)+"\t"+"\t".join(tmp)+"\n")
-        id+=1
+        if tmp[0] in seen:
+            "Warning: 1:many relation for "+tmp[0]+" gene will be excluded.\n"
+            seen.pop(tmp[0])
+        else:
+            seen[tmp0]=tmp
+        #out.write(str(id)+"\t"+"\t".join(tmp)+"\n")
+        #id+=1
     inf.close()
+    for k,v in seen:
+        out.write(str(id)+"\t"+"\t".join(v)+"\n")
+        id+=1
     out.close()
     printInfo(verb=VERB,numLoc=id+1, numSp=numSp)
 readEnsemblMap(ensemblMap, outfile, numSp)
