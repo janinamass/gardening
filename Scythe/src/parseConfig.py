@@ -1,6 +1,8 @@
 import tkinter as tk
 import configparser
 from tkinter import filedialog
+from tkinter import messagebox
+
 root=tk.Tk()
 root.title("Scythe GUI alpha")
 root.iconbitmap('@scy.xbm')
@@ -8,14 +10,70 @@ import os
 #todo if ../loc has fa: fill in
 # vice versa
 
-  
+global LOGSTR
+LOGSTR = ""
+global CURRENTCONFIG
+CURRENTCONFIG = configparser.ConfigParser()
+def logged(f):
+    global LOGSTR
+    def wrapped(*args, **kargs):
+        global LOGSTR
+        print ("%s called..." % f.__name__)
+        try:
+            LOGSTR=LOGSTR+f.__name__+str(args)+str(kargs)
+            return f(*args, **kargs)
+        finally:
+            print ("..Done.")
+            print(LOGSTR)
+    return wrapped
+
+class ConfigHandler( ):
+    def __init__(self):
+        self._currentconfig = configparser.ConfigParser()
+    @property
+    def currentconfig(self):
+        return self._currentconfig
+    @currentconfig.setter
+    def currentconfig(self,config):
+        self._currentconfig=config
+    
+        
+    #    initConfigHandler()
+    #def initConfigHandler(self):
+    #    global CURRENTCONFIG
+    
+class ScytheConvertDialog():
+    pass
+
+class Infobox():
+    @logged
+    def todo(self):
+        message="Soon (tm)."
+        messagebox.showinfo(title="Todo...",message= message )
+    @logged
+    def about(self):
+        message="Scythe GUI 0.4 \nOctober 2013\n"
+        messagebox.showinfo(title="About Scythe",message= message )
+        tmp="blabl"
+        return(tmp)
+    
+    def wanttosave(self):
+        pass
+    def bepatient(self):
+        message="Scythe is running\n This may take some time.\n"
+        messagebox.showinfo(title="Running",message= message )
+    def saveConfig(self):
+        formats = [('Scythe configuration','*.scy')]
+        tmp= tk.filedialog.asksaveasfilename(parent=self.parent,filetypes=formats ,title="Save configuration as...")
+        
 class ScytheMenu(tk.Frame):
   
     def __init__(self, parent):
         tk.Frame.__init__(self, parent)   
         self.parent = parent        
         self.initGUI()
-        
+        self.confighandler = ConfigHandler()
+        self.scythewizard= ScytheWizard(self.parent)
     def initGUI(self):
         menubar = tk.Menu(self.parent)
         self.parent.config(menu=menubar)
@@ -24,7 +82,7 @@ class ScytheMenu(tk.Frame):
         fileMenu.add_command(label="New run...", command=self.onNewRun)
         #fileMenu.add_command(label="Convert files...", command=self.onConvertFiles)
         fileMenu.add_command(label="Load configuration...", command=self.onLoadConfig)
-        fileMenu.add_command(label="Save configuration...", command=self.onLoadConfig)
+        fileMenu.add_command(label="Save configuration...", command=self.onSaveConfig)
         
         convertMenu = tk.Menu(fileMenu)
         convertMenu.add_command(label="convert orthology information to .grp", command=self.onConvertToGrp)
@@ -43,6 +101,7 @@ class ScytheMenu(tk.Frame):
         menubar.add_cascade(label="File", menu=fileMenu)
         menubar.add_cascade(label="Info", menu=infoMenu)
         menubar.add_cascade(label="Help", menu=helpMenu)
+        #self.onNewRun()
     def onConvertToGrp(self):
         pass
     def onConvertToLoc(self):
@@ -50,9 +109,40 @@ class ScytheMenu(tk.Frame):
     def onExit(self):
         self.quit()
     def onNewRun(self):
-        ScytheWizard()
+        self.scythewizard=ScytheWizard(self.parent)
     def onLoadConfig(self):
-        pass
+        formats = [('Scythe configuration','*.scy')]  
+        tmp = tk.filedialog.askopenfilename(parent=self.parent,filetypes=[('Scythe configuration','*.scy')],title="Load configuration...")
+        cfg = self.confighandler.currentconfig.read(tmp)
+        if self.confighandler.currentconfig.get('Mode','use_local_files')=='yes':
+            self.scythewizard.st_fastaDir.set(self.confighandler.currentconfig.get('Local_directories','fasta_directory') )
+            self.scythewizard.st_locDir.set(self.confighandler.currentconfig.get('Local_directories','loc_directory') )
+            self.scythewizard.st_grpFile.set(self.confighandler.currentconfig.get('Local_directories','grp_file') )
+
+            self.scythewizard.cb_use_local.select()
+            self.scythewizard.cb_use_local.configure(state=tk.NORMAL)
+            self.scythewizard.cb_use_ensembl.configure(state=tk.DISABLED)
+            self.scythewizard.ent_fastaDir.configure(state=tk.ENABLED)
+            self.scythewizard.ent_locDir.configure(state=tk.ENABLED)
+            self.scythewizard.ent_grpFile.configure(state=tk.ENABLED)
+
+        #for section in cfg.sections():
+        #    print(section)
+        #    for option in cfg.options(section):
+        #        print (" ", option, "=", cfg.get(section, option))
+        
+       
+        
+        #self.scythewizard.st_fastaDir.set(cfg["Local_directories"]['fasta_directory'])
+        #print(self.confighandler.cuurentconfig())
+        return tmp
+    def onSaveConfig(self):
+        formats = [('Scythe configuration','*.scy')]  
+        
+        tmp= tk.filedialog.asksaveasfilename(parent=self.parent,filetypes=formats ,title="Save configuration as...")
+        #self.ent_grpFile.config(state=tk.NORMAL)
+        #self.st_grpFile.set(tmp)
+        return tmp
     def onShowLog(self):
         pass
     def onEnsembl(self):
@@ -61,7 +151,7 @@ class ScytheMenu(tk.Frame):
     def onLocal(self):
         pass
     def onAbout(self):
-        pass
+        Infobox().about()
 
     def onConvertFiles(self):
         pass
@@ -73,11 +163,13 @@ class ScytheMenu(tk.Frame):
 
 
 class ScytheWizard(tk.Tk):
-    def __init__(self, *args, **kwargs):     
+    def __init__(self, parent):
+        self.parent = parent     
         self.initWizard()
         
         
     def initWizard(self):
+       
         #Labels
         self.lab_fastaDir = tk.Label(text="Fasta Directory")
         self.lab_locDir = tk.Label(text=".loc Directory")
@@ -194,7 +286,7 @@ class ScytheWizard(tk.Tk):
         print(self.ent_fastaDir)
         if self.int_ensembl.get() ==1:
             print("True")
-            self.st_fastaDir="none"
+            #self.st_fastaDir="none"
             print("True", self.st_fastaDir)
             self.ent_fastaDir.config(state=tk.DISABLED)
             self.ent_locDir.config(state=tk.DISABLED)
@@ -202,7 +294,7 @@ class ScytheWizard(tk.Tk):
             self.b_locDir.config(state=tk.DISABLED)
             self.cb_use_local.config(state=tk.DISABLED)
         else:
-            self.st_fastaDir="some"
+            #self.st_fastaDir="some"
             print("False", self.st_fastaDir,self.ent_fastaDir )
             #self.ent_fastaDir.config(state=tk.NORMAL)
             #self.ent_locDir.config(state=tk.NORMAL)
