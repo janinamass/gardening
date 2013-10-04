@@ -1,34 +1,33 @@
-[DEFAULT]
-resumed_session = no
-gap_open_cost = 10
-gap_extend_cost = 5
-substitution_matrix = BLOSUM62 
-
-
 [Mode]
 use_ensembl_api = no
 use_local_files = yes
 
-[Local_directories]
+[Paths]
 fasta_directory = ./
 loc_directory =  ./
 grp_file = ./example.grp
-[Output]
 output_directory = ./
+
+[Output]
 attach_output_prefix = no
 output_prefix = species_abbrevation
+output_orthogroups = yes
+output_species_fasta = yes
+merge_species_fasta_with_defaults = yes
 
 [Cleanup]
-clean_up_direcories = yes
+clean_up_directories = yes
 
-[Split_input]
-split = no
-split_each = 1000
+[Run_options]
+max_threads = 1 #todo
+split_input = no 
+split_each = 1000 #todo
+use_seqan = no #todo
 
 [Penalties]
-gap_open_cost = default
-gap_extend_cost = default
-substitution_matrix = default
+gap_open_cost = 10
+gap_extend_cost = 5
+substitution_matrix = BLOSUM62 
 
 [Algorithm]
 use_global_max = no
