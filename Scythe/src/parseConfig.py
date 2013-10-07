@@ -3,7 +3,8 @@ import configparser
 from tkinter import filedialog
 from tkinter import messagebox
 from tkinter import ttk
-
+from tkinter import OptionMenu
+from tkinter import Scale
 root=tk.Tk()
 root.title("Scythe GUI alpha")
 root.iconbitmap('@scy.xbm')
@@ -14,7 +15,8 @@ global LOGSTR
 LOGSTR = ""
 global CURRENTCONFIG
 CURRENTCONFIG = configparser.ConfigParser()
-
+BACKUPCONFIG = configparser.ConfigParser()
+print(CURRENTCONFIG,BACKUPCONFIG)
 ############ labels ##################
 CF_MODE = "Mode"
 CF_MODE_use_ensembl = "use_ensembl_api"
@@ -47,7 +49,22 @@ CF_ALGORITHM_use_default="use_default"
 CF_ALGORITHM_use_global_sum="use_global_sum"
 CF_PARALOGS="Paralogs"
 CF_PARALOGS_include_paralogs = "include_paralogs"
+##################options###########################
+OPTIONS = {}
+#dropdown menus
+yn =["yes","no"]
+for o in [CF_PARALOGS_include_paralogs, CF_ALGORITHM_use_global_max,CF_ALGORITHM_use_default,
+          CF_ALGORITHM_use_global_sum, CF_RUN_use_seqan, CF_RUN_split_input, CF_CLEANUP_clean_up_directories,
+          CF_OUTPUT_merge_species_fasta_with_defaults, CF_OUTPUT_output_species_fasta, CF_OUTPUT_output_orthogroups,
+          CF_OUTPUT_attach_output_prefix,CF_MODE_use_local_files,CF_MODE_use_ensembl]:
+    OPTIONS[o]=yn
 
+#PENALTIES:int entry
+#PENALTIES:str entry
+
+
+
+###################################################
 SECTIONS = [CF_MODE,CF_PATHS, CF_OUTPUT, CF_CLEANUP, CF_RUN, CF_PENALTIES,CF_ALGORITHM,CF_PARALOGS]
 MAXCONFIG = configparser.ConfigParser()
 for i in SECTIONS:
@@ -68,12 +85,47 @@ for i in [CF_ALGORITHM_use_global_max,CF_ALGORITHM_use_default,CF_ALGORITHM_use_
     MAXCONFIG.set(CF_ALGORITHM,i,"unset")
 for i in [CF_PARALOGS_include_paralogs  ]:
     MAXCONFIG.set(CF_PARALOGS,i,"unset")
-    
-
+for i in MAXCONFIG.items():
+    print(i)
 ######################################
-
-
-
+#q'n'd
+def initConfCurrent():
+    global CURRENTCONFIG
+    global MAXCONFIG
+    for i in MAXCONFIG.sections():
+        CURRENTCONFIG.add_section(i)
+        for j in MAXCONFIG.options(i):
+            print(i,j)
+            CURRENTCONFIG.set(i,j,MAXCONFIG.get(i,j))
+def backupConf():
+    global CURRENTCONFIG
+    global BACKUPCONFIG
+    for i in CURRENTCONFIG.sections():
+        try:
+            BACKUPCONFIG.add_section(i)
+        except configparser.DuplicateSectionError as e:
+             pass
+        for j in CURRENTCONFIG.options(i):
+            BACKUPCONFIG.set(i,j,CURRENTCONFIG.get(i,j) )
+def backupConfTo(newconf):
+    global CURRENTCONFIG
+    for i in CURRENTCONFIG.sections():
+        try:
+            newconf.add_section(i)
+        except configparser.DuplicateSectionError as e:
+             pass
+        for j in CURRENTCONFIG.options(i):
+            newconf.set(i,j,CURRENTCONFIG.get(i,j) )
+def restoreConf():
+     global BACKUPCONFIG
+     global CURRENTCONFIG
+     for i in BACKUPCONFIG.sections():
+         try:
+             CURRENTCONFIG.add_section(i)
+         except configparser.DuplicateSectionError as e:
+             pass
+         for j in  BACKUPCONFIG.options(i):
+             CURRENTCONFIG.set(i,j,BACKUPCONFIG.get(i,j))
 ######################################
 def logged(f):
     global LOGSTR
@@ -99,14 +151,8 @@ class ConfigHandler():
         self._currentconfig=config
         
     def reset(self):
-        global CURRENTCONFIG
-        CURRENTCONFIG = configparser.ConfigParser()
-        self._currentconfig=configparser.ConfigParser()
-    
-        
-    #    initConfigHandler()
-    #def initConfigHandler(self):
-    #    global CURRENTCONFIG
+        initConfCurrent()
+        print("full reset")
     
 class ScytheConvertDialog():
     pass
@@ -166,6 +212,7 @@ class ScytheMenu(tk.Frame):
         self.parent = parent        
         self.initGUI()
         self.confighandler = ConfigHandler()
+        initConfCurrent()
         self.scythewizard= ScytheWizard(self.parent)
     def initGUI(self):
         menubar = tk.Menu(self.parent)
@@ -217,11 +264,11 @@ class ScytheMenu(tk.Frame):
         cfg = self.confighandler.currentconfig.read(tmp)
         global CURRENTCONFIG
         CURRENTCONFIG=self.confighandler.currentconfig
-        if self.confighandler.currentconfig.get('Mode','use_local_files')=='yes':
-            self.scythewizard.st_fastaDir.set(self.confighandler.currentconfig.get('Paths','fasta_directory') )
-            self.scythewizard.st_locDir.set(self.confighandler.currentconfig.get('Paths','loc_directory') )
-            self.scythewizard.st_grpFile.set(self.confighandler.currentconfig.get('Paths','grp_file') )
-            self.scythewizard.st_outDir.set(self.confighandler.currentconfig.get('Paths','output_directory') )
+        if self.confighandler.currentconfig.get(CF_MODE,'use_local_files')=='yes':
+            self.scythewizard.st_fastaDir.set(self.confighandler.currentconfig.get(CF_PATHS,'fasta_directory') )
+            self.scythewizard.st_locDir.set(self.confighandler.currentconfig.get(CF_PATHS,'loc_directory') )
+            self.scythewizard.st_grpFile.set(self.confighandler.currentconfig.get(CF_PATHS,'grp_file') )
+            self.scythewizard.st_outDir.set(self.confighandler.currentconfig.get(CF_PATHS,'output_directory') )
             self.scythewizard.cb_use_local.select()
             self.scythewizard.cb_use_local.configure(state=tk.NORMAL)
             self.scythewizard.cb_use_ensembl.configure(state=tk.DISABLED)
@@ -268,13 +315,55 @@ class ScytheMenu(tk.Frame):
         pass
     def onShowOptions(self):
         Infobox().showConfig()
+    def onSetConfigApply(self):
+        print("configapply")
+        Infobox().todo()
+    def onSetConfigOK(self):
+        #Infobox().todo()
+        backupConf()
+        print("BACKED UP")
+        restoreConf()
+        print("RESTORED-->CURRENTCONF set")
+    def onSetConfigCancel(self):
+        #self.restoreOldConfig()
+        print("Config CANCEL")
+        
+        #Infobox().todo()
+    #def restoreOldConfig(self):
+    #    CURRENTCONFIG = configparser.ConfigParser(BACKUPCONFIG)
+    #def saveNewConfig(self):
+    #    CURRENTCONFIG = configparser.ConfigParser(self.tempconfig)
+    #    BACKUPCONFIG = configparser.ConfigParser(CURRENTCONFIG)
+    
+    def applyPenalties(self):
+        pass
+    def applyOutput(self):
+        pass
+    def applyCleanup(self):
+        pass
+    def applyRun(self):
+        pass
+    def applyAlgorithm(self):
+        pass
+    def applyParalogs(self):
+        pass
     def onSetOptions(self):
         global CURRENTCONFIG
         global MAXCONFIG
+        global CF_MODE
+        tmpconfig= configparser.ConfigParser()
+        backupConfTo(tmpconfig)
         
         top = tk.Toplevel()
         top.title("Set configuration")
         nb = ttk.Notebook(top)
+        b_config_ok = tk.Button(top, text="OK", command=top.destroy)
+        b_config_ok.bind('<ButtonRelease-1>',self.onSetConfigOK())
+        b_config_apply = tk.Button(top, text="Apply", command=self.onSetConfigApply)
+        b_config_cancel = tk.Button(top, text="Cancel", command=top.destroy)
+        b_config_cancel.bind('<ButtonRelease-1>',self.onSetConfigCancel())
+        
+        
         fr_paths = tk.Frame(nb,width=200, height=100)
         fr_penalties = tk.Frame(nb,width=200, height=100)
         fr_mode = ttk.Frame(nb,width=200, height=100)
@@ -297,46 +386,95 @@ class ScytheMenu(tk.Frame):
                     txt_subsec[section]=[opt]
         lab_sec=[]
         lab_subsec={}
+        dd_subsec={}
+        var_subsec={}
         for t in txt_sec:
             lab_sec.append(tk.Label(fr_paths,text = t)) 
         for t in txt_subsec:
+            print(t,txt_subsec[t])
             for u in txt_subsec[t]:
+                if t == CF_MODE:
+                    fr = fr_mode
+                elif t == CF_PATHS:
+                    fr = fr_paths
+                elif t == CF_OUTPUT:
+                    fr = fr_output
+                elif t == CF_CLEANUP:
+                    fr = fr_cleanup
+                elif t == CF_RUN:
+                    fr = fr_run
+                elif t == CF_PENALTIES:
+                    fr = fr_penalties
+                elif t == CF_ALGORITHM:
+                    fr = fr_algorithm
+                elif t == CF_PARALOGS:
+                    fr = fr_paralogs
+                else:
+                    print("No such section:",t)
                 try:
-                    lab_subsec[t].append(tk.Label(fr_paths,text = u))
+                    lab_subsec[t].append(tk.Label(fr,text = u))
+                    var_subsec[t].append(tk.StringVar(fr))
+                    if u in OPTIONS:
+                        dd_subsec[t].append(OptionMenu(fr,var_subsec[t][-1],*OPTIONS[u]))
+                    else:
+                        dd_subsec[t].append("")
                 except KeyError as e:
-                    lab_subsec[t]=[tk.Label(text = u)]
-        for t in lab_sec:
-            t.grid()
-        
-          #  for option in tmp.currentconfig.options(section):
-          #      message += " "+ option+ "="+ tmp.currentconfig.get(section, option)+"\n"
-        
-    
-        
+                    try:
+                        lab_subsec[t]=[tk.Label(fr,text = u)]
+                        var_subsec[t]=[tk.StringVar(fr)]
+                        if u in OPTIONS:
+                            dd_subsec[t] = [OptionMenu(fr,var_subsec[t][-1],*OPTIONS[u])]
+                        else:
+                            dd_subsec[t] = [""]
+                    except KeyError as e:
+                        print(e)
+                        dd_subsec[t].append("")
+                        
+        for t in lab_subsec:
+            r=0
+            c=0
+            for i in  lab_subsec[t]:
+                print(i.cget("text"))
+                i.grid(row=r,column=c, sticky=tk.E)
+                r+=1
+                print(r,i.cget("text"))
+        for t in dd_subsec:
+            c=1
+            r=0
+            for i in dd_subsec[t]:
+                print(i)
+                if i is not "":
+                    i.grid(row=r,column=c,sticky=tk.N)
+                r+=1
+                print(r)
         ######################################
-        
-        
-        
-        
-        
-        
-        
-        
-        nb.add(fr_mode, text="Mode")
-        nb.add(fr_paths, text="Paths")
-        nb.add(fr_penalties, text="Penalties")
-        nb.add(fr_output, text="Output")
-        nb.add(fr_cleanup, text="Clean Up")
-        nb.add(fr_run, text="Run")
-        nb.add(fr_algorithm, text="Algorithm")
-        nb.add(fr_paralogs, text="Paralogs")
+        st_submat = tk.StringVar()
+        sc_config_numthreads = Scale(fr_run, from_=1, to=8, orient=tk.HORIZONTAL)
+        sc_config_numthreads.grid(row=0, column=1, sticky=tk.E)
+        en_config_gapopen=tk.Entry(fr_penalties)
+        en_config_gapextend=tk.Entry(fr_penalties)
+        om_config_submat=tk.OptionMenu(fr_penalties,st_submat, *["EBLOSUM62","EDNAFULL"])
+        om_config_submat.grid(row=2,column=1 )
+        en_config_outpref=tk.Entry(fr_output, width=6)
+        en_config_gapopen.grid(row=0, column=1)
+        en_config_gapextend.grid(row=1, column=1)
+        #en_config_submat.grid(row=2, column=1)
+        en_config_outpref.grid(row=1, column=1)
+        #nb.add(fr_mode, text=CF_MODE)
+        #nb.add(fr_paths, text=CF_PATHS)
+        nb.add(fr_penalties, text=CF_PENALTIES)
+        nb.add(fr_output, text=CF_OUTPUT)
+        nb.add(fr_cleanup, text=CF_CLEANUP)
+        nb.add(fr_run, text=CF_RUN)
+        nb.add(fr_algorithm, text=CF_ALGORITHM)
+        nb.add(fr_paralogs, text=CF_PARALOGS)
 
         nb.grid()
-        
-        
-        
-        
-
+        b_config_cancel.grid(row=1, column=0, sticky=tk.E,padx=115)
+        b_config_apply.grid(row=1, column=0, sticky=tk.E,padx=50)
+        b_config_ok.grid(row=1, column=0, sticky=tk.E)
+       
+    
 class ScytheWizard(tk.Tk):
     def __init__(self, parent):
         self.parent = parent     
@@ -424,9 +562,10 @@ class ScytheWizard(tk.Tk):
         
     def useLocal(self):
         global CURRENTCONFIG
+        print("CURRENTCONFIG",CURRENTCONFIG)
         if self.int_local.get() ==1:
-            CURRENTCONFIG.set("Mode", "use_local_files", "yes")
-            CURRENTCONFIG.set("Mode", "use_ensembl_api", "no")
+            CURRENTCONFIG.set(CF_MODE, "use_local_files", "yes")
+            CURRENTCONFIG.set(CF_MODE, "use_ensembl_api", "no")
             #self.st_fastaDir
             self.ent_fastaDir.config(state=tk.NORMAL)
             self.ent_locDir.config(state=tk.NORMAL)
