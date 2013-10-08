@@ -93,7 +93,10 @@ def initConfCurrent():
     global CURRENTCONFIG
     global MAXCONFIG
     for i in MAXCONFIG.sections():
-        CURRENTCONFIG.add_section(i)
+        try:
+            CURRENTCONFIG.add_section(i)
+        except configparser.DuplicateSectionError as e:
+             pass
         for j in MAXCONFIG.options(i):
             print(i,j)
             CURRENTCONFIG.set(i,j,MAXCONFIG.get(i,j))
@@ -167,16 +170,19 @@ class ScytheConvertDialog():
     pass
 class ScytheConfigEditor():
     def __init__(self):
+        
         global CURRENTCONFIG
         global MAXCONFIG
         global CF_MODE
+        backupConf()
+        print("BACKED UP")
         tmpconfig= configparser.ConfigParser()
         backupConfTo(tmpconfig)
         top = tk.Toplevel()
         top.title("Set configuration")
         nb = ttk.Notebook(top)
         b_config_ok = tk.Button(top, text="OK", command=top.destroy)
-        b_config_ok.bind('<ButtonRelease-1>',self.onSetConfigOK())
+        b_config_ok.bind('<ButtonRelease-1>',self.onSetConfigOK)
         b_config_apply = tk.Button(top, text="Apply", command=self.onSetConfigApply)
         b_config_cancel = tk.Button(top, text="Cancel", command=top.destroy)
         b_config_cancel.bind('<ButtonRelease-1>',self.onSetConfigCancel())
@@ -301,14 +307,16 @@ class ScytheConfigEditor():
         print("configapply")
         self.setConfigFromFields()
         Infobox().todo()
-    def onSetConfigOK(self):
+    def onSetConfigOK(self,event):
+        print("configapply")
+        self.setConfigFromFields()
         #Infobox().todo()
         
-        backupConf()
-        print("BACKED UP")
+        
+        
+    def onSetConfigCancel(self):
         restoreConf()
         print("RESTORED-->CURRENTCONF set")
-    def onSetConfigCancel(self):
         #self.restoreOldConfig()
         print("Config CANCEL")
     def setConfigFromFields(self):
@@ -318,12 +326,12 @@ class ScytheConfigEditor():
         #penalties
         tempconf.set(CF_PENALTIES,CF_PENALTIES_gap_open_cost,self.var_subsec[CF_PENALTIES][0].get() )
         tempconf.set(CF_PENALTIES, CF_PENALTIES_gap_extend_cost,self.var_subsec[CF_PENALTIES][1].get())
-        tempconf.set(CF_PENALTIES, CF_PENALTIES_substitution_matrix,self.self.om_config_submat.get())
+        tempconf.set(CF_PENALTIES, CF_PENALTIES_substitution_matrix,self.st_submat.get())
         tempconf.set(CF_ALGORITHM, CF_ALGORITHM_use_global_max,self.var_subsec[CF_ALGORITHM][0].get())
         tempconf.set(CF_ALGORITHM, CF_ALGORITHM_use_default,self.var_subsec[CF_ALGORITHM ][1].get())
         tempconf.set(CF_ALGORITHM, CF_ALGORITHM_use_global_sum,self.var_subsec[CF_ALGORITHM][2].get())
         tempconf.set(CF_PARALOGS, CF_PARALOGS_include_paralogs,self.var_subsec[CF_PARALOGS][0].get())
-        tempconf.set(CF_RUN, CF_RUN_max_threads,self.sc_config_numthreads.get())
+        tempconf.set(CF_RUN, CF_RUN_max_threads,str(self.sc_config_numthreads.get()))
         tempconf.set(CF_RUN, CF_RUN_split_input, self.var_subsec[CF_RUN][1].get())
         tempconf.set(CF_RUN, CF_RUN_split_each, self.en_config_spliteach.get())
         tempconf.set(CF_RUN, CF_RUN_use_seqan, self.var_subsec[CF_RUN][3].get())
@@ -715,11 +723,11 @@ class ScytheWizard(tk.Tk):
         print(tmp)
         self.ent_outDir.config(state=tk.NORMAL)
         self.st_outDir.set(tmp)
-        CURRENTCONFIG.set("Paths", "out_dir",tmp)
+        CURRENTCONFIG.set("Paths", CF_PATHS_output_directory,tmp)
         #if self.ent_locDir.get()=="":
         #    if os.path.isdir(os.path.split(tmp)[0]+os.sep+"fa"):
         #        self.st_Dir.set(os.path.split(tmp)[0]+os.sep+"fa")
-        return filedialog.tmp()
+        #return filedialog.tmp()
     
     def useEnsembl(self):
         CURRENTCONFIG.set("Mode", "use_local_files", "no")
