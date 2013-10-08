@@ -116,6 +116,15 @@ def backupConfTo(newconf):
              pass
         for j in CURRENTCONFIG.options(i):
             newconf.set(i,j,CURRENTCONFIG.get(i,j) )
+def setCurrentConf(newconf):
+    global CURRENTCONFIG
+    for i in newconf.sections():
+        try:
+            CURRENTCONFIG.add_section(i)
+        except configparser.DuplicateSectionError as e:
+             pass
+        for j in newconf.options(i):
+            CURRENTCONFIG.set(i,j,newconf.get(i,j) )
 def restoreConf():
      global BACKUPCONFIG
      global CURRENTCONFIG
@@ -156,6 +165,219 @@ class ConfigHandler():
     
 class ScytheConvertDialog():
     pass
+class ScytheConfigEditor():
+    def __init__(self):
+        global CURRENTCONFIG
+        global MAXCONFIG
+        global CF_MODE
+        tmpconfig= configparser.ConfigParser()
+        backupConfTo(tmpconfig)
+        top = tk.Toplevel()
+        top.title("Set configuration")
+        nb = ttk.Notebook(top)
+        b_config_ok = tk.Button(top, text="OK", command=top.destroy)
+        b_config_ok.bind('<ButtonRelease-1>',self.onSetConfigOK())
+        b_config_apply = tk.Button(top, text="Apply", command=self.onSetConfigApply)
+        b_config_cancel = tk.Button(top, text="Cancel", command=top.destroy)
+        b_config_cancel.bind('<ButtonRelease-1>',self.onSetConfigCancel())
+        
+        
+        fr_paths = tk.Frame(nb,width=200, height=100)
+        fr_penalties = tk.Frame(nb,width=200, height=100)
+        fr_mode = ttk.Frame(nb,width=200, height=100)
+        fr_output = ttk.Frame(nb,width=200, height=100)
+        fr_cleanup = ttk.Frame(nb,width=200, height=100)
+        fr_run = ttk.Frame(nb,width=200, height=100)
+        fr_algorithm = ttk.Frame(nb,width=200, height=100)
+        fr_paralogs = ttk.Frame(nb,width=200, height=100)
+        
+        #######labels########################
+        self.txt_sec=[]
+        self.txt_subsec={}
+        for section in MAXCONFIG.sections():
+            print( "["+section +"]\n")
+            self.txt_sec.append(section)
+            for opt in MAXCONFIG.options(section):
+                try:
+                    self.txt_subsec[section].append(opt)
+                except KeyError as e:
+                    self.txt_subsec[section]=[opt]
+        lab_sec=[]
+        lab_subsec={}
+        dd_subsec={}
+        self.var_subsec={}
+        for t in self.txt_sec:
+            lab_sec.append(tk.Label(fr_paths,text = t)) 
+        for t in self.txt_subsec:
+            print(t,self.txt_subsec[t])
+            for u in self.txt_subsec[t]:
+                if t == CF_MODE:
+                    fr = fr_mode
+                elif t == CF_PATHS:
+                    fr = fr_paths
+                elif t == CF_OUTPUT:
+                    fr = fr_output
+                elif t == CF_CLEANUP:
+                    fr = fr_cleanup
+                elif t == CF_RUN:
+                    fr = fr_run
+                elif t == CF_PENALTIES:
+                    fr = fr_penalties
+                elif t == CF_ALGORITHM:
+                    fr = fr_algorithm
+                elif t == CF_PARALOGS:
+                    fr = fr_paralogs
+                else:
+                    print("No such section:",t)
+                try:
+                    lab_subsec[t].append(tk.Label(fr,text = u))
+                    self.var_subsec[t].append(tk.StringVar(fr))
+                    if u in OPTIONS:
+                        dd_subsec[t].append(OptionMenu(fr,self.var_subsec[t][-1],*OPTIONS[u]))
+                    else:
+                        dd_subsec[t].append("")
+                except KeyError as e:
+                    try:
+                        lab_subsec[t]=[tk.Label(fr,text = u)]
+                        self.var_subsec[t]=[tk.StringVar(fr)] 
+                        if u in OPTIONS:
+                            dd_subsec[t] = [OptionMenu(fr,self.var_subsec[t][-1],*OPTIONS[u])]
+                        else:
+                            dd_subsec[t] = [""]
+                    except KeyError as e:
+                        print(e)
+                        dd_subsec[t].append("")
+                        
+        for t in lab_subsec:
+            r=0
+            c=0
+            for i in  lab_subsec[t]:
+                print(i.cget("text"))
+                i.grid(row=r,column=c, sticky=tk.E)
+                r+=1
+                print(r,i.cget("text"))
+        for t in dd_subsec:
+            c=1
+            r=0
+            for i in dd_subsec[t]:
+                print(i)
+                if i is not "":
+                    i.grid(row=r,column=c,sticky=tk.N)
+                r+=1
+                print(r)
+        ######################################
+        self.st_submat = tk.StringVar()
+        self.st_outpref = tk.StringVar()
+        self.st_spliteach = tk.StringVar()
+        self.sc_config_numthreads = Scale(fr_run, from_=1, to=8, orient=tk.HORIZONTAL)
+        self.sc_config_numthreads.grid(row=0, column=1, sticky=tk.E)
+        en_config_gapopen=tk.Entry(fr_penalties, textvariable=self.var_subsec[CF_PENALTIES][0])
+        en_config_gapextend=tk.Entry(fr_penalties,textvariable=self.var_subsec[CF_PENALTIES][1] )
+        self.en_config_spliteach=tk.Entry(fr_run,textvariable=self.st_spliteach,width=6 )
+
+        self.om_config_submat=tk.OptionMenu(fr_penalties, self.st_submat, *["EBLOSUM62","EDNAFULL"])
+        self.om_config_submat.grid(row=2,column=1 )
+        self.en_config_outpref=tk.Entry(fr_output, width=6, textvariable=self.st_outpref)
+        en_config_gapopen.grid(row=0, column=1)
+        en_config_gapextend.grid(row=1, column=1)
+        #en_config_submat.grid(row=2, column=1)
+        self.en_config_outpref.grid(row=1, column=1)
+        self.en_config_spliteach.grid(row=2,column=1)
+        #nb.add(fr_mode, text=CF_MODE)
+        #nb.add(fr_paths, text=CF_PATHS)
+        nb.add(fr_penalties, text=CF_PENALTIES)
+        nb.add(fr_output, text=CF_OUTPUT)
+        nb.add(fr_cleanup, text=CF_CLEANUP)
+        nb.add(fr_run, text=CF_RUN)
+        nb.add(fr_algorithm, text=CF_ALGORITHM)
+        nb.add(fr_paralogs, text=CF_PARALOGS)
+
+        nb.grid()
+        b_config_cancel.grid(row=1, column=0, sticky=tk.E,padx=115)
+        b_config_apply.grid(row=1, column=0, sticky=tk.E,padx=50)
+        b_config_ok.grid(row=1, column=0, sticky=tk.E)
+        self.setFieldsFromConfig()
+    def onSetConfigApply(self):
+        print("configapply")
+        self.setConfigFromFields()
+        Infobox().todo()
+    def onSetConfigOK(self):
+        #Infobox().todo()
+        
+        backupConf()
+        print("BACKED UP")
+        restoreConf()
+        print("RESTORED-->CURRENTCONF set")
+    def onSetConfigCancel(self):
+        #self.restoreOldConfig()
+        print("Config CANCEL")
+    def setConfigFromFields(self):
+        tempconf = configparser.ConfigParser()
+        backupConfTo(tempconf)
+        #get all values from fields
+        #penalties
+        tempconf.set(CF_PENALTIES,CF_PENALTIES_gap_open_cost,self.var_subsec[CF_PENALTIES][0].get() )
+        tempconf.set(CF_PENALTIES, CF_PENALTIES_gap_extend_cost,self.var_subsec[CF_PENALTIES][1].get())
+        tempconf.set(CF_PENALTIES, CF_PENALTIES_substitution_matrix,self.self.om_config_submat.get())
+        tempconf.set(CF_ALGORITHM, CF_ALGORITHM_use_global_max,self.var_subsec[CF_ALGORITHM][0].get())
+        tempconf.set(CF_ALGORITHM, CF_ALGORITHM_use_default,self.var_subsec[CF_ALGORITHM ][1].get())
+        tempconf.set(CF_ALGORITHM, CF_ALGORITHM_use_global_sum,self.var_subsec[CF_ALGORITHM][2].get())
+        tempconf.set(CF_PARALOGS, CF_PARALOGS_include_paralogs,self.var_subsec[CF_PARALOGS][0].get())
+        tempconf.set(CF_RUN, CF_RUN_max_threads,self.sc_config_numthreads.get())
+        tempconf.set(CF_RUN, CF_RUN_split_input, self.var_subsec[CF_RUN][1].get())
+        tempconf.set(CF_RUN, CF_RUN_split_each, self.en_config_spliteach.get())
+        tempconf.set(CF_RUN, CF_RUN_use_seqan, self.var_subsec[CF_RUN][3].get())
+        #CLEANUP
+        tempconf.set(CF_CLEANUP, CF_CLEANUP_clean_up_directories, self.var_subsec[CF_CLEANUP][0].get())
+        #output
+        for i in range(0, len(self.txt_subsec[CF_OUTPUT])):
+            tempconf.set(CF_OUTPUT, self.txt_subsec[CF_OUTPUT][i], self.var_subsec[CF_OUTPUT][i].get())
+        #outputprefix:
+        tempconf.set(CF_OUTPUT,CF_OUTPUT_output_prefix,self.en_config_outpref.get())
+        
+        print (self.en_config_outpref.get())
+        
+        
+        #self.var_subsec[CF_PENALTIES][0].set(CURRENTCONFIG.get(CF_PENALTIES,self.txt_subsec[CF_PENALTIES][0]))
+        #print(CURRENTCONFIG.get(CF_PENALTIES,self.txt_subsec[CF_PENALTIES][1]))
+        setCurrentConf(tempconf)
+        print(CURRENTCONFIG)
+        for t in  tempconf.options(CF_PENALTIES):
+            print(t)
+            print(tempconf.get(CF_PENALTIES,t))
+        for t in  tempconf.options(CF_ALGORITHM):
+            print(t)
+            print(tempconf.get(CF_ALGORITHM,t))
+    def setFieldsFromConfig(self):
+        #penalties
+        print(self.txt_subsec[CF_PENALTIES][0])
+        print(CURRENTCONFIG.get(CF_PENALTIES,self.txt_subsec[CF_PENALTIES][0]))
+        self.var_subsec[CF_PENALTIES][0].set(CURRENTCONFIG.get(CF_PENALTIES,self.txt_subsec[CF_PENALTIES][0]))
+        print(CURRENTCONFIG.get(CF_PENALTIES,self.txt_subsec[CF_PENALTIES][1]))
+        self.var_subsec[CF_PENALTIES][1].set(CURRENTCONFIG.get(CF_PENALTIES,self.txt_subsec[CF_PENALTIES][1]))
+        self.st_submat.set(CURRENTCONFIG.get(CF_PENALTIES, CF_PENALTIES_substitution_matrix))
+        #output
+        self.var_subsec[CF_OUTPUT][0].set(CURRENTCONFIG.get(CF_OUTPUT,self.txt_subsec[CF_OUTPUT][0]))
+        self.st_outpref.set(CURRENTCONFIG.get(CF_OUTPUT,CF_OUTPUT_output_prefix))
+        self.var_subsec[CF_OUTPUT][2].set(CURRENTCONFIG.get(CF_OUTPUT,self.txt_subsec[CF_OUTPUT][2]))
+        self.var_subsec[CF_OUTPUT][3].set(CURRENTCONFIG.get(CF_OUTPUT,self.txt_subsec[CF_OUTPUT][3]))
+        self.var_subsec[CF_OUTPUT][4].set(CURRENTCONFIG.get(CF_OUTPUT,self.txt_subsec[CF_OUTPUT][4]))
+        #cleanup
+        self.var_subsec[CF_CLEANUP][0].set(CURRENTCONFIG.get(CF_CLEANUP,self.txt_subsec[CF_CLEANUP][0]))
+        #run
+        #slider
+        self.var_subsec[CF_RUN][1].set(CURRENTCONFIG.get(CF_RUN,self.txt_subsec[CF_RUN][1]))
+        self.st_spliteach.set(CURRENTCONFIG.get(CF_RUN,CF_RUN_split_each ))
+        self.var_subsec[CF_RUN][3].set(CURRENTCONFIG.get(CF_RUN,self.txt_subsec[CF_RUN][3]))
+        #algo
+        self.var_subsec[CF_ALGORITHM][0].set(CURRENTCONFIG.get(CF_ALGORITHM,self.txt_subsec[CF_ALGORITHM][0]))
+        self.var_subsec[CF_ALGORITHM][1].set(CURRENTCONFIG.get(CF_ALGORITHM,self.txt_subsec[CF_ALGORITHM][1]))
+        self.var_subsec[CF_ALGORITHM][2].set(CURRENTCONFIG.get(CF_ALGORITHM,self.txt_subsec[CF_ALGORITHM][2]))
+        #paralogs
+        self.var_subsec[CF_PARALOGS][0].set(CURRENTCONFIG.get(CF_PARALOGS,self.txt_subsec[CF_PARALOGS][0]))
+
+
+        
 
 class Infobox():
     @logged
@@ -214,6 +436,7 @@ class ScytheMenu(tk.Frame):
         self.confighandler = ConfigHandler()
         initConfCurrent()
         self.scythewizard= ScytheWizard(self.parent)
+        self.configEditor = None
     def initGUI(self):
         menubar = tk.Menu(self.parent)
         self.parent.config(menu=menubar)
@@ -235,8 +458,6 @@ class ScytheMenu(tk.Frame):
         optionsMenu = tk.Menu(menubar)
         optionsMenu.add_command(label="Show configuration...", command=self.onShowOptions)
         optionsMenu.add_command(label="Set configuration...", command=self.onSetOptions)
-
-
 
         infoMenu = tk.Menu(menubar)
         infoMenu.add_command(label="Show log...", command=self.onShowLog)
@@ -315,18 +536,7 @@ class ScytheMenu(tk.Frame):
         pass
     def onShowOptions(self):
         Infobox().showConfig()
-    def onSetConfigApply(self):
-        print("configapply")
-        Infobox().todo()
-    def onSetConfigOK(self):
-        #Infobox().todo()
-        backupConf()
-        print("BACKED UP")
-        restoreConf()
-        print("RESTORED-->CURRENTCONF set")
-    def onSetConfigCancel(self):
-        #self.restoreOldConfig()
-        print("Config CANCEL")
+    
         
         #Infobox().todo()
     #def restoreOldConfig(self):
@@ -335,145 +545,22 @@ class ScytheMenu(tk.Frame):
     #    CURRENTCONFIG = configparser.ConfigParser(self.tempconfig)
     #    BACKUPCONFIG = configparser.ConfigParser(CURRENTCONFIG)
     
-    def applyPenalties(self):
-        pass
-    def applyOutput(self):
-        pass
-    def applyCleanup(self):
-        pass
-    def applyRun(self):
-        pass
-    def applyAlgorithm(self):
-        pass
-    def applyParalogs(self):
-        pass
+#     def applyPenalties(self):
+#         pass
+#     def applyOutput(self):
+#         pass
+#     def applyCleanup(self):
+#         pass
+#     def applyRun(self):
+#         pass
+#     def applyAlgorithm(self):
+#         pass
+#     def applyParalogs(self):
+#         pass
     def onSetOptions(self):
-        global CURRENTCONFIG
-        global MAXCONFIG
-        global CF_MODE
-        tmpconfig= configparser.ConfigParser()
-        backupConfTo(tmpconfig)
-        
-        top = tk.Toplevel()
-        top.title("Set configuration")
-        nb = ttk.Notebook(top)
-        b_config_ok = tk.Button(top, text="OK", command=top.destroy)
-        b_config_ok.bind('<ButtonRelease-1>',self.onSetConfigOK())
-        b_config_apply = tk.Button(top, text="Apply", command=self.onSetConfigApply)
-        b_config_cancel = tk.Button(top, text="Cancel", command=top.destroy)
-        b_config_cancel.bind('<ButtonRelease-1>',self.onSetConfigCancel())
+        self.configEditor = ScytheConfigEditor()
         
         
-        fr_paths = tk.Frame(nb,width=200, height=100)
-        fr_penalties = tk.Frame(nb,width=200, height=100)
-        fr_mode = ttk.Frame(nb,width=200, height=100)
-        fr_output = ttk.Frame(nb,width=200, height=100)
-        fr_cleanup = ttk.Frame(nb,width=200, height=100)
-        fr_run = ttk.Frame(nb,width=200, height=100)
-        fr_algorithm = ttk.Frame(nb,width=200, height=100)
-        fr_paralogs = ttk.Frame(nb,width=200, height=100)
-        
-        #######labels########################
-        txt_sec=[]
-        txt_subsec={}
-        for section in MAXCONFIG.sections():
-            print( "["+section +"]\n")
-            txt_sec.append(section)
-            for opt in MAXCONFIG.options(section):
-                try:
-                    txt_subsec[section].append(opt)
-                except KeyError as e:
-                    txt_subsec[section]=[opt]
-        lab_sec=[]
-        lab_subsec={}
-        dd_subsec={}
-        var_subsec={}
-        for t in txt_sec:
-            lab_sec.append(tk.Label(fr_paths,text = t)) 
-        for t in txt_subsec:
-            print(t,txt_subsec[t])
-            for u in txt_subsec[t]:
-                if t == CF_MODE:
-                    fr = fr_mode
-                elif t == CF_PATHS:
-                    fr = fr_paths
-                elif t == CF_OUTPUT:
-                    fr = fr_output
-                elif t == CF_CLEANUP:
-                    fr = fr_cleanup
-                elif t == CF_RUN:
-                    fr = fr_run
-                elif t == CF_PENALTIES:
-                    fr = fr_penalties
-                elif t == CF_ALGORITHM:
-                    fr = fr_algorithm
-                elif t == CF_PARALOGS:
-                    fr = fr_paralogs
-                else:
-                    print("No such section:",t)
-                try:
-                    lab_subsec[t].append(tk.Label(fr,text = u))
-                    var_subsec[t].append(tk.StringVar(fr))
-                    if u in OPTIONS:
-                        dd_subsec[t].append(OptionMenu(fr,var_subsec[t][-1],*OPTIONS[u]))
-                    else:
-                        dd_subsec[t].append("")
-                except KeyError as e:
-                    try:
-                        lab_subsec[t]=[tk.Label(fr,text = u)]
-                        var_subsec[t]=[tk.StringVar(fr)]
-                        if u in OPTIONS:
-                            dd_subsec[t] = [OptionMenu(fr,var_subsec[t][-1],*OPTIONS[u])]
-                        else:
-                            dd_subsec[t] = [""]
-                    except KeyError as e:
-                        print(e)
-                        dd_subsec[t].append("")
-                        
-        for t in lab_subsec:
-            r=0
-            c=0
-            for i in  lab_subsec[t]:
-                print(i.cget("text"))
-                i.grid(row=r,column=c, sticky=tk.E)
-                r+=1
-                print(r,i.cget("text"))
-        for t in dd_subsec:
-            c=1
-            r=0
-            for i in dd_subsec[t]:
-                print(i)
-                if i is not "":
-                    i.grid(row=r,column=c,sticky=tk.N)
-                r+=1
-                print(r)
-        ######################################
-        st_submat = tk.StringVar()
-        sc_config_numthreads = Scale(fr_run, from_=1, to=8, orient=tk.HORIZONTAL)
-        sc_config_numthreads.grid(row=0, column=1, sticky=tk.E)
-        en_config_gapopen=tk.Entry(fr_penalties)
-        en_config_gapextend=tk.Entry(fr_penalties)
-        om_config_submat=tk.OptionMenu(fr_penalties,st_submat, *["EBLOSUM62","EDNAFULL"])
-        om_config_submat.grid(row=2,column=1 )
-        en_config_outpref=tk.Entry(fr_output, width=6)
-        en_config_gapopen.grid(row=0, column=1)
-        en_config_gapextend.grid(row=1, column=1)
-        #en_config_submat.grid(row=2, column=1)
-        en_config_outpref.grid(row=1, column=1)
-        #nb.add(fr_mode, text=CF_MODE)
-        #nb.add(fr_paths, text=CF_PATHS)
-        nb.add(fr_penalties, text=CF_PENALTIES)
-        nb.add(fr_output, text=CF_OUTPUT)
-        nb.add(fr_cleanup, text=CF_CLEANUP)
-        nb.add(fr_run, text=CF_RUN)
-        nb.add(fr_algorithm, text=CF_ALGORITHM)
-        nb.add(fr_paralogs, text=CF_PARALOGS)
-
-        nb.grid()
-        b_config_cancel.grid(row=1, column=0, sticky=tk.E,padx=115)
-        b_config_apply.grid(row=1, column=0, sticky=tk.E,padx=50)
-        b_config_ok.grid(row=1, column=0, sticky=tk.E)
-       
     
 class ScytheWizard(tk.Tk):
     def __init__(self, parent):
