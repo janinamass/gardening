@@ -5,6 +5,9 @@ from tkinter import messagebox
 from tkinter import ttk
 from tkinter import OptionMenu
 from tkinter import Scale
+import multiprocessing
+from scytheGUI_classes import ScytheConvertDialogLoc
+
 root=tk.Tk()
 root.title("Scythe GUI alpha")
 root.iconbitmap('@scy.xbm')
@@ -63,7 +66,7 @@ for o in [CF_PARALOGS_include_paralogs, CF_ALGORITHM_use_global_max,CF_ALGORITHM
 #PENALTIES:str entry
 
 
-
+MAXCPU=multiprocessing.cpu_count
 ###################################################
 SECTIONS = [CF_MODE,CF_PATHS, CF_OUTPUT, CF_CLEANUP, CF_RUN, CF_PENALTIES,CF_ALGORITHM,CF_PARALOGS]
 MAXCONFIG = configparser.ConfigParser()
@@ -166,8 +169,7 @@ class ConfigHandler():
         initConfCurrent()
         print("full reset")
     
-class ScytheConvertDialog():
-    pass
+
 class ScytheConfigEditor():
     def __init__(self):
         
@@ -275,7 +277,7 @@ class ScytheConfigEditor():
         self.st_submat = tk.StringVar()
         self.st_outpref = tk.StringVar()
         self.st_spliteach = tk.StringVar()
-        self.sc_config_numthreads = Scale(fr_run, from_=1, to=8, orient=tk.HORIZONTAL)
+        self.sc_config_numthreads = Scale(fr_run, from_=1, to=multiprocessing.cpu_count(), orient=tk.HORIZONTAL)
         self.sc_config_numthreads.grid(row=0, column=1, sticky=tk.E)
         en_config_gapopen=tk.Entry(fr_penalties, textvariable=self.var_subsec[CF_PENALTIES][0])
         en_config_gapextend=tk.Entry(fr_penalties,textvariable=self.var_subsec[CF_PENALTIES][1] )
@@ -481,7 +483,7 @@ class ScytheMenu(tk.Frame):
     def onConvertToGrp(self):
         pass
     def onConvertToLoc(self):
-        pass
+        ScytheConvertDialogLoc()
     def onExit(self):
         self.quit()
     def onNewRun(self):
