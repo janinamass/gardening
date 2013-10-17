@@ -84,7 +84,8 @@ class ScytheConvertDialogLoc():
 
         
     def callConvertTsv(self,file):  
-        Scythe_ensembl2loc.readEnsemblLoc(file, file+".loc")
+        pass
+        #Scythe_ensembl2loc.readEnsemblLoc(file, file+".loc")
     def mkdir(self,path):
         
         
