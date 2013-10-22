@@ -5,9 +5,10 @@ from tkinter import messagebox
 from tkinter import ttk
 from tkinter import OptionMenu
 from tkinter import Scale
+from tkinter import Listbox
 import multiprocessing
 from scytheGUI_classes import ScytheConvertDialogLoc
-
+import ensembl 
 root=tk.Tk()
 root.title("Scythe GUI alpha")
 root.iconbitmap('@scy.xbm')
@@ -569,14 +570,85 @@ class ScytheMenu(tk.Frame):
 #         pass
     def onSetOptions(self):
         self.configEditor = ScytheConfigEditor()
+class EnsemblSelector(tk.Listbox):
+        lb = None
+        top= None
         
-        
-    
+        speclist = None
+        rellist = None
+        itemlist = None
+        def __init__(self):
+            speclist = []
+            rellist = []
+            itemlist = []
+            data = ensembl.specInfo()
+            self.data = data
+            top = tk.Toplevel(root)
+            top.title("Ensembl Species Selector")
+            self.top=top
+
+            lb = Listbox(self.top,selectmode='multiple',exportselection=0)
+            self.lb= lb
+            #self.top=top
+            print(data)
+            for d in data["species"]:
+                print(d["name"])
+                if not d["name"].startswith("Ancestral"):
+                    speclist.append(d["name"])
+                    itemlist.append(d["name"]+'_core_'+str(d["release"]))
+                    rellist.append(d["release"])
+            self.itemlist=itemlist    
+            self.speclist=speclist
+            self.rellist = rellist
+            self.prepRun(itemlist)
+        def onEnsOK(self):
+            print("onOK")
+            specs,rel = self.readListBox()
+            ensembl.useEnsemblDB(specs,rel)
+            #dat = ensembl.specInfo()
+            #print(dat)
+        def onEnsQuit(self):
+            print("onQuit")
+            self.top.destroy()
+        def prepRun(self, itemlist):
+            #pass
+            #top = tk.Toplevel(root)
+            #top.title("Ensembl Species Selector")
+            #tmp = Listbox(top,selectmode='multiple',exportselection=0)
+            for item in itemlist:
+                self.lb.insert(tk.END, item)
+            self.lb.grid(row=0, column=0)
+            b_ensOK = tk.Button(self.top, text="OK", command=self.onEnsOK)
+            b_ensQuit = tk.Button(self.top, text="Quit", command=self.onEnsQuit)
+            b_ensOK.grid(row=1, column=0,sticky="E", padx=60)
+            b_ensQuit.grid(row=1, column=0,sticky="E", padx=0)
+        def readListBox(self):
+            items = self.lb.curselection()
+            print(items)
+            print(self.speclist)
+            selecteditemsspec = [self.speclist[int(item)] for item in items]
+            selecteditemsrel = [self.rellist[int(item)] for item in items]
+
+            print(selecteditemsspec, selecteditemsrel  )
+            return(selecteditemsspec,selecteditemsrel)
 class ScytheWizard(tk.Tk):
     def __init__(self, parent):
         self.parent = parent     
         self.initWizard()
+    def quit(self):
+        root.destroy()
+    def prepRun(self):
+        print("prep run called")
         
+        #top = tk.Toplevel(root)
+        #top.title("Ensembl Species Selector")
+        #tmp = Listbox(top,selectmode='multiple',exportselection=0)
+        #for item in ["one", "two", "three", "four"]:
+        #    tmp.insert(tk.END, item)
+        #tmp.grid(row=0, column=0)
+        ens = EnsemblSelector()
+        #check if ensembl or local
+        #try ensembl
         
     def initWizard(self):
        
@@ -615,7 +687,11 @@ class ScytheWizard(tk.Tk):
         self.b_locDir = tk.Button(text="open...",command=self.askLocDir, state=tk.DISABLED)#self.askopenfilename)
         self.b_grpFile = tk.Button(text="open...",command=self.askGrpFile, state=tk.DISABLED)#self.askopenfilename)
         self.b_outDir = tk.Button(text="open...",command=self.askOutDir, state=tk.DISABLED)#self.askopenfilename)
-
+        
+        ######21.10
+        self.b_next = tk.Button(root, text="Next...", command = self.prepRun)
+        self.b_quit = tk.Button(root, text="Quit", command = self.quit)
+        ######
         #self.b_convertOrtho = tk.Button(text="convert file to .grp")
         #todo convert orthomcl, proteinortho, tabsep
         #self.b_convertLoci = tk.Button(text="convert files to .loc")
@@ -656,7 +732,9 @@ class ScytheWizard(tk.Tk):
         self.b_outDir.grid(row=4, column=2, sticky="E")
         
         #self.b_convertOrtho.grid(row=3,column=3)
-        
+        self.b_next.grid(row=5, column=1, sticky="E")
+        self.b_quit.grid(row=5, column=2, sticky="W")
+
     def useLocal(self):
         global CURRENTCONFIG
         print("CURRENTCONFIG",CURRENTCONFIG)
