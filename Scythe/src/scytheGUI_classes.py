@@ -19,7 +19,7 @@ class ScytheConvertDialogProteinortho():
 class ScytheConvertDialogLoc():
     def __init__(self):
         self.root = tk.Toplevel()
-        self.root.title("Convert gff/tab-separated file to .grp file")
+        self.root.title("Convert gff/tab-separated files to .loc files")
         
         #convert whole folder
         self.lab_dir = tk.Label(self.root,text="gff/tsv directory")
@@ -77,15 +77,16 @@ class ScytheConvertDialogLoc():
         tmp= filedialog.askopenfilename(filetypes=formats)
         print(tmp)
         self.ent_file.config(state=tk.NORMAL)
-        self.st_file.set(tmp)
+        #self.st_file.set(tmp)
         
     def callConvertGff(self,file):  
         Scythe_gff2loc.read_gff2loc(file, file+".loc")
 
         
     def callConvertTsv(self,file):  
-        pass
-        #Scythe_ensembl2loc.readEnsemblLoc(file, file+".loc")
+        #pass
+        print("callConvertTsv",file)
+        Scythe_ensembl2loc.readEnsemblLoc(file, file+".loc")
     def mkdir(self,path):
         
         
@@ -124,7 +125,9 @@ class ScytheConvertDialogLoc():
         for g in gfffiles:
             self.callConvertGff(folder+os.sep+g)
         for t in tsvfiles:
-            self.callConvertTsv(folder+os.sep+t)
+            print("tsvfiles", t)
+            if t:
+                self.callConvertTsv(folder+os.sep+t)
         #mkdir 
         locpath = self.mkdir(folder+os.sep+"loc")
         locfiles = []

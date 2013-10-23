@@ -4,12 +4,16 @@ from datetime import datetime, date, timedelta
 import mysql.connector
 import os
 import time
-###################REST
+
 def getSequences(stableids,outdir, specname):
     res = ""
     http = httplib2.Http(".cache")
     server = "http://beta.rest.ensembl.org"
-    out = open(outdir+os.sep+specname+".fa",'w')
+    path=outdir+os.sep+"fa"
+    if not os.path.isdir(path):
+            os.makedirs(path)
+    print(path)
+    out = open(outdir+os.sep+"fa"+os.sep+specname+".fa",'w')
     for g in stableids:           
             ext = "/sequence/id/"+g
             resp, content = http.request(server+ext, method="GET", headers={"Content-Type":"text/x-fasta"})
@@ -20,7 +24,10 @@ def getSequences(stableids,outdir, specname):
     
     
 def getHomology(targetspecies, queryspecies, querystableids, outdir):
-    out = open(outdir+os.sep+queryspecies+"_"+targetspecies+".tsv",'w')
+    path=outdir+os.sep+"ensembl_ortho_tsv"
+    if not os.path.isdir(path):
+            os.makedirs(path)
+    out = open(outdir+os.sep+"ensembl_ortho_tsv"+os.sep+queryspecies+"__"+targetspecies+".tsv",'w')
     print("target:",targetspecies)
     print("query",queryspecies)
     print("stableids",querystableids)
@@ -37,14 +44,9 @@ def getHomology(targetspecies, queryspecies, querystableids, outdir):
         
         for f in data.values():
             try:
-                #print("f:",f)
-                #print("f0",f[0])
-                #print(dict(f))
                 tmp1 = f[0]["id"]
                 tmp2 = f[0]["homologies"][0]
                 tmp2 = tmp2["id"]
-            #print(tmp1,tmp2)
-        #print(g, dict(content.decode("utf8"))["id"] )
                 out.write("\t".join([tmp1,tmp2]))
                 out.write("\n")
             except IndexError as e:
@@ -76,7 +78,10 @@ def getGeneProteinRelation( outdir, specname, release):
         curB.execute(cmd)
         cmd = 'select stable_id from gene where biotype="protein_coding" and source ="ensembl" limit 3;'
         curB.execute(cmd)
-        out = open(outdir+os.sep+specname+"_"+str(release)+".tsv",'w')
+        path=outdir+os.sep+"ensembl_gene_tsv"
+        if not os.path.isdir(path):
+            os.makedirs(path)
+        out = open(outdir+os.sep+"ensembl_gene_tsv"+os.sep+specname+"_"+str(release)+".tsv",'w')
         seen = set()
        
         for b in curB:#tuples
@@ -107,19 +112,17 @@ def getGeneProteinRelation( outdir, specname, release):
     curB.close()
     return(stableids, parent.keys())
 
-def useEnsemblDB(specs,rel):#, targets):
+def useEnsemblDB(specs,rel, outdir):#, targets):
     res = ""
     http = httplib2.Http(".cache")
     server = "http://beta.rest.ensembl.org"
-    #cmd = 'show databases like "'+spec+'_core_'+rel+'_%";'
-    #print(cmd)
     
     for i in range(0,len(specs)):
         print(i)
-        stableids, geneids = getGeneProteinRelation( "./", specs[i], rel[i])
-        getSequences(stableids,  ".",specs[i] )
+        stableids, geneids = getGeneProteinRelation( outdir, specs[i], rel[i])
+        getSequences(stableids,  outdir,specs[i] )
         if(i+1<len(specs)):
-                getHomology(specs[i+1],specs[i],geneids, "./")
+                getHomology(specs[i+1],specs[i],geneids, outdir)
 def specInfo():
     pass
     http = httplib2.Http(".cache") 
@@ -140,7 +143,6 @@ def selectSpecies(data, namelist):
         else:
             aliases = s["aliases"]
             print(aliases)
-            #aliases = aliases.split(",")
             found = [a for a in aliases if a in namelist]
             if found:
                 specs.append(s["name"])
@@ -149,11 +151,11 @@ def selectSpecies(data, namelist):
 def main():
     namelist = ["bos taurus", "human", "chimp"]
     data = specInfo()
+    outdir=None
+    if not outdir:
+        outdir = "./"
     specs, rels = selectSpecies(data, namelist)
-    #for i in ind:
-    #   tmp = ""
-    useEnsemblDB(specs, rels)
-        #print(tmp)
+    useEnsemblDB(specs, rels, outdir)
   
 if __name__ == "__main__":
     main()

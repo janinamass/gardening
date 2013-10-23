@@ -577,17 +577,20 @@ class EnsemblSelector(tk.Listbox):
         speclist = None
         rellist = None
         itemlist = None
-        def __init__(self):
+        outdir = None
+        def __init__(self, outdir):
             speclist = []
             rellist = []
             itemlist = []
             data = ensembl.specInfo()
             self.data = data
+            self.outdir = outdir
             top = tk.Toplevel(root)
-            top.title("Ensembl Species Selector")
+            #adjust width and height
+            top.title("Select Species from Ensembl")
             self.top=top
 
-            lb = Listbox(self.top,selectmode='multiple',exportselection=0)
+            lb = Listbox(self.top,selectmode='multiple',exportselection=0 ,width=40, height=30,)
             self.lb= lb
             #self.top=top
             print(data)
@@ -604,7 +607,7 @@ class EnsemblSelector(tk.Listbox):
         def onEnsOK(self):
             print("onOK")
             specs,rel = self.readListBox()
-            ensembl.useEnsemblDB(specs,rel)
+            ensembl.useEnsemblDB(specs,rel, self.outdir)
             #dat = ensembl.specInfo()
             #print(dat)
         def onEnsQuit(self):
@@ -619,7 +622,7 @@ class EnsemblSelector(tk.Listbox):
                 self.lb.insert(tk.END, item)
             self.lb.grid(row=0, column=0)
             b_ensOK = tk.Button(self.top, text="OK", command=self.onEnsOK)
-            b_ensQuit = tk.Button(self.top, text="Quit", command=self.onEnsQuit)
+            b_ensQuit = tk.Button(self.top, text="Cancel", command=self.onEnsQuit)
             b_ensOK.grid(row=1, column=0,sticky="E", padx=60)
             b_ensQuit.grid(row=1, column=0,sticky="E", padx=0)
         def readListBox(self):
@@ -629,8 +632,8 @@ class EnsemblSelector(tk.Listbox):
             selecteditemsspec = [self.speclist[int(item)] for item in items]
             selecteditemsrel = [self.rellist[int(item)] for item in items]
 
-            print(selecteditemsspec, selecteditemsrel  )
-            return(selecteditemsspec,selecteditemsrel)
+            print(selecteditemsspec, selecteditemsrel)
+            return(selecteditemsspec, selecteditemsrel)
 class ScytheWizard(tk.Tk):
     def __init__(self, parent):
         self.parent = parent     
@@ -639,16 +642,11 @@ class ScytheWizard(tk.Tk):
         root.destroy()
     def prepRun(self):
         print("prep run called")
-        
-        #top = tk.Toplevel(root)
-        #top.title("Ensembl Species Selector")
-        #tmp = Listbox(top,selectmode='multiple',exportselection=0)
-        #for item in ["one", "two", "three", "four"]:
-        #    tmp.insert(tk.END, item)
-        #tmp.grid(row=0, column=0)
-        ens = EnsemblSelector()
-        #check if ensembl or local
-        #try ensembl
+        #check whether ensembl or local is checked
+        #outdir to
+        outdir = CURRENTCONFIG.get(CF_PATHS,CF_PATHS_output_directory)
+        #catch unset outdir
+        ens = EnsemblSelector(outdir)
         
     def initWizard(self):
        
