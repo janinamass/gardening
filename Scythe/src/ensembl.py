@@ -46,12 +46,15 @@ def getHomology(targetspecies, queryspecies, querystableids, outdir):
             try:
                 tmp1 = f[0]["id"]
                 tmp2 = f[0]["homologies"][0]
-                tmp2 = tmp2["id"]
-                out.write("\t".join([tmp1,tmp2]))
-                out.write("\n")
+                print(tmp2)
+                if (tmp2["type"] == "ortholog_one2one" ):
+                    tmp2 = tmp2["id"]
+                    out.write("\t".join([tmp1,tmp2]))
+                    out.write("\n")
+                
             except IndexError as e:
                     pass
-            time.sleep(0.4)
+            time.sleep(0.2)
     
     
     
@@ -76,7 +79,7 @@ def getGeneProteinRelation( outdir, specname, release):
         cmd = "use "+a[0]+";"
         print(cmd)
         curB.execute(cmd)
-        cmd = 'select stable_id from gene where biotype="protein_coding" and source ="ensembl" limit 3;'
+        cmd = 'select stable_id from gene where biotype="protein_coding" and source ="ensembl" limit 400;'
         curB.execute(cmd)
         path=outdir+os.sep+"ensembl_gene_tsv"
         if not os.path.isdir(path):
@@ -87,7 +90,7 @@ def getGeneProteinRelation( outdir, specname, release):
         for b in curB:#tuples
             print(b)
             for bb in b:
-                time.sleep(0.4)
+                time.sleep(0.2)
                 ext = "/feature/id/"+bb+"?feature=cds"
                 resp, content = http.request(server+ext, method="GET", headers={"Content-Type":"application/json"})
                 data = json.loads(content.decode("utf8"))

@@ -76,6 +76,10 @@ def readLength(lengthfile):
 
 
 def readEnsemblLoc(ensembleLoc, outfile, lenDct=None):
+    if ensembleLoc is None:
+        print(outfile)
+        return (-1)
+    print("readEnsemblLoc", ensembleLoc)
     out=open(outfile,"w")
     infile = open(ensembleLoc,"r")
     numLoc = 0

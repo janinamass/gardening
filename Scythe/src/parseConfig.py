@@ -8,6 +8,8 @@ from tkinter import Scale
 from tkinter import Listbox
 import multiprocessing
 from scytheGUI_classes import ScytheConvertDialogLoc
+from scytheGUI_classes import ScytheConvertDialogGrp
+
 import ensembl 
 root=tk.Tk()
 root.title("Scythe GUI alpha")
@@ -482,7 +484,7 @@ class ScytheMenu(tk.Frame):
         menubar.add_cascade(label="Help", menu=helpMenu)
         #self.onNewRun()
     def onConvertToGrp(self):
-        pass
+        ScytheConvertDialogGrp()
     def onConvertToLoc(self):
         ScytheConvertDialogLoc()
     def onExit(self):
@@ -797,7 +799,7 @@ class ScytheWizard(tk.Tk):
         CURRENTCONFIG.set("Paths", "grp_file",tmp)
         return tmp
     def askOutDir(self):
-        tmp= filedialog.askdirectory()
+        tmp= filedialog.askdirectory(mustexist=False)
         print(tmp)
         self.ent_outDir.config(state=tk.NORMAL)
         self.st_outDir.set(tmp)
