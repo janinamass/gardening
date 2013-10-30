@@ -3,9 +3,9 @@ from decimal import Decimal
 from datetime import datetime, date, timedelta
 import mysql.connector
 import os
+import time
 ###################REST
 def getSequences(stableids,outdir, specname):
-    
     res = ""
     http = httplib2.Http(".cache")
     server = "http://beta.rest.ensembl.org"
@@ -15,7 +15,43 @@ def getSequences(stableids,outdir, specname):
             resp, content = http.request(server+ext, method="GET", headers={"Content-Type":"text/x-fasta"})
             print(content.decode("utf8"))
             out.write(content.decode("utf8"))
+            time.sleep(0.4)
     out.close()
+    
+    
+def getHomology(targetspecies, queryspecies, querystableids, outdir):
+    out = open(outdir+os.sep+queryspecies+"_"+targetspecies+".tsv",'w')
+    print("target:",targetspecies)
+    print("query",queryspecies)
+    print("stableids",querystableids)
+    res = ""
+    http = httplib2.Http(".cache")
+    server = "http://beta.rest.ensembl.org"
+    for g in  querystableids:           
+        ext = "/homology/id/"+g+"?content-type=application/json;format=condensed;type=orthologues;target_species="+targetspecies
+        print(ext)
+        resp, content = http.request(server+ext, method="GET", headers={"Content-Type":"application/json"})
+        print(content.decode("utf8"))
+        data = json.loads(content.decode("utf8"))
+        print("data:",data)
+        
+        for f in data.values():
+            try:
+                #print("f:",f)
+                #print("f0",f[0])
+                #print(dict(f))
+                tmp1 = f[0]["id"]
+                tmp2 = f[0]["homologies"][0]
+                tmp2 = tmp2["id"]
+            #print(tmp1,tmp2)
+        #print(g, dict(content.decode("utf8"))["id"] )
+                out.write("\t".join([tmp1,tmp2]))
+                out.write("\n")
+            except IndexError as e:
+                    pass
+            time.sleep(0.4)
+    
+    
     
 def getGeneProteinRelation( outdir, specname, release):
     stableids=[]
@@ -36,14 +72,17 @@ def getGeneProteinRelation( outdir, specname, release):
     
     for a in curA:
         cmd = "use "+a[0]+";"
+        print(cmd)
         curB.execute(cmd)
-        cmd = 'select stable_id from gene where biotype="protein_coding" and source ="ensembl" and stable_id like "ENSG%" limit 20;'
+        cmd = 'select stable_id from gene where biotype="protein_coding" and source ="ensembl" limit 300;'
         curB.execute(cmd)
         out = open(outdir+os.sep+specname+"_"+str(release)+".tsv",'w')
         seen = set()
        
         for b in curB:#tuples
+            print(b)
             for bb in b:
+                time.sleep(0.4)
                 ext = "/feature/id/"+bb+"?feature=cds"
                 resp, content = http.request(server+ext, method="GET", headers={"Content-Type":"application/json"})
                 data = json.loads(content.decode("utf8"))
@@ -66,7 +105,7 @@ def getGeneProteinRelation( outdir, specname, release):
             #print(g,gg,size[gg] )
     curA.close()
     curB.close()
-    return(stableids)
+    return(stableids, parent.keys())
 
 def useEnsemblDB(specs,rel):#, targets):
     res = ""
@@ -77,88 +116,40 @@ def useEnsemblDB(specs,rel):#, targets):
     
     for i in range(0,len(specs)):
         print(i)
-        stableids = getGeneProteinRelation( "./", specs[i], rel[i])
+        stableids, geneids = getGeneProteinRelation( "./", specs[i], rel[i])
         getSequences(stableids,  ".",specs[i] )
-    
-    #curA = cnx.cursor(buffered=True)
-    #curB = cnx.cursor(buffered=True)
-    #curA.execute(cmd)
-    #for a in curA:
-        #print(a)
-     #   cmd = "use "+a[0]+";"
-     #   curB.execute(cmd)
-        #print("exec curb")
-        #print(curB)
-     #   cmd = 'select stable_id from gene where biotype="protein_coding" and source ="ensembl" and stable_id like "ENSG%" limit 2;'
-     #   curB.execute(cmd)
-     #   seen = set()
-     #   size =dict()
-     #   gene = dict()
-     #   parent = dict()
-     #   for b in curB:#tuples
-     #       for bb in b:
-     #           ext = "/feature/id/"+bb+"?feature=cds"
-     #           resp, content = http.request(server+ext, method="GET", headers={"Content-Type":"application/json"})
-     #           data = json.loads(content.decode("utf8"))
-     #           for f in data:
-     #               try:
-     #                   size[f["ID"]]+=f["end"]-f["start"]+1
-     #                   parent[bb].add(f["ID"])
-     #               except KeyError as e:
-     #                   size[f["ID"]]=f["end"]-f["start"]+1
-     #                   gene[f["ID"]]=bb
-     #               try:
-     #                   parent[bb].add(f["ID"])
-     #               except KeyError as e:
-     #                   parent[bb]=set()
-    #for g in parent:
-    #    for gg in parent[g]:
-    #        print(g,gg,size[gg] )
-    #        
-    #        #server = "http://beta.rest.ensembl.org"
-    #        ext = "/sequence/id/"+gg
-    #        resp1, content1 = http.request(server+ext, method="GET", headers={"Content-Type":"text/x-fasta"})
-    #        print(content1.decode("utf8"))
-    #        
-    #    ext = "/homology/id/"+g+"?format=condensed;type=orthologues;target_species="+targets[0]
-    #    resp2, content2 = http.request(server+ext, method="GET", headers={"Content-Type":"application/json"})
-    #        #if not resp.status == 200:
-    #        #print "Invalid response: ", resp.status
-    #        #sys.exit()
-    #        #import json
-# 
-#        decoded = json.loads(content2.decode("utf8"))
-#        
-#        for d in decoded["data"]:
-#            print(g,d["id"])
-
-  #ext = "/homology/id/ENSG00000157764?target_taxon=10090;sequence=cdna;target_species=cow;type=orthologues"
-            
-            
-            
-    #for g in gene:
-    #    print(g,gene[g],size[g] )
-   # curA.close()
-   # curB.close()
-  #  return (res)
-def main():
+        if(i+1<len(specs)):
+                getHomology(specs[i+1],specs[i],geneids, "./")
+def specInfo():
+    pass
     http = httplib2.Http(".cache") 
     server = "http://beta.rest.ensembl.org"
     ext = "/info/species"
     resp, content = http.request(server+ext, method="GET", headers={"Content-Type":"application/json"})
     data = json.loads(content.decode("utf8"))
-
-    specs =[]
-    rels = []
-    targets = []
+    return(data)
+def selectSpecies(data, namelist):
+    backupdct={}
+    specs = []
+    rels =[]
     for s in data["species"]:
         print(s["release"], s["name"], s["aliases"], s["groups"])
-        specs.append(s["name"])
-        rels.append(s["release"])
-    
-    
-    ind =[34]
-    specs = [specs[2],specs[34]]
+        if (s["name"] in namelist ):
+            specs.append(s["name"])
+            rels.append(s["release"])
+        else:
+            aliases = s["aliases"]
+            print(aliases)
+            #aliases = aliases.split(",")
+            found = [a for a in aliases if a in namelist]
+            if found:
+                specs.append(s["name"])
+                rels.append(s["release"])
+    return(specs, rels)
+def main():
+    namelist = ["bos taurus", "human", "chimp"]
+    data = specInfo()
+    specs, rels = selectSpecies(data, namelist)
     #for i in ind:
     #   tmp = ""
     useEnsemblDB(specs, rels)

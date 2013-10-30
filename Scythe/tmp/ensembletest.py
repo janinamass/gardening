@@ -21,11 +21,12 @@ def useEnsemblDB(spec,rel):
         curB.execute(cmd)
         print("exec curb")
         print(curB)
-        cmd = 'select stable_id from gene where biotype="protein_coding" and source ="ensembl" and stable_id like "ENSG%" limit 5;'
+        cmd = 'select stable_id from gene where biotype="protein_coding" and source ="ensembl" and stable_id like "ENSG%" limit 8;'
         curB.execute(cmd)
         seen = set()
         res=""
         prev=""
+        first=""
         cnt =0
         for b in curB:
             #print(b)
@@ -44,6 +45,7 @@ def useEnsemblDB(spec,rel):
                 for f in data:
                     if prev=="": # very first
                         prev=f["ID"]
+                        first = f["ID"]
                         #print("first",prev )
                         #size[f["ID"]]=f["end"]-f["start"]+1
                         #seen.add(f["ID"]) 
@@ -51,7 +53,8 @@ def useEnsemblDB(spec,rel):
                         #print("not yet seen",f["ID"],bb )
                         size[f["ID"]]=f["end"]-f["start"]+1
                         seen.add(f["ID"])        #print out last
-                        if prev in size: #previous existed
+                        if prev in size and prev != first: #previous existed
+                            
                             #print(bb,prev+"\t"+str(size[prev]))
                             #res +=bb,prev+"\t"+str(size[prev])+"\n"
                             res +="\t" .join([bb,prev,str(size[prev]),"\n"])
