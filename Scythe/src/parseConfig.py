@@ -9,7 +9,7 @@ from tkinter import Listbox
 import multiprocessing
 from scytheGUI_classes import ScytheConvertDialogLoc
 from scytheGUI_classes import ScytheConvertDialogGrp
-
+import scythe
 import ensembl 
 root=tk.Tk()
 root.title("Scythe GUI alpha")
@@ -636,6 +636,15 @@ class EnsemblSelector(tk.Listbox):
 
             print(selecteditemsspec, selecteditemsrel)
             return(selecteditemsspec, selecteditemsrel)
+#def callScythe(groups,delim,asID,faFileList,namesList, cleanUp, stopAfter=stopAfter, inDir=inDir, outDir=outDir,
+#              gapOpen=gapOpen, gapExtend=gapExtend,
+#              locDir=locDir,faDir=faDir):
+#    scythe.runScythe(groups=groups, delim=delim, 
+#              asID=asID, faFileList=faFileList, 
+#              namesList=namesList, cleanUp=cleanUp, 
+#              stopAfter=stopAfter, inDir=inDir, outDir=outDir,
+#              gapOpen=gapOpen, gapExtend=gapExtend,
+#              locDir=locDir,faDir=faDir)
 class ScytheWizard(tk.Tk):
     def __init__(self, parent):
         self.parent = parent     
@@ -643,13 +652,84 @@ class ScytheWizard(tk.Tk):
     def quit(self):
         root.destroy()
     def prepRun(self):
+        scythe.VERBOSE=False
+        #config = CURRENTCONFIG
         print("prep run called")
         #check whether ensembl or local is checked
+        useEnsembl= CURRENTCONFIG.get(CF_MODE, CF_MODE_use_ensembl)
+        useLocal = CURRENTCONFIG.get(CF_MODE, CF_MODE_use_local_files)
         #outdir to
         outdir = CURRENTCONFIG.get(CF_PATHS,CF_PATHS_output_directory)
         #catch unset outdir
-        ens = EnsemblSelector(outdir)
+        print(useEnsembl)
+        if useEnsembl == "yes":
+            ens = EnsemblSelector(outdir)
+        else:
+            print("Will't use ensembl")
+            if  useLocal == "yes":
+                fastaDir =  CURRENTCONFIG.get(CF_PATHS,CF_PATHS_fasta_directory)
+                locDir =  CURRENTCONFIG.get(CF_PATHS,CF_PATHS_loc_directory)
+                grpFile = CURRENTCONFIG.get(CF_PATHS,CF_PATHS_grp_file)
+                
+                print("Will use local files")
+                print(fastaDir,locDir,grpFile,outdir)
+                ################
+            if CURRENTCONFIG.get(CF_ALGORITHM,CF_ALGORITHM_use_global_max)!="yes":
+                scythe.GLOBMAX = False
+            else:
+                scythe.GLOBMAX = True
+            if CURRENTCONFIG.get(CF_ALGORITHM,CF_ALGORITHM_use_global_sum)!="yes":
+                scythe.GLOBSUM = False
+            else:
+                scythe.GLOBSUM = True
+    
+            if CURRENTCONFIG.get(CF_CLEANUP,CF_CLEANUP_clean_up_directories) !="yes":
+                cleanUp = False
+            else:
+                cleanUp = True
+    
+    
+        groups= CURRENTCONFIG.get(CF_PATHS,CF_PATHS_grp_file)
+        namesList = None
+        faDir = CURRENTCONFIG.get(CF_PATHS,CF_PATHS_fasta_directory)
+        inDir = faDir
+        outDir = CURRENTCONFIG.get(CF_PATHS,CF_PATHS_output_directory)
+        locDir = CURRENTCONFIG.get(CF_PATHS,CF_PATHS_loc_directory)
+        fastaList = os.listdir(faDir)
+        #gffList = None
+        delim = None
+        asID = 0
+        stopAfter = False
+        gapOpen= CURRENTCONFIG.get(CF_PENALTIES,CF_PENALTIES_gap_open_cost)
+        gapExtend =CURRENTCONFIG.get(CF_PENALTIES,CF_PENALTIES_gap_extend_cost)
+        faFileList = os.listdir(faDir)
+        namesList = os.listdir(faDir)
+        namesList = [n[0:3] for n in namesList]
         
+        
+        print(groups)
+        print(namesList)
+        print(gapOpen,gapExtend )
+        print(faDir, faFileList)
+        print("LODIR", locDir)
+        scythe.runScythe(groups=groups, delim=delim, 
+                  asID=asID, faFileList=faFileList, 
+                  namesList=namesList, cleanUp=cleanUp, 
+                  stopAfter=stopAfter, inDir=inDir, outDir=outDir,
+                  gapOpen=gapOpen, gapExtend=gapExtend,
+                  locDir=locDir,faDir=faDir)
+                    
+                    
+                
+                
+                ################
+            #scythe.runScythe(groups=groups, delim=delim, 
+            #  asID=asID, faFileList=faFileList, 
+            #  namesList=namesList, cleanUp=cleanUp, 
+            #  stopAfter=stopAfter, inDir=inDir, outDir=outDir,
+            #  gapOpen=gapOpen, gapExtend=gapExtend,
+            #  locDir=locDir,faDir=faDir)
+                
     def initWizard(self):
        
         #Labels
@@ -692,15 +772,8 @@ class ScytheWizard(tk.Tk):
         self.b_next = tk.Button(root, text="Next...", command = self.prepRun)
         self.b_quit = tk.Button(root, text="Quit", command = self.quit)
         ######
-        #self.b_convertOrtho = tk.Button(text="convert file to .grp")
-        #todo convert orthomcl, proteinortho, tabsep
-        #self.b_convertLoci = tk.Button(text="convert files to .loc")
-        #todo convert tabsep gff
-        #self.b_saveConfig = tk.Button(text='Save Config...')
-        #self.b_loadConfig = tk.Button(text='Load Config...')
-        #Button(master, text='Load Config...', command=None).grid(row=3, column=4, sticky=W, pady=0)
         
-        #ChechButtons
+        #Checkuttons
         self.cb_use_ensembl = tk.Checkbutton(root, text='use ENSEMBL',variable=self.int_ensembl,
                                          command=self.useEnsembl)
         self.cb_use_local = tk.Checkbutton(root, text='use local files',variable=self.int_local,
@@ -708,8 +781,6 @@ class ScytheWizard(tk.Tk):
 
        
         
-   #     self.ent_fastaDir = tk.Entry(root, width = 100, 
-   #                                  textvariable = self.st_fastaDir, state = tk.DISABLED).grid(row=3, column=0, sticky=W, pady=4)
         #add to grid
         self.cb_use_ensembl.grid(row=0, column=0 )
         self.cb_use_local.grid(row=0, column=1)
@@ -815,8 +886,7 @@ class ScytheWizard(tk.Tk):
         print(self.int_ensembl)
         print(self.ent_fastaDir)
         if self.int_ensembl.get() ==1:
-            print("True")
-            #self.st_fastaDir="none"
+        
             print("True", self.st_fastaDir)
             self.ent_fastaDir.config(state=tk.DISABLED)
             self.ent_locDir.config(state=tk.DISABLED)
@@ -832,53 +902,13 @@ class ScytheWizard(tk.Tk):
             self.ent_outDir.config(state=tk.DISABLED)
             CURRENTCONFIG.set("Mode", "use_local_files", "no")
             CURRENTCONFIG.set("Mode", "use_ensembl_api", "no")
-            #self.cb_use_local.config(state=tk.NORMAL)
 
-            #self.st_fastaDir="some"
-            #print("False", self.st_fastaDir,self.ent_fastaDir )
-            #self.ent_fastaDir.config(state=tk.NORMAL)
-            #self.ent_locDir.config(state=tk.NORMAL)
 
-            
-   # def useLocal(self):
-   #     if self.b_ensembl == 1:
-   #         self.ent.configure(state='disabled')
-   #     else:
-   #         self.ent.configure(state='normal')       
 
-#app=ScytheWizard()
+
 app=ScytheMenu(root)
-#ap=App()
+
 root.mainloop()
 
-#config = configparser.ConfigParser()
-#config.sections()
-#config.read('sampleconfig.scy')
-#print(config.sections())
-#global logger
-#logger = ""
-
-#master = Tk()
-#master.iconbitmap('@scy.xbm')
-#master.title("Scythe Wizard alpha")
-#master.geometry("300x300")
 
 
-#cb_use_ensembl= Checkbutton(master, text="Use Ensembl", variable=None).grid(row=0, column=1, sticky=W, pady=0)
-#cb_use_local = Checkbutton(master, text="Use local files", variable=None).grid(row=0, column=2, sticky=W, pady=0)
-
-#Label(master, text="Fasta Directory").grid(row=1,sticky=W, pady=0)
-#Label(master, text="Loc Directory").grid(row=2,sticky=W, pady=0)
-
-#e1 = Entry(master)
-#e2 = Entry(master)
-
-#e1.grid(row=1, column=1)
-#e2.grid(row=2, column=1)
-#Button(master, text='Quit', command=master.quit).grid(row=3, column=0, sticky=W, pady=4)
-#Button(master, text='Show', command=None).grid(row=3, column=1, sticky=W, pady=4)
-#Button(master, text='Save Config...', command=None).grid(row=3, column=3, sticky=W, pady=0)
-#Button(master, text='Load Config...', command=None).grid(row=3, column=4, sticky=W, pady=0)
-#Button(master, text='Dummy2', command=None).grid(row=3, column=5, sticky=W, pady=0)
-
-#master.mainloop()
