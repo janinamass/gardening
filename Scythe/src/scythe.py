@@ -30,7 +30,7 @@ def usage():
     """Print help."""
     print ("""
     ######################################
-    #  scythe.py v0.5a   [10/31/2013 JM] #
+    #  scythe.py v0.5b   [10/31/2013 JM] #
     ######################################
   usage:
      scythe.py -i DIR -g .grpFILE --cleanup

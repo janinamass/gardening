@@ -691,10 +691,10 @@ class ScytheWizard(tk.Tk):
     
         groups= CURRENTCONFIG.get(CF_PATHS,CF_PATHS_grp_file)
         namesList = None
-        faDir = CURRENTCONFIG.get(CF_PATHS,CF_PATHS_fasta_directory)
-        inDir = faDir
-        outDir = CURRENTCONFIG.get(CF_PATHS,CF_PATHS_output_directory)
-        locDir = CURRENTCONFIG.get(CF_PATHS,CF_PATHS_loc_directory)
+        faDir = CURRENTCONFIG.get(CF_PATHS,CF_PATHS_fasta_directory)+os.sep
+        inDir = faDir+os.sep
+        outDir = CURRENTCONFIG.get(CF_PATHS,CF_PATHS_output_directory)+os.sep
+        locDir = CURRENTCONFIG.get(CF_PATHS,CF_PATHS_loc_directory)+os.sep
         fastaList = os.listdir(faDir)
         #gffList = None
         delim = None
@@ -711,7 +711,7 @@ class ScytheWizard(tk.Tk):
         print(namesList)
         print(gapOpen,gapExtend )
         print(faDir, faFileList)
-        print("LODIR", locDir)
+        print("Loc", locDir)
         scythe.runScythe(groups=groups, delim=delim, 
                   asID=asID, faFileList=faFileList, 
                   namesList=namesList, cleanUp=cleanUp, 

@@ -79,7 +79,7 @@ def getGeneProteinRelation( outdir, specname, release):
         cmd = "use "+a[0]+";"
         print(cmd)
         curB.execute(cmd)
-        cmd = 'select stable_id from gene where biotype="protein_coding" and source ="ensembl" limit 400;'
+        cmd = 'select stable_id from gene where biotype="protein_coding" and source ="ensembl" limit 10;'
         curB.execute(cmd)
         path=outdir+os.sep+"ensembl_gene_tsv"
         if not os.path.isdir(path):

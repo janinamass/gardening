@@ -222,7 +222,7 @@ class ScytheConvertDialogLoc():
                 #outfile=outfolder+os.sep+t+".loc"
                 self.callConvertTsv(folder+os.sep+t, None)
         #mkdir 
-        locpath = self.mkdir(folder+os.sep+"loc")
+        locpath = self.mkdir(folder+os.sep+"loc"+os.sep)
         locfiles = []
         for f in os.listdir(folder):
             if f.endswith(".loc"):

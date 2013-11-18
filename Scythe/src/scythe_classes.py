@@ -1,4 +1,4 @@
-import re, sys, os, subprocess, string
+import re, sys, os, subprocess, string, random
 from gffFastaTools import FastaParser, FastaHelper, GFFParser
 #####################################
 # updated 04/18/2013 by J.Mass 		#
@@ -369,7 +369,14 @@ class ScytheFrame(object):
         self._sr = self._path+"/ScytheResults/"
         self._srfa = self._sr+"/fasta/"
         self._srofa = self._sr+"/orthogroups_fasta/"
-        self._fat = self._path+"/ScytheFastaTemp/"
+        ##########test for /dev/shm ######
+        rdev = self.testRamDev()
+        if rdev:
+        	self._fat = rdev
+        #no /dev/shm, mac os
+        else:
+         	self._fat = self._path+"/ScytheFastaTemp/"     	
+         	
     @property
     def path(self):
         return self._path
@@ -391,7 +398,19 @@ class ScytheFrame(object):
             os.makedirs(self._srofa)
         if not os.path.isdir(self._fat):
             os.makedirs(self._fat)
-   
+    def testRamDev(self):
+    	rand = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(2))
+    	ramdevpath = "/dev/shm/ScytheFastaTemp"+"_"+rand+"/"
+    	if not os.path.isdir("/dev/shm/"):
+    		return(False)
+    	if not os.path.isdir(ramdevpath):
+    		os.makedirs(ramdevpath)
+    	else:
+    		return(self.testRamDev())
+    	return(ramdevpath) 	
+    	
+    	
+    		
     def callNeedleAll(self, asequence, bsequence, outfile, gapOpen, gapExtend, aformat = "score", stype1="-sprotein1", stype2="-sprotein2" ,  stdout = False):
         """
         call 'needleall' from the emboss package 
