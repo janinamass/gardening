@@ -502,6 +502,7 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
                     task = frame.callNeedleAll(fileA, fileB, outfile = outfile,stdout=True, gapOpen=gapOpen, gapExtend=gapExtend)
                     fulldata = task.stdout.read()
                     assert task.wait() == 0
+                    task.stdout.close()
                 except AssertionError as ae:
                     print(ae)
                     data="#"
@@ -603,6 +604,9 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
                 outfiles[s.name].write(r[0][ok].toFasta())
                 outfilesGroups[R].write(r[0][ok].toFasta())
         cnt+=1
+        #####
+        #outfiles[s.name].close()
+        outfilesGroups[R].close()
     if cleanUp:
         annoy("# Cleaning up...")
         frame.cleanUp()
