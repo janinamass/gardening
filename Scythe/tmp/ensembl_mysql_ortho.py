@@ -143,7 +143,7 @@ def makeTable(genomeDB_ids, orthoSpec2stableIds, orthoIds):
 ### glob var ###
 SPECID = {}
 ################
-name2genomeDB_ids = getGenome_Db_Ids(["gorilla_gorilla", "pan_troglodytes", "homo_sapiens", "mus_musculus"],73)
+name2genomeDB_ids = getGenome_Db_Ids(["mus_musculus", "pan_troglodytes", "homo_sapiens"],73)
 for k,v in name2genomeDB_ids.items():
     SPECID[k] = v
     SPECID[v] = k[1:-1]

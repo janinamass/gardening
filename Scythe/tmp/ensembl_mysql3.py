@@ -102,7 +102,7 @@ def fetch1to1orthologs(method_link_species_set_ids,release = 73):
     cmd +="AND homology.method_link_species_set_id = method_link_species_set.method_link_species_set_id "
     cmd +="AND homology_member.member_id=member.member_id "
     cmd +="AND homology_member.homology_id=homology.homology_id "
-    cmd +=")LIMIT 300;"
+    cmd +=")"
 
     curA.execute(cmd)
     res = curA.fetchall()

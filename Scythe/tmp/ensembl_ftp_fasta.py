@@ -50,6 +50,6 @@ def xtract(cfile, outpath = "."):
     
 
 def main():
-    ensembl_ftp_fasta(release=73, specieslist=["homo_sapiens","mus_musculus"])
+    ensembl_ftp_fasta(release=73, specieslist=["homo_sapiens","mus_musculus","pan_troglodytes"])
 
 main()
