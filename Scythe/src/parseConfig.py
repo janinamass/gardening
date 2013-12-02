@@ -55,6 +55,14 @@ CF_ALGORITHM_use_default="use_default"
 CF_ALGORITHM_use_global_sum="use_global_sum"
 CF_PARALOGS="Paralogs"
 CF_PARALOGS_include_paralogs = "include_paralogs"
+###### TODO 02.12.13 #######
+CF_FASTAHEADER="Fasta_header"
+CF_FASTAHEADER_delimiter = "fasta_header_delimiter"
+CF_FASTAHEADER_part = "fasta_header_part"
+############################
+
+
+
 ##################options###########################
 OPTIONS = {}
 #dropdown menus
@@ -71,7 +79,7 @@ for o in [CF_PARALOGS_include_paralogs, CF_ALGORITHM_use_global_max,CF_ALGORITHM
 
 MAXCPU=multiprocessing.cpu_count
 ###################################################
-SECTIONS = [CF_MODE,CF_PATHS, CF_OUTPUT, CF_CLEANUP, CF_RUN, CF_PENALTIES,CF_ALGORITHM,CF_PARALOGS]
+SECTIONS = [CF_MODE,CF_PATHS, CF_OUTPUT, CF_CLEANUP, CF_RUN, CF_PENALTIES,CF_ALGORITHM,CF_PARALOGS, CF_FASTAHEADER]
 MAXCONFIG = configparser.ConfigParser()
 for i in SECTIONS:
     MAXCONFIG.add_section(i)
@@ -91,6 +99,8 @@ for i in [CF_ALGORITHM_use_global_max,CF_ALGORITHM_use_default,CF_ALGORITHM_use_
     MAXCONFIG.set(CF_ALGORITHM,i,"unset")
 for i in [CF_PARALOGS_include_paralogs  ]:
     MAXCONFIG.set(CF_PARALOGS,i,"unset")
+for i in [CF_FASTAHEADER_delimiter, CF_FASTAHEADER_part]:
+    MAXCONFIG.set(CF_FASTAHEADER,i,"unset")
 for i in MAXCONFIG.items():
     print(i)
 ######################################
@@ -201,7 +211,8 @@ class ScytheConfigEditor():
         fr_run = ttk.Frame(nb,width=200, height=100)
         fr_algorithm = ttk.Frame(nb,width=200, height=100)
         fr_paralogs = ttk.Frame(nb,width=200, height=100)
-        
+        fr_fastaheader = ttk.Frame(nb,width=200, height=100)
+
         #######labels########################
         self.txt_sec=[]
         self.txt_subsec={}
@@ -238,6 +249,10 @@ class ScytheConfigEditor():
                     fr = fr_algorithm
                 elif t == CF_PARALOGS:
                     fr = fr_paralogs
+                ############TODO################
+                elif t == CF_FASTAHEADER:
+                    fr = fr_fastaheader
+                ################################
                 else:
                     print("No such section:",t)
                 try:
@@ -280,11 +295,17 @@ class ScytheConfigEditor():
         self.st_submat = tk.StringVar()
         self.st_outpref = tk.StringVar()
         self.st_spliteach = tk.StringVar()
+        self.st_fasta_header_delimiter = tk.StringVar()
+        self.st_fasta_header_part = tk.StringVar()
+        
         self.sc_config_numthreads = Scale(fr_run, from_=1, to=multiprocessing.cpu_count(), orient=tk.HORIZONTAL)
         self.sc_config_numthreads.grid(row=0, column=1, sticky=tk.E)
         en_config_gapopen=tk.Entry(fr_penalties, textvariable=self.var_subsec[CF_PENALTIES][0])
         en_config_gapextend=tk.Entry(fr_penalties,textvariable=self.var_subsec[CF_PENALTIES][1] )
         self.en_config_spliteach=tk.Entry(fr_run,textvariable=self.st_spliteach,width=6 )
+        self.en_config_fasta_header_delimiter= tk.Entry(fr_fastaheader,textvariable=self.st_fasta_header_delimiter,width=6 )
+        self.en_config_fasta_header_part= tk.Entry(fr_fastaheader,textvariable=self.st_fasta_header_part ,width=6 )
+
 
         self.om_config_submat=tk.OptionMenu(fr_penalties, self.st_submat, *["EBLOSUM62","EDNAFULL"])
         self.om_config_submat.grid(row=2,column=1 )
@@ -294,6 +315,9 @@ class ScytheConfigEditor():
         #en_config_submat.grid(row=2, column=1)
         self.en_config_outpref.grid(row=1, column=1)
         self.en_config_spliteach.grid(row=2,column=1)
+        
+        self.en_config_fasta_header_delimiter.grid(row=0, column=1)
+        self.en_config_fasta_header_part.grid(row=1,column=1)
         #nb.add(fr_mode, text=CF_MODE)
         #nb.add(fr_paths, text=CF_PATHS)
         nb.add(fr_penalties, text=CF_PENALTIES)
@@ -302,7 +326,9 @@ class ScytheConfigEditor():
         nb.add(fr_run, text=CF_RUN)
         nb.add(fr_algorithm, text=CF_ALGORITHM)
         nb.add(fr_paralogs, text=CF_PARALOGS)
-
+        ###################TODO#################
+        nb.add(fr_fastaheader, text=CF_FASTAHEADER)
+        
         nb.grid()
         b_config_cancel.grid(row=1, column=0, sticky=tk.E,padx=115)
         b_config_apply.grid(row=1, column=0, sticky=tk.E,padx=50)
@@ -347,7 +373,7 @@ class ScytheConfigEditor():
             tempconf.set(CF_OUTPUT, self.txt_subsec[CF_OUTPUT][i], self.var_subsec[CF_OUTPUT][i].get())
         #outputprefix:
         tempconf.set(CF_OUTPUT,CF_OUTPUT_output_prefix,self.en_config_outpref.get())
-        
+        ########## TODO 02.12.13 ############
         print (self.en_config_outpref.get())
         
         
@@ -388,7 +414,8 @@ class ScytheConfigEditor():
         self.var_subsec[CF_ALGORITHM][2].set(CURRENTCONFIG.get(CF_ALGORITHM,self.txt_subsec[CF_ALGORITHM][2]))
         #paralogs
         self.var_subsec[CF_PARALOGS][0].set(CURRENTCONFIG.get(CF_PARALOGS,self.txt_subsec[CF_PARALOGS][0]))
-
+        #########TODO 02.12.13 ???
+        self.var_subsec[CF_FASTAHEADER][0].set(CURRENTCONFIG.get(CF_FASTAHEADER,self.txt_subsec[CF_FASTAHEADER][0]))
 
         
 
