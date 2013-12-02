@@ -83,17 +83,19 @@ def readTsvFiles(listoftsv, outfile):
                # print("add2")
         
     
-    for o in ortho.keys():
+    #for o in ortho.keys():
     #    print(o)
         #print(o,"+",ortho[o])
-        if len(ortho[o])>1:
-            print(o,ortho[o])         
+        #if len(ortho[o])>1:
+            #print(o,ortho[o])         
     #print(len(ortho.keys()))
     #print(len(seen))
+    cntr = 0
     for s in seen:
         if s not in done:
-            res+=s+"\t"+"\t".join(ortho[s])
+            res+=str(cntr)+"\t"+s+"\t"+"\t".join(ortho[s])
             res+="\n"
+            cntr+=1
             done.add(s)
             for d in ortho[s]:
                 done.add(s)
