@@ -100,8 +100,11 @@ def parseConfig(pathconfig):
     CF_ALGORITHM_use_global_sum="use_global_sum"
     CF_PARALOGS="Paralogs"
     CF_PARALOGS_include_paralogs = "include_paralogs"
-
-    
+    ###################todo 02.12.12 #############
+    CF_FASTAHEADER="Fasta_header"
+    CF_FASTAHEADER_delimiter = "fasta_header_delimiter"
+    CF_FASTAHEADER_part = "fasta_header_part"
+    ##############################################
 # SECTIONS
 # CF_MODE: CF_MODE_use_ensembl,CF_MODE_use_local_files
 # CF_PATHS: CF_PATHS_fasta_directory, CF_PATHS_loc_directory,CF_PATHS_grp_file,
@@ -145,7 +148,7 @@ def parseConfig(pathconfig):
     else:
         cleanUp = True
     
-    
+   ####TODO delimiter, asID from Config file ### 
     groups= config.get(CF_PATHS,CF_PATHS_grp_file)
     namesList = None
     faDir = config.get(CF_PATHS,CF_PATHS_fasta_directory)
@@ -154,8 +157,8 @@ def parseConfig(pathconfig):
     locDir = config.get(CF_PATHS,CF_PATHS_loc_directory)
     fastaList = os.listdir(faDir)
     #gffList = None
-    delim = None
-    asID = 0
+    delim = config.get(CF_FASTAHEADER,CF_FASTAHEADER_delimiter)
+    asID = int(config.get(CF_FASTAHEADER,CF_FASTAHEADER_part))
     stopAfter = False
     gapOpen= config.get(CF_PENALTIES,CF_PENALTIES_gap_open_cost)
     gapExtend =config.get(CF_PENALTIES,CF_PENALTIES_gap_extend_cost)
@@ -163,13 +166,13 @@ def parseConfig(pathconfig):
     namesList = os.listdir(faDir)
     namesList = [n[0:3] for n in namesList]
     
-    
+    print(delim,"DELIMITER", asID)
     print(groups)
     print(namesList)
     print(gapOpen,gapExtend )
     print(faDir, faFileList)
     print("LODIR", locDir)
-    runScythe(groups=groups, delim=delim, 
+    runScythe(groups=groups, delim=delim.strip('"'), 
               asID=asID, faFileList=faFileList, 
               namesList=namesList, cleanUp=cleanUp, 
               stopAfter=stopAfter, inDir=inDir, outDir=outDir,
@@ -525,6 +528,7 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
             yield(algo(avd, seqDct, singles, allSpec, defaultForms),str(g))
 
 def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, inDir, outDir, gapOpen, gapExtend, locDir=None, faDir=None):
+    print(delim,"rsDELIMITER", asID)
     stopAfter=int(stopAfter)
     specsList = []
     grpMapList = []
@@ -536,7 +540,6 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
     if groups:
         if locDir:
             locfl = [locDir+x for x in locFileList]
-            print(locfl,"locdl")
         else:
             locfl = [inDir+"/loc/"+x for x in locFileList]
         dct = GrpParser().groupDct(groups, locf=locfl)
@@ -630,7 +633,7 @@ def main():
     outDir = "./"
     fastaList = None
     gffList = None
-    delim = None
+    delim = None 
     asID = 0
     stopAfter = False
     gapOpen=str(10)
