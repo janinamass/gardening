@@ -440,7 +440,10 @@ class ScytheFrame(object):
                                                                             gapExtend
                                                                             )
         print(cmd)
-        ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+        ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, close_fds=True)
+        
+        retval = ret.wait()
+        #ret.stdout.close()
         return(ret)
     
     #----------------------------------------------#
