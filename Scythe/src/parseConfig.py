@@ -1,3 +1,7 @@
+#todo:
+#update config on next click
+#spawn new thread for actual program (w/ cancel possibility)
+
 import tkinter as tk
 import configparser
 from tkinter import filedialog
@@ -32,19 +36,19 @@ CF_PATHS_fasta_directory = "fasta_directory"
 CF_PATHS_loc_directory = "loc_directory"
 CF_PATHS_grp_file = "grp_file"
 CF_PATHS_output_directory = "output_directory"
-CF_OUTPUT ="Output"
-CF_OUTPUT_attach_output_prefix="attach_output_prefix"
-CF_OUTPUT_output_prefix="output_prefix"
-CF_OUTPUT_output_orthogroups = "output_orthogroups"
-CF_OUTPUT_output_species_fasta = "output_species_fasta"
-CF_OUTPUT_merge_species_fasta_with_defaults = "merge_species_fasta_with_defaults"
+#CF_OUTPUT ="Output"
+#CF_OUTPUT_attach_output_prefix="attach_output_prefix"
+#CF_OUTPUT_output_prefix="output_prefix"
+#CF_OUTPUT_output_orthogroups = "output_orthogroups"
+#CF_OUTPUT_output_species_fasta = "output_species_fasta"
+#CF_OUTPUT_merge_species_fasta_with_defaults = "merge_species_fasta_with_defaults"
 CF_CLEANUP = "Cleanup"
 CF_CLEANUP_clean_up_directories = "clean_up_directories"
 CF_RUN="Run_options"
 CF_RUN_max_threads ="max_threads"
 CF_RUN_split_input="split_input"
-CF_RUN_split_each="split_each"
-CF_RUN_use_seqan="use_seqan"
+#CF_RUN_split_each="split_each"
+#CF_RUN_use_seqan="use_seqan"
 CF_PENALTIES = "Penalties"
 CF_PENALTIES_gap_open_cost = "gap_open_cost"
 CF_PENALTIES_gap_extend_cost="gap_extend_cost"
@@ -68,18 +72,16 @@ OPTIONS = {}
 #dropdown menus
 yn =["yes","no"]
 for o in [CF_PARALOGS_include_paralogs, CF_ALGORITHM_use_global_max,CF_ALGORITHM_use_default,
-          CF_ALGORITHM_use_global_sum, CF_RUN_use_seqan, CF_RUN_split_input, CF_CLEANUP_clean_up_directories,
-          CF_OUTPUT_merge_species_fasta_with_defaults, CF_OUTPUT_output_species_fasta, CF_OUTPUT_output_orthogroups,
-          CF_OUTPUT_attach_output_prefix,CF_MODE_use_local_files,CF_MODE_use_ensembl]:
+          CF_ALGORITHM_use_global_sum,CF_RUN_split_input, CF_CLEANUP_clean_up_directories,
+          CF_MODE_use_local_files,CF_MODE_use_ensembl]:
     OPTIONS[o]=yn
 
-#PENALTIES:int entry
-#PENALTIES:str entry
+
 
 
 MAXCPU=multiprocessing.cpu_count
 ###################################################
-SECTIONS = [CF_MODE,CF_PATHS, CF_OUTPUT, CF_CLEANUP, CF_RUN, CF_PENALTIES,CF_ALGORITHM,CF_PARALOGS, CF_FASTAHEADER]
+SECTIONS = [CF_MODE,CF_PATHS, CF_CLEANUP, CF_RUN, CF_PENALTIES,CF_ALGORITHM,CF_PARALOGS, CF_FASTAHEADER]
 MAXCONFIG = configparser.ConfigParser()
 for i in SECTIONS:
     MAXCONFIG.add_section(i)
@@ -87,11 +89,11 @@ for i in [CF_MODE_use_ensembl,CF_MODE_use_local_files]:
     MAXCONFIG.set(CF_MODE,i,"unset")
 for i in [CF_PATHS_fasta_directory,CF_PATHS_loc_directory,CF_PATHS_grp_file,CF_PATHS_output_directory ]:
     MAXCONFIG.set(CF_PATHS,i,"unset")
-for i in [CF_OUTPUT_attach_output_prefix,CF_OUTPUT_output_prefix,CF_OUTPUT_output_orthogroups,CF_OUTPUT_output_species_fasta,CF_OUTPUT_merge_species_fasta_with_defaults ]:
-    MAXCONFIG.set(CF_OUTPUT,i,"unset")
+#for i in [CF_OUTPUT_attach_output_prefix,CF_OUTPUT_output_prefix,CF_OUTPUT_output_orthogroups,CF_OUTPUT_output_species_fasta,CF_OUTPUT_merge_species_fasta_with_defaults ]:
+#    MAXCONFIG.set(CF_OUTPUT,i,"unset")
 for i in [CF_CLEANUP_clean_up_directories]:
     MAXCONFIG.set(CF_CLEANUP,i,"unset")
-for i in [CF_RUN_max_threads,CF_RUN_split_input,CF_RUN_split_each,CF_RUN_use_seqan]:
+for i in [CF_RUN_max_threads,CF_RUN_split_input]:
     MAXCONFIG.set(CF_RUN,i,"unset")
 for i in [CF_PENALTIES_gap_open_cost,CF_PENALTIES_gap_extend_cost,CF_PENALTIES_substitution_matrix]:
     MAXCONFIG.set(CF_PENALTIES,i,"unset")
@@ -206,7 +208,7 @@ class ScytheConfigEditor():
         fr_paths = tk.Frame(nb,width=200, height=100)
         fr_penalties = tk.Frame(nb,width=200, height=100)
         fr_mode = ttk.Frame(nb,width=200, height=100)
-        fr_output = ttk.Frame(nb,width=200, height=100)
+        #fr_output = ttk.Frame(nb,width=200, height=100)
         fr_cleanup = ttk.Frame(nb,width=200, height=100)
         fr_run = ttk.Frame(nb,width=200, height=100)
         fr_algorithm = ttk.Frame(nb,width=200, height=100)
@@ -237,8 +239,8 @@ class ScytheConfigEditor():
                     fr = fr_mode
                 elif t == CF_PATHS:
                     fr = fr_paths
-                elif t == CF_OUTPUT:
-                    fr = fr_output
+                #elif t == CF_OUTPUT:
+                #    fr = fr_output
                 elif t == CF_CLEANUP:
                     fr = fr_cleanup
                 elif t == CF_RUN:
@@ -293,8 +295,8 @@ class ScytheConfigEditor():
                 print(r)
         ######################################
         self.st_submat = tk.StringVar()
-        self.st_outpref = tk.StringVar()
-        self.st_spliteach = tk.StringVar()
+        #self.st_outpref = tk.StringVar()
+        #self.st_spliteach = tk.StringVar()
         self.st_fasta_header_delimiter = tk.StringVar()
         self.st_fasta_header_part = tk.StringVar()
         
@@ -302,30 +304,30 @@ class ScytheConfigEditor():
         self.sc_config_numthreads.grid(row=0, column=1, sticky=tk.E)
         en_config_gapopen=tk.Entry(fr_penalties, textvariable=self.var_subsec[CF_PENALTIES][0])
         en_config_gapextend=tk.Entry(fr_penalties,textvariable=self.var_subsec[CF_PENALTIES][1] )
-        self.en_config_spliteach=tk.Entry(fr_run,textvariable=self.st_spliteach,width=6 )
+        #self.en_config_spliteach=tk.Entry(fr_run,textvariable=self.st_spliteach,width=6 )
         self.en_config_fasta_header_delimiter= tk.Entry(fr_fastaheader,textvariable=self.st_fasta_header_delimiter,width=6 )
         self.en_config_fasta_header_part= tk.Entry(fr_fastaheader,textvariable=self.st_fasta_header_part ,width=6 )
 
 
         self.om_config_submat=tk.OptionMenu(fr_penalties, self.st_submat, *["EBLOSUM62","EDNAFULL"])
         self.om_config_submat.grid(row=2,column=1 )
-        self.en_config_outpref=tk.Entry(fr_output, width=6, textvariable=self.st_outpref)
+        #self.en_config_outpref=tk.Entry(fr_output, width=6, textvariable=self.st_outpref)
         en_config_gapopen.grid(row=0, column=1)
         en_config_gapextend.grid(row=1, column=1)
         #en_config_submat.grid(row=2, column=1)
-        self.en_config_outpref.grid(row=1, column=1)
-        self.en_config_spliteach.grid(row=2,column=1)
+        #self.en_config_outpref.grid(row=1, column=1)
+        #self.en_config_spliteach.grid(row=2,column=1)
         
         self.en_config_fasta_header_delimiter.grid(row=0, column=1)
         self.en_config_fasta_header_part.grid(row=1,column=1)
         #nb.add(fr_mode, text=CF_MODE)
         #nb.add(fr_paths, text=CF_PATHS)
         nb.add(fr_penalties, text=CF_PENALTIES)
-        nb.add(fr_output, text=CF_OUTPUT)
+        #nb.add(fr_output, text=CF_OUTPUT)
         nb.add(fr_cleanup, text=CF_CLEANUP)
         nb.add(fr_run, text=CF_RUN)
         nb.add(fr_algorithm, text=CF_ALGORITHM)
-        nb.add(fr_paralogs, text=CF_PARALOGS)
+        #nb.add(fr_paralogs, text=CF_PARALOGS)
         ###################TODO#################
         nb.add(fr_fastaheader, text=CF_FASTAHEADER)
         
@@ -361,20 +363,20 @@ class ScytheConfigEditor():
         tempconf.set(CF_ALGORITHM, CF_ALGORITHM_use_global_max,self.var_subsec[CF_ALGORITHM][0].get())
         tempconf.set(CF_ALGORITHM, CF_ALGORITHM_use_default,self.var_subsec[CF_ALGORITHM ][1].get())
         tempconf.set(CF_ALGORITHM, CF_ALGORITHM_use_global_sum,self.var_subsec[CF_ALGORITHM][2].get())
-        tempconf.set(CF_PARALOGS, CF_PARALOGS_include_paralogs,self.var_subsec[CF_PARALOGS][0].get())
+        #tempconf.set(CF_PARALOGS, CF_PARALOGS_include_paralogs,self.var_subsec[CF_PARALOGS][0].get())
         tempconf.set(CF_RUN, CF_RUN_max_threads,str(self.sc_config_numthreads.get()))
         tempconf.set(CF_RUN, CF_RUN_split_input, self.var_subsec[CF_RUN][1].get())
-        tempconf.set(CF_RUN, CF_RUN_split_each, self.en_config_spliteach.get())
-        tempconf.set(CF_RUN, CF_RUN_use_seqan, self.var_subsec[CF_RUN][3].get())
+        #tempconf.set(CF_RUN, CF_RUN_split_each, self.en_config_spliteach.get())
+        #tempconf.set(CF_RUN, CF_RUN_use_seqan, self.var_subsec[CF_RUN][3].get())
         #CLEANUP
         tempconf.set(CF_CLEANUP, CF_CLEANUP_clean_up_directories, self.var_subsec[CF_CLEANUP][0].get())
         #output
-        for i in range(0, len(self.txt_subsec[CF_OUTPUT])):
-            tempconf.set(CF_OUTPUT, self.txt_subsec[CF_OUTPUT][i], self.var_subsec[CF_OUTPUT][i].get())
+        #for i in range(0, len(self.txt_subsec[CF_OUTPUT])):
+         #   tempconf.set(CF_OUTPUT, self.txt_subsec[CF_OUTPUT][i], self.var_subsec[CF_OUTPUT][i].get())
         #outputprefix:
-        tempconf.set(CF_OUTPUT,CF_OUTPUT_output_prefix,self.en_config_outpref.get())
+        #tempconf.set(CF_OUTPUT,CF_OUTPUT_output_prefix,self.en_config_outpref.get())
         ########## TODO 02.12.13 ############
-        print (self.en_config_outpref.get())
+        #print (self.en_config_outpref.get())
         
         
         #self.var_subsec[CF_PENALTIES][0].set(CURRENTCONFIG.get(CF_PENALTIES,self.txt_subsec[CF_PENALTIES][0]))
@@ -396,18 +398,18 @@ class ScytheConfigEditor():
         self.var_subsec[CF_PENALTIES][1].set(CURRENTCONFIG.get(CF_PENALTIES,self.txt_subsec[CF_PENALTIES][1]))
         self.st_submat.set(CURRENTCONFIG.get(CF_PENALTIES, CF_PENALTIES_substitution_matrix))
         #output
-        self.var_subsec[CF_OUTPUT][0].set(CURRENTCONFIG.get(CF_OUTPUT,self.txt_subsec[CF_OUTPUT][0]))
-        self.st_outpref.set(CURRENTCONFIG.get(CF_OUTPUT,CF_OUTPUT_output_prefix))
-        self.var_subsec[CF_OUTPUT][2].set(CURRENTCONFIG.get(CF_OUTPUT,self.txt_subsec[CF_OUTPUT][2]))
-        self.var_subsec[CF_OUTPUT][3].set(CURRENTCONFIG.get(CF_OUTPUT,self.txt_subsec[CF_OUTPUT][3]))
-        self.var_subsec[CF_OUTPUT][4].set(CURRENTCONFIG.get(CF_OUTPUT,self.txt_subsec[CF_OUTPUT][4]))
+        #self.var_subsec[CF_OUTPUT][0].set(CURRENTCONFIG.get(CF_OUTPUT,self.txt_subsec[CF_OUTPUT][0]))
+        #self.st_outpref.set(CURRENTCONFIG.get(CF_OUTPUT,CF_OUTPUT_output_prefix))
+        #self.var_subsec[CF_OUTPUT][2].set(CURRENTCONFIG.get(CF_OUTPUT,self.txt_subsec[CF_OUTPUT][2]))
+        #self.var_subsec[CF_OUTPUT][3].set(CURRENTCONFIG.get(CF_OUTPUT,self.txt_subsec[CF_OUTPUT][3]))
+        #self.var_subsec[CF_OUTPUT][4].set(CURRENTCONFIG.get(CF_OUTPUT,self.txt_subsec[CF_OUTPUT][4]))
         #cleanup
         self.var_subsec[CF_CLEANUP][0].set(CURRENTCONFIG.get(CF_CLEANUP,self.txt_subsec[CF_CLEANUP][0]))
         #run
         #slider
         self.var_subsec[CF_RUN][1].set(CURRENTCONFIG.get(CF_RUN,self.txt_subsec[CF_RUN][1]))
-        self.st_spliteach.set(CURRENTCONFIG.get(CF_RUN,CF_RUN_split_each ))
-        self.var_subsec[CF_RUN][3].set(CURRENTCONFIG.get(CF_RUN,self.txt_subsec[CF_RUN][3]))
+        #self.st_spliteach.set(CURRENTCONFIG.get(CF_RUN,CF_RUN_split_each ))
+        #self.var_subsec[CF_RUN][3].set(CURRENTCONFIG.get(CF_RUN,self.txt_subsec[CF_RUN][3]))
         #algo
         self.var_subsec[CF_ALGORITHM][0].set(CURRENTCONFIG.get(CF_ALGORITHM,self.txt_subsec[CF_ALGORITHM][0]))
         self.var_subsec[CF_ALGORITHM][1].set(CURRENTCONFIG.get(CF_ALGORITHM,self.txt_subsec[CF_ALGORITHM][1]))
@@ -678,6 +680,7 @@ class ScytheWizard(tk.Tk):
         self.initWizard()
     def quit(self):
         root.destroy()
+    
     def prepRun(self):
         scythe.VERBOSE=False
         #config = CURRENTCONFIG
@@ -692,7 +695,7 @@ class ScytheWizard(tk.Tk):
         if useEnsembl == "yes":
             ens = EnsemblSelector(outdir)
         else:
-            print("Will't use ensembl")
+            
             if  useLocal == "yes":
                 fastaDir =  CURRENTCONFIG.get(CF_PATHS,CF_PATHS_fasta_directory)
                 locDir =  CURRENTCONFIG.get(CF_PATHS,CF_PATHS_loc_directory)
@@ -724,8 +727,8 @@ class ScytheWizard(tk.Tk):
         locDir = CURRENTCONFIG.get(CF_PATHS,CF_PATHS_loc_directory)+os.sep
         fastaList = os.listdir(faDir)
         #gffList = None
-        delim = None
-        asID = 0
+        delim = CURRENTCONFIG.get(CF_FASTAHEADER,CF_FASTAHEADER_delimiter).strip('"')
+        asID = int(CURRENTCONFIG.get(CF_FASTAHEADER,CF_FASTAHEADER_part))
         stopAfter = False
         gapOpen= CURRENTCONFIG.get(CF_PENALTIES,CF_PENALTIES_gap_open_cost)
         gapExtend =CURRENTCONFIG.get(CF_PENALTIES,CF_PENALTIES_gap_extend_cost)
@@ -739,12 +742,21 @@ class ScytheWizard(tk.Tk):
         print(gapOpen,gapExtend )
         print(faDir, faFileList)
         print("Loc", locDir)
-        scythe.runScythe(groups=groups, delim=delim, 
-                  asID=asID, faFileList=faFileList, 
-                  namesList=namesList, cleanUp=cleanUp, 
-                  stopAfter=stopAfter, inDir=inDir, outDir=outDir,
-                  gapOpen=gapOpen, gapExtend=gapExtend,
-                  locDir=locDir,faDir=faDir)
+        
+        ##run scythe
+        #order matters for argument list
+        p = multiprocessing.Process(target=scythe.runScythe,args=[groups,delim,asID,namesList,cleanUp,stopAfter,faFileList,inDir,outDir,gapOpen, gapExtend,locDir,faDir])
+
+        p.start()
+        print (p, p.is_alive())
+
+        #threads.append(p)
+        #scythe.runScythe(groups=groups, delim=delim, 
+        #          asID=asID, faFileList=faFileList, 
+        #          namesList=namesList, cleanUp=cleanUp, 
+        #          stopAfter=stopAfter, inDir=inDir, outDir=outDir,
+        #          gapOpen=gapOpen, gapExtend=gapExtend,
+        #          locDir=locDir,faDir=faDir)
                     
                     
                 
