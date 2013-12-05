@@ -441,8 +441,8 @@ class ScytheFrame(object):
                                                                             )
         print(cmd)
         ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, close_fds=True)
-        
-        retval = ret.wait()
+        print("RET arrived")
+        #retval = ret.wait()
         #ret.stdout.close()
         return(ret)
     
