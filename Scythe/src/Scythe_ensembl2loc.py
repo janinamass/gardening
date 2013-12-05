@@ -41,10 +41,10 @@ for o, a in opts:
         lengthsfile = a
     else:
         assert False, "unhandled option"
-
-if not ensemblLoc:
-    usage()
-if not outfile:
+def main():
+    if not ensemblLoc:
+        usage()
+    if not outfile:
         outfile = ensemblLoc+".loc"
 ########################################
 def pfloat(float):
@@ -73,63 +73,68 @@ def readLength(lengthfile):
             print("Warning,less than 3 columns is that right:transcript: ",trid," length:"+length+" ?\n")
             lenDct[trid]=int(length)
     return (lenDct)
-def main():
-    def readEnsemblLoc(ensembleLoc, outfile, lenDct=None):
-        out=open(outfile,"w")
-        infile = open(ensembleLoc,"r")
-        numLoc = 0
-        numTr = 0
-        locDct = {}
-        maxDct = {} #max length of transcript at locus
-        longestTr = {}
-        missing = False
-        for l in infile:
-            if "Ensembl" in l:
-                continue
-            l = l.strip()
-            tmp = l.split("\t")
-            if tmp[0] not in locDct:
-                numLoc+=1
-                numTr+=1
-                locDct[tmp[0]]=[tmp[1]]
-            else:
-                numTr+=1
-                locDct[tmp[0]].append(tmp[1])
-        
-        if lenDct:
-            for l,tr in locDct.items():
-                try:
-                    maxDct[l] = max([lenDct[i] for i in tr])
-                except KeyError as ke:
-                    tmp=[]
-                    missing = True
-                    for i in tr:
-                        if i in lenDct:
-                            tmp.append(i)
-                        else: 
-                            lenDct[i]=0
-                            tmp.append(i)
-                    maxDct[l] = max([lenDct[i] for i in tmp])
-                    if not maxDct[l]:
-                        #last resort
-                        maxDct[l]=tr[0]
-                longestTr[l]=[t for t in tr if lenDct[t] == maxDct[l]]
-                #print(longestTr[l])
-                longestTr[l] = longestTr[l][0]
-            locDct2 = locDct.copy()
-            for loc,tr in locDct2.items():#rm
-                locDct[loc] = [t for t in tr if t != longestTr[loc]]
-            for loc,tr in locDct.items():
-                out.write(loc+"\t"+longestTr[loc]+"\t"+"\t".join(tr)+"\n")
-            if missing:
-                print("# There were missing lengths\n")
+
+
+def readEnsemblLoc(ensembleLoc, outfile, lenDct=None):
+    if ensembleLoc is None:
+        print(outfile)
+        return (-1)
+    print("readEnsemblLoc", ensembleLoc)
+    out=open(outfile,"w")
+    infile = open(ensembleLoc,"r")
+    numLoc = 0
+    numTr = 0
+    locDct = {}
+    maxDct = {} #max length of transcript at locus
+    longestTr = {}
+    missing = False
+    for l in infile:
+        if "Ensembl" in l:
+            continue
+        l = l.strip()
+        tmp = l.split("\t")
+        if tmp[0] not in locDct:
+            numLoc+=1
+            numTr+=1
+            locDct[tmp[0]]=[tmp[1]]
+        else:
+            numTr+=1
+            locDct[tmp[0]].append(tmp[1])
     
-        else: #no lengths given 
-            for loc,tr in locDct.items():
-                out.write(loc+"\t"+"\t".join(tr)+"\n")
-        out.close()
-        printInfo(numLoc=numLoc, numTr=numTr, outfile=outfile, verb=VERB)
-    
+    if lenDct:
+        for l,tr in locDct.items():
+            try:
+                maxDct[l] = max([lenDct[i] for i in tr])
+            except KeyError as ke:
+                tmp=[]
+                missing = True
+                for i in tr:
+                    if i in lenDct:
+                        tmp.append(i)
+                    else: 
+                        lenDct[i]=0
+                        tmp.append(i)
+                maxDct[l] = max([lenDct[i] for i in tmp])
+                if not maxDct[l]:
+                    #last resort
+                    maxDct[l]=tr[0]
+            longestTr[l]=[t for t in tr if lenDct[t] == maxDct[l]]
+            #print(longestTr[l])
+            longestTr[l] = longestTr[l][0]
+        locDct2 = locDct.copy()
+        for loc,tr in locDct2.items():#rm
+            locDct[loc] = [t for t in tr if t != longestTr[loc]]
+        for loc,tr in locDct.items():
+            out.write(loc+"\t"+longestTr[loc]+"\t"+"\t".join(tr)+"\n")
+        if missing:
+            print("# There were missing lengths\n")
+
+    else: #no lengths given 
+        for loc,tr in locDct.items():
+            out.write(loc+"\t"+"\t".join(tr)+"\n")
+    out.close()
+    printInfo(numLoc=numLoc, numTr=numTr, outfile=outfile, verb=VERB)
+
     if lengthsfile:
        ldct = readLength(lengthsfile)
        readEnsemblLoc(ensemblLoc,outfile,ldct)

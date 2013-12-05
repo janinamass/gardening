@@ -6,8 +6,9 @@ import os
 import glob
 import getopt
 from itertools import chain
+import configparser
 
-path = os.path.join(os.path.dirname(__file__), '../BioHelpers/*.py')
+path = os.path.join(os.path.dirname(__file__), 'BioHelpers/*.py')
 #-- import from BioHelpers --#
 for infile in glob.glob(path):
     fullbasename = os.path.basename(infile)
@@ -29,12 +30,17 @@ def usage():
     """Print help."""
     print ("""
     ######################################
-    #  scythe.py v0.3a   [04/21/2013 JM] #
+    #  scythe.py v0.5b   [10/31/2013 JM] #
     ######################################
   usage:
      scythe.py -i DIR -g .grpFILE --cleanup
+     
+  usage with configuration file:
+     scythe.py --config configuration.scy
 
   general options:  
+    -C, --config                     use configuration file instead of
+                                     command line parameters
     -c, --cleanup                    remove temporary files when done
     -h, --help                       prints this
     -i, --in_dir=DIR                 folder w/ subfolder "fa" and "loc"
@@ -59,6 +65,124 @@ def usage():
     """)
     sys.exit(2)
 #-----/usage------#
+
+#----parse configuration----#
+def parseConfig(pathconfig):
+    VERBOSE =False
+    CF_MODE = "Mode"
+    CF_MODE_use_ensembl = "use_ensembl_api"
+    CF_MODE_use_local_files = "use_local_files"
+    CF_PATHS = "Paths"
+    CF_PATHS_fasta_directory = "fasta_directory"
+    CF_PATHS_loc_directory = "loc_directory"
+    CF_PATHS_grp_file = "grp_file"
+    CF_PATHS_output_directory = "output_directory"
+    CF_OUTPUT ="Output"
+    CF_OUTPUT_attach_output_prefix="attach_output_prefix"
+    CF_OUTPUT_output_prefix="output_prefix"
+    CF_OUTPUT_output_orthogroups = "output_orthogroups"
+    CF_OUTPUT_output_species_fasta = "output_species_fasta"
+    CF_OUTPUT_merge_species_fasta_with_defaults = "merge_species_fasta_with_defaults"
+    CF_CLEANUP = "Cleanup"
+    CF_CLEANUP_clean_up_directories = "clean_up_directories"
+    CF_RUN="Run_options"
+    CF_RUN_max_threads ="max_threads"
+    CF_RUN_split_input="split_input"
+    CF_RUN_split_each="split_each"
+    CF_RUN_use_seqan="use_seqan"
+    CF_PENALTIES = "Penalties"
+    CF_PENALTIES_gap_open_cost = "gap_open_cost"
+    CF_PENALTIES_gap_extend_cost="gap_extend_cost"
+    CF_PENALTIES_substitution_matrix="substitution_matrix"
+    CF_ALGORITHM = "Algorithm"
+    CF_ALGORITHM_use_global_max ="use_global_max"
+    CF_ALGORITHM_use_default="use_default"
+    CF_ALGORITHM_use_global_sum="use_global_sum"
+    CF_PARALOGS="Paralogs"
+    CF_PARALOGS_include_paralogs = "include_paralogs"
+    ###################todo 02.12.12 #############
+    CF_FASTAHEADER="Fasta_header"
+    CF_FASTAHEADER_delimiter = "fasta_header_delimiter"
+    CF_FASTAHEADER_part = "fasta_header_part"
+    ##############################################
+# SECTIONS
+# CF_MODE: CF_MODE_use_ensembl,CF_MODE_use_local_files
+# CF_PATHS: CF_PATHS_fasta_directory, CF_PATHS_loc_directory,CF_PATHS_grp_file,
+#       CF_PATHS_output_directory
+# CF_OUTPUT: CF_OUTPUT_attach_output_prefix, CF_OUTPUT_output_prefix,
+#     CF_OUTPUT_output_orthogroups, CF_OUTPUT_output_species_fasta
+#     CF_OUTPUT_merge_species_fasta_with_defaults
+# CF_CLEANUP: CF_CLEANUP_clean_up_directories
+# CF_RUN: CF_RUN_max_threads, CF_RUN_split_input,CF_RUN_split_each,
+#    CF_RUN_use_seqan
+# CF_PENALTIES: CF_PENALTIES_gap_open_cost, CF_PENALTIES_gap_extend_cost
+#    CF_PENALTIES_substitution_matrix
+# CF_ALGORITHM: CF_ALGORITHM_use_global_max,CF_ALGORITHM_use_default,
+#     CF_ALGORITHM_use_global_sum 
+# CF_PARALOGS:[CF_PARALOGS_include_paralogs  ]:
+  
+    config = configparser.ConfigParser()
+    print(config.sections())
+    print(pathconfig)
+    config.read(pathconfig)
+    print(config.sections())
+    print(config.sections())
+    for c in config:
+        print(c)
+   # print(config)
+    #global VERBOSE
+    global GLOBMAX
+    global GLOBSUM 
+    #VERBOSE = None
+    if config.get(CF_ALGORITHM,CF_ALGORITHM_use_global_max)!="yes":
+        GLOBMAX = False
+    else:
+         GLOBMAX = True
+    if config.get(CF_ALGORITHM,CF_ALGORITHM_use_global_sum)!="yes":
+        GLOBSUM = False
+    else:
+        GLOBSUM = True
+    
+    if config.get(CF_CLEANUP,CF_CLEANUP_clean_up_directories) !="yes":
+        cleanUp = False
+    else:
+        cleanUp = True
+    
+   ####TODO delimiter, asID from Config file ### 
+    groups= config.get(CF_PATHS,CF_PATHS_grp_file)
+    namesList = None
+    faDir = config.get(CF_PATHS,CF_PATHS_fasta_directory)
+    inDir = faDir
+    outDir = config.get(CF_PATHS,CF_PATHS_output_directory)
+    locDir = config.get(CF_PATHS,CF_PATHS_loc_directory)
+    fastaList = os.listdir(faDir)
+    #gffList = None
+    delim = config.get(CF_FASTAHEADER,CF_FASTAHEADER_delimiter)
+    asID = int(config.get(CF_FASTAHEADER,CF_FASTAHEADER_part))
+    stopAfter = False
+    gapOpen= config.get(CF_PENALTIES,CF_PENALTIES_gap_open_cost)
+    gapExtend =config.get(CF_PENALTIES,CF_PENALTIES_gap_extend_cost)
+    faFileList = os.listdir(faDir)
+    namesList = os.listdir(faDir)
+    namesList = [n[0:3] for n in namesList]
+    
+    print(delim,"DELIMITER", asID)
+    print(groups)
+    print(namesList)
+    print(gapOpen,gapExtend )
+    print(faDir, faFileList)
+    print("LODIR", locDir)
+    runScythe(groups=groups, delim=delim.strip('"'), 
+              asID=asID, faFileList=faFileList, 
+              namesList=namesList, cleanUp=cleanUp, 
+              stopAfter=stopAfter, inDir=inDir, outDir=outDir,
+              gapOpen=gapOpen, gapExtend=gapExtend,
+              locDir=locDir,faDir=faDir)
+
+
+#----/parse configuration----#
+
+
 
 #-- be verbose --#
 def annoy(*args):
@@ -253,6 +377,7 @@ def findGlobalMax(avd, seqDct, singles, all, coll, uncoll, defaultForms):
     return(globMaxIds, globMaxSps)
 
 def algo(avd, seqDct, singles, all, defaultForms):
+    print("AVD",avd)
     """Process distance matrix"""
     # avd is a two dimensional dictionary with sequence identifiers as indices
     # it represents the distance / scoring matrix
@@ -269,6 +394,7 @@ def algo(avd, seqDct, singles, all, defaultForms):
     if not coll or GLOBMAX:
         globMaxIds, globMaxSps = findGlobalMax(avd, seqDct, singles, all, coll, uncoll, defaultForms)
         annoy("# global max pair:", globMaxIds, globMaxSps)
+        print("GLM",globMaxIds)
         coll.add(globMaxIds[0])
         coll.add(globMaxIds[1])
         processed.add(globMaxSps[0])
@@ -346,6 +472,7 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
         allSpec = set(spl)
         
         for s in spl:
+            #print("FAT, "+frame._fat)
             outfile = frame._fat+".".join([str(g),s,"fa"])
             out = open(outfile, "w")
             spa = group.groups[g][s]
@@ -378,6 +505,7 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
                     task = frame.callNeedleAll(fileA, fileB, outfile = outfile,stdout=True, gapOpen=gapOpen, gapExtend=gapExtend)
                     fulldata = task.stdout.read()
                     assert task.wait() == 0
+                    task.stdout.close()
                 except AssertionError as ae:
                     print(ae)
                     data="#"
@@ -388,6 +516,7 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
                     else:
                         tmp = pattern.findall(l)
                         if tmp:
+                            print(tmp)
                             res = tmp[0]
                             score = int(float(res[2])*10)
                             avd[res[0]][res[1]]=score
@@ -398,33 +527,58 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
         else:
             yield(algo(avd, seqDct, singles, allSpec, defaultForms),str(g))
 
-def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, inDir, outDir, gapOpen, gapExtend):
+def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, inDir, outDir, gapOpen, gapExtend, locDir=None, faDir=None):
+    print(delim,"rsDELIMITER", asID)
     stopAfter=int(stopAfter)
     specsList = []
     grpMapList = []
-    locFileList = os.listdir(inDir+"/loc/")
+    if locDir:
+        locFileList = os.listdir(locDir)
+        print("locdir set", locFileList)
+    else:
+        locFileList = os.listdir(inDir+"/loc/")
     if groups:
-        locfl = [inDir+"/loc/"+x for x in locFileList]
+        if locDir:
+            locfl = [locDir+x for x in locFileList]
+        else:
+            locfl = [inDir+"/loc/"+x for x in locFileList]
         dct = GrpParser().groupDct(groups, locf=locfl)
+        #print(dct)
     else:
         usage()
-    locFileList = os.listdir(inDir+"/loc/")
+   # locFileList = os.listdir(inDir+"/loc/")
     for n,f in zip(namesList,faFileList):
+        print(namesList, faFileList,"match")
         """Find matching .loc and .fa files"""
-        locFileList = os.listdir(inDir+"/loc/")
+        #locFileList = os.listdir(inDir+"/loc/")
+        if locDir:
+            locFileList = os.listdir(locDir)
+        else:
+            locFileList = os.listdir(inDir+"/loc/")
         pf = ".".join(f.split(".")[:-1])
+        print("PF",pf)
         pf = pf.split("_")[0]
+        print("PF2",pf)
+        print("LOC",locFileList)
         locFileList = [x for x in locFileList if x.startswith(pf)]
-        try:
-            locFileList[0] == ""
-        except IndexError as ke:
-            print("Something is wrong. File names don't match, please try renaming.",ke)
-            exit(2)
+        print("lfl",locFileList)
+        #try:
+        #    locFileList[0] == ""
+        #except IndexError as ke:
+        #    print("Something is wrong. File names don't match, please try renaming.",ke)
+        #    exit(2)
         n = n.strip()
-        specsList.append(ScytheSpec(name = n, format = "loc", source = inDir+"/loc/"+locFileList[0], fasta = inDir+"/fa/"+f))
+        if locDir:
+            specsList.append(ScytheSpec(name = n, format = "loc", source = locDir+locFileList[0], fasta = faDir+f))
+
+        else:
+            specsList.append(ScytheSpec(name = n, format = "loc", source = inDir+"/loc/"+locFileList[0], fasta = inDir+"/fa/"+f))
         for a in specsList:
             annoy("#\t",a.name,a.fasta)
-        grpMapList.append(ScytheGroupMap(name=n, locfile =inDir+"/loc/"+locFileList[0], dct=dct, separator=delim, asID=asID))
+        if locDir:
+            grpMapList.append(ScytheGroupMap(name=n, locfile=locDir+locFileList[0], dct=dct, separator=delim, asID=asID))
+        else:
+            grpMapList.append(ScytheGroupMap(name=n, locfile =inDir+"/loc/"+locFileList[0], dct=dct, separator=delim, asID=asID))
     for g in grpMapList:
         g.free()
     for sp in specsList:
@@ -453,6 +607,9 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
                 outfiles[s.name].write(r[0][ok].toFasta())
                 outfilesGroups[R].write(r[0][ok].toFasta())
         cnt+=1
+        #####
+        #outfiles[s.name].close()
+        outfilesGroups[R].close()
     if cleanUp:
         annoy("# Cleaning up...")
         frame.cleanUp()
@@ -476,16 +633,17 @@ def main():
     outDir = "./"
     fastaList = None
     gffList = None
-    delim = None
+    delim = None 
     asID = 0
     stopAfter = False
     gapOpen=str(10)
     gapExtend =str(0.5)
+    isUsingConfig = False
     ##################################
     
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], "i:o:s:d:a:g:O:E:mcvhM", 
-                                        ["in_dir=","out_dir=",
+        opts, args = getopt.gnu_getopt(sys.argv[1:], "C:i:o:s:d:a:g:O:E:mcvhM", 
+                                        ["config=","in_dir=","out_dir=",
                                          "stop_after=",
                                          "delim=", "asID=",
                                          "groups=","gap_open=", "gap_extend=","global_max","cleanup", 
@@ -496,7 +654,12 @@ def main():
         print(logo)
         usage()
     for o, a in opts:
-        if o in ("-i", "--in_dir"):
+        if o in ("-C", "--config"):
+            print(logo)
+            parseConfig(a)
+            
+            isUsingConfig=True
+        elif o in ("-i", "--in_dir"):
             inDir = a
         elif o in ("-o", "--outdir"):
             outDir = a
@@ -525,39 +688,41 @@ def main():
             usage()
         else:
             assert False, "unhandled option"
-    
-    if VERBOSE:
-        for o, a in opts:
-            if o in ("-v", "--verbose","-c", "--cleanup"):
-                annoy(o, "set")
-            else:
-                annoy(o, "set to",a)
-
-    if not (inDir and groups):
-        print(logo)
-        usage()
-    
-    try:
-        annoy(os.listdir(inDir+"/fa/"))
-        annoy(os.listdir(inDir+"/loc/"))
-    except OSError as e:
-        print(e)
-        print("Please provide a directory containing folders 'fa' with fasta files and 'loc' with .loc files.")
-        usage()
+    if not isUsingConfig:
         
-    faFileList = os.listdir(inDir+"/fa/")
-    namesList = os.listdir(inDir+"/fa/")
-    namesList = [n[0:3] for n in namesList]
-    #print (namesList)        
-
-    if (len(faFileList)!=len(namesList)):
-        print("Names:", namesList)
-        print("Fasta files:", faFileList)
-        usage()
-    runScythe(groups=groups, delim=delim, 
-              asID=asID, faFileList=faFileList, 
-              namesList=namesList, cleanUp=cleanUp, 
-              stopAfter=stopAfter, inDir=inDir, outDir=outDir, gapOpen=gapOpen, gapExtend=gapExtend)
+        if VERBOSE:
+            for o, a in opts:
+                if o in ("-v", "--verbose","-c", "--cleanup"):
+                    annoy(o, "set")
+                else:
+                    annoy(o, "set to",a)
+    
+        if not (inDir and groups):
+            print(logo)
+            usage()
+        
+        try:
+            annoy(os.listdir(inDir+"/fa/"))
+            annoy(os.listdir(inDir+"/loc/"))
+        except OSError as e:
+            print(e)
+            print("Please provide a directory containing folders 'fa' with fasta files and 'loc' with .loc files.")
+            usage()
+            
+        faFileList = os.listdir(inDir+"/fa/")
+        namesList = os.listdir(inDir+"/fa/")
+        namesList = [n[0:3] for n in namesList]
+        #print (namesList)        
+    
+        if (len(faFileList)!=len(namesList)):
+            print("Names:", namesList)
+            print("Fasta files:", faFileList)
+            usage()
+        
+        runScythe(groups=groups, delim=delim, 
+                  asID=asID, faFileList=faFileList, 
+                  namesList=namesList, cleanUp=cleanUp, 
+                  stopAfter=stopAfter, inDir=inDir, outDir=outDir, gapOpen=gapOpen, gapExtend=gapExtend)
 
 #----------------------------------------------------------------#
    

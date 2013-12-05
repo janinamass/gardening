@@ -1,0 +1,42 @@
+[Mode]
+use_ensembl_api = no
+use_local_files = yes
+
+[Paths]
+fasta_directory = ./
+loc_directory =  ./
+grp_file = ./example.grp
+output_directory = ./
+
+[Output]
+attach_output_prefix = no
+output_prefix = species_abbrevation
+output_orthogroups = yes
+output_species_fasta = yes
+merge_species_fasta_with_defaults = yes
+
+[Cleanup]
+clean_up_directories = yes
+
+[Run_options]
+max_threads = 1 #todo
+split_input = no 
+split_each = 1000 #todo
+use_seqan = no #todo
+
+[Penalties]
+gap_open_cost = 10
+gap_extend_cost = 5
+substitution_matrix = BLOSUM62 
+
+[Algorithm]
+use_global_max = no
+use_default = no
+use_global_sum = no
+
+[Paralogs]
+include_paralogs = no
+
+[Fasta_header]
+fasta_header_delimiter = unset 
+fasta_header_part = 0
