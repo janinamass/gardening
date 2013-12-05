@@ -36,3 +36,7 @@ use_global_sum = no
 
 [Paralogs]
 include_paralogs = no
+
+[Fasta_header]
+fasta_header_delimiter = unset 
+fasta_header_part = 0
