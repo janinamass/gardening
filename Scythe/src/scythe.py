@@ -502,7 +502,9 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
                 fileB = outfile
                 outfile=frame._sr+".".join([str(g),spl[i],spl[i+1],"needle"])
                 try: 
+                    print("CALLING NEEDLE")
                     task = frame.callNeedleAll(fileA, fileB, outfile = outfile,stdout=True, gapOpen=gapOpen, gapExtend=gapExtend)
+                    print("TASK CALLED")
                     fulldata = task.stdout.read()
                     assert task.wait() == 0
                     task.stdout.close()
