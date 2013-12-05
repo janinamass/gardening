@@ -14,7 +14,6 @@ def prepareLocFromFasta(fasta):
     longest = {}
     out = fasta+".tmp"
     fp = FastaParser()
-    #fp.read_fasta(fasta)
     out = open(out,'w')
     for i in fp.read_fasta(fasta):
         tmp = i[0].split(" ")
@@ -22,7 +21,6 @@ def prepareLocFromFasta(fasta):
         geneid = geneid[0].split("gene:")[-1]
         proteinid = tmp[0]
         protlen=len(i[1])
-        #print("\t".join([geneid, proteinid,str(protlen)]))
         peptide= Pep(proteinid,geneid,protlen)
         try:
             genes[geneid].append(peptide)
@@ -37,14 +35,8 @@ def prepareLocFromFasta(fasta):
     for g in genes:
         firstcol = [w for w in genes[g] if w.isLongest==True ]
         restcol = [w for w in genes[g] if w.isLongest!=True ]
-        #for v in genes[g]:
         s = firstcol[0].gene+"\t"+firstcol[0].pep+"\t"
-        print(firstcol[0].gene, firstcol[0].pep, firstcol[0].length)
         s+="\t".join([v.pep for v in restcol])
-        #for v in restcol:
-        #    s += v.pep
-        #    print(v.gene,v.pep,v.length)
-        print("#")
         s+="\n"
         out.write(s)
 def q(s):
@@ -75,9 +67,7 @@ def main():
         usage()
     
     
-    
     prepareLocFromFasta(infile)
-
 
 if __name__ == "__main__":
     main()
