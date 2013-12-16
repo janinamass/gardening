@@ -23,6 +23,8 @@ import os
 
 global LOGSTR
 LOGSTR = ""
+global SCYTHE_PROCESS
+SCYTHE_PROCESS = None
 global CURRENTCONFIG
 CURRENTCONFIG = configparser.ConfigParser()
 BACKUPCONFIG = configparser.ConfigParser()
@@ -36,19 +38,11 @@ CF_PATHS_fasta_directory = "fasta_directory"
 CF_PATHS_loc_directory = "loc_directory"
 CF_PATHS_grp_file = "grp_file"
 CF_PATHS_output_directory = "output_directory"
-#CF_OUTPUT ="Output"
-#CF_OUTPUT_attach_output_prefix="attach_output_prefix"
-#CF_OUTPUT_output_prefix="output_prefix"
-#CF_OUTPUT_output_orthogroups = "output_orthogroups"
-#CF_OUTPUT_output_species_fasta = "output_species_fasta"
-#CF_OUTPUT_merge_species_fasta_with_defaults = "merge_species_fasta_with_defaults"
 CF_CLEANUP = "Cleanup"
 CF_CLEANUP_clean_up_directories = "clean_up_directories"
 CF_RUN="Run_options"
 CF_RUN_max_threads ="max_threads"
 CF_RUN_split_input="split_input"
-#CF_RUN_split_each="split_each"
-#CF_RUN_use_seqan="use_seqan"
 CF_PENALTIES = "Penalties"
 CF_PENALTIES_gap_open_cost = "gap_open_cost"
 CF_PENALTIES_gap_extend_cost="gap_extend_cost"
@@ -89,8 +83,6 @@ for i in [CF_MODE_use_ensembl,CF_MODE_use_local_files]:
     MAXCONFIG.set(CF_MODE,i,"unset")
 for i in [CF_PATHS_fasta_directory,CF_PATHS_loc_directory,CF_PATHS_grp_file,CF_PATHS_output_directory ]:
     MAXCONFIG.set(CF_PATHS,i,"unset")
-#for i in [CF_OUTPUT_attach_output_prefix,CF_OUTPUT_output_prefix,CF_OUTPUT_output_orthogroups,CF_OUTPUT_output_species_fasta,CF_OUTPUT_merge_species_fasta_with_defaults ]:
-#    MAXCONFIG.set(CF_OUTPUT,i,"unset")
 for i in [CF_CLEANUP_clean_up_directories]:
     MAXCONFIG.set(CF_CLEANUP,i,"unset")
 for i in [CF_RUN_max_threads,CF_RUN_split_input]:
@@ -239,8 +231,6 @@ class ScytheConfigEditor():
                     fr = fr_mode
                 elif t == CF_PATHS:
                     fr = fr_paths
-                #elif t == CF_OUTPUT:
-                #    fr = fr_output
                 elif t == CF_CLEANUP:
                     fr = fr_cleanup
                 elif t == CF_RUN:
@@ -343,7 +333,6 @@ class ScytheConfigEditor():
     def onSetConfigOK(self,event):
         print("configapply")
         self.setConfigFromFields()
-        #Infobox().todo()
         
         
         
@@ -363,16 +352,11 @@ class ScytheConfigEditor():
         tempconf.set(CF_ALGORITHM, CF_ALGORITHM_use_global_max,self.var_subsec[CF_ALGORITHM][0].get())
         tempconf.set(CF_ALGORITHM, CF_ALGORITHM_use_default,self.var_subsec[CF_ALGORITHM ][1].get())
         tempconf.set(CF_ALGORITHM, CF_ALGORITHM_use_global_sum,self.var_subsec[CF_ALGORITHM][2].get())
-        #tempconf.set(CF_PARALOGS, CF_PARALOGS_include_paralogs,self.var_subsec[CF_PARALOGS][0].get())
         tempconf.set(CF_RUN, CF_RUN_max_threads,str(self.sc_config_numthreads.get()))
         tempconf.set(CF_RUN, CF_RUN_split_input, self.var_subsec[CF_RUN][1].get())
-        #tempconf.set(CF_RUN, CF_RUN_split_each, self.en_config_spliteach.get())
-        #tempconf.set(CF_RUN, CF_RUN_use_seqan, self.var_subsec[CF_RUN][3].get())
         #CLEANUP
         tempconf.set(CF_CLEANUP, CF_CLEANUP_clean_up_directories, self.var_subsec[CF_CLEANUP][0].get())
         #output
-        #for i in range(0, len(self.txt_subsec[CF_OUTPUT])):
-         #   tempconf.set(CF_OUTPUT, self.txt_subsec[CF_OUTPUT][i], self.var_subsec[CF_OUTPUT][i].get())
         #outputprefix:
         #tempconf.set(CF_OUTPUT,CF_OUTPUT_output_prefix,self.en_config_outpref.get())
         ########## TODO 02.12.13 ############
@@ -398,18 +382,11 @@ class ScytheConfigEditor():
         self.var_subsec[CF_PENALTIES][1].set(CURRENTCONFIG.get(CF_PENALTIES,self.txt_subsec[CF_PENALTIES][1]))
         self.st_submat.set(CURRENTCONFIG.get(CF_PENALTIES, CF_PENALTIES_substitution_matrix))
         #output
-        #self.var_subsec[CF_OUTPUT][0].set(CURRENTCONFIG.get(CF_OUTPUT,self.txt_subsec[CF_OUTPUT][0]))
-        #self.st_outpref.set(CURRENTCONFIG.get(CF_OUTPUT,CF_OUTPUT_output_prefix))
-        #self.var_subsec[CF_OUTPUT][2].set(CURRENTCONFIG.get(CF_OUTPUT,self.txt_subsec[CF_OUTPUT][2]))
-        #self.var_subsec[CF_OUTPUT][3].set(CURRENTCONFIG.get(CF_OUTPUT,self.txt_subsec[CF_OUTPUT][3]))
-        #self.var_subsec[CF_OUTPUT][4].set(CURRENTCONFIG.get(CF_OUTPUT,self.txt_subsec[CF_OUTPUT][4]))
         #cleanup
         self.var_subsec[CF_CLEANUP][0].set(CURRENTCONFIG.get(CF_CLEANUP,self.txt_subsec[CF_CLEANUP][0]))
         #run
         #slider
         self.var_subsec[CF_RUN][1].set(CURRENTCONFIG.get(CF_RUN,self.txt_subsec[CF_RUN][1]))
-        #self.st_spliteach.set(CURRENTCONFIG.get(CF_RUN,CF_RUN_split_each ))
-        #self.var_subsec[CF_RUN][3].set(CURRENTCONFIG.get(CF_RUN,self.txt_subsec[CF_RUN][3]))
         #algo
         self.var_subsec[CF_ALGORITHM][0].set(CURRENTCONFIG.get(CF_ALGORITHM,self.txt_subsec[CF_ALGORITHM][0]))
         self.var_subsec[CF_ALGORITHM][1].set(CURRENTCONFIG.get(CF_ALGORITHM,self.txt_subsec[CF_ALGORITHM][1]))
@@ -644,6 +621,8 @@ class EnsemblSelector(tk.Listbox):
         def onEnsQuit(self):
             print("onQuit")
             self.top.destroy()
+        #def cancelRun(self, process):
+        #    process.terminate()
         def prepRun(self, itemlist):
             #pass
             #top = tk.Toplevel(root)
@@ -680,11 +659,31 @@ class ScytheWizard(tk.Tk):
         self.initWizard()
     def quit(self):
         root.destroy()
-    
+    def setConfigFromFields(self):
+        tempconf = configparser.ConfigParser()
+        backupConfTo(tempconf)
+        tempconf.set(CF_PATHS, CF_PATHS_output_directory,self.ent_outDir.get())
+        tempconf.set(CF_PATHS, CF_PATHS_fasta_directory,self.ent_fastaDir.get())
+        tempconf.set(CF_PATHS, CF_PATHS_loc_directory,self.ent_locDir.get())
+        tempconf.set(CF_PATHS, CF_PATHS_grp_file,self.ent_grpFile.get())
+ 
+        
+        setCurrentConf(tempconf)
+        print(CURRENTCONFIG)
     def prepRun(self):
+        global SCYTHE_PROCESS
         scythe.VERBOSE=False
         #config = CURRENTCONFIG
         print("prep run called")
+        
+        #############09.12.13 ######
+        #update config one more time
+        self.setConfigFromFields()
+        #CURRENTCONFIG.set(CF_PATHS, CF_PATHS_output_directory,self.ent_outDir.get())
+        print("Read entry fields one more time", CURRENTCONFIG.get(CF_PATHS, CF_PATHS_output_directory))
+        
+        
+        ###############################################
         #check whether ensembl or local is checked
         useEnsembl= CURRENTCONFIG.get(CF_MODE, CF_MODE_use_ensembl)
         useLocal = CURRENTCONFIG.get(CF_MODE, CF_MODE_use_local_files)
@@ -746,10 +745,10 @@ class ScytheWizard(tk.Tk):
         ##run scythe
         #order matters for argument list
         p = multiprocessing.Process(target=scythe.runScythe,args=[groups,delim,asID,namesList,cleanUp,stopAfter,faFileList,inDir,outDir,gapOpen, gapExtend,locDir,faDir])
-
+        SCYTHE_PROCESS = p
         p.start()
         print (p, p.is_alive())
-
+        #multiprocessing.Process.
         #threads.append(p)
         #scythe.runScythe(groups=groups, delim=delim, 
         #          asID=asID, faFileList=faFileList, 
@@ -768,9 +767,15 @@ class ScytheWizard(tk.Tk):
             #  stopAfter=stopAfter, inDir=inDir, outDir=outDir,
             #  gapOpen=gapOpen, gapExtend=gapExtend,
             #  locDir=locDir,faDir=faDir)
-                
+    def cancelRun(self, process):
+        if process:
+            process.terminate()
+            print("('Cancel') -> Terminated by User.")
+            process = None
+        else:
+            print("No running process.")
     def initWizard(self):
-       
+        global SCYTHE_PROCESS
         #Labels
         self.lab_fastaDir = tk.Label(text="Fasta Directory")
         self.lab_locDir = tk.Label(text=".loc Directory")
@@ -810,6 +815,8 @@ class ScytheWizard(tk.Tk):
         ######21.10
         self.b_next = tk.Button(root, text="Next...", command = self.prepRun)
         self.b_quit = tk.Button(root, text="Quit", command = self.quit)
+        #####06.12
+        self.b_cancel = tk.Button(root, text = "Cancel", command = lambda: self.cancelRun(SCYTHE_PROCESS))
         ######
         
         #Checkuttons
@@ -844,7 +851,7 @@ class ScytheWizard(tk.Tk):
         #self.b_convertOrtho.grid(row=3,column=3)
         self.b_next.grid(row=5, column=1, sticky="E")
         self.b_quit.grid(row=5, column=2, sticky="W")
-
+        self.b_cancel.grid(row=5, column=3, sticky="E")
     def useLocal(self):
         global CURRENTCONFIG
         print("CURRENTCONFIG",CURRENTCONFIG)
@@ -888,8 +895,8 @@ class ScytheWizard(tk.Tk):
         if self.ent_locDir.get()=="":
             if os.path.isdir(os.path.split(tmp)[0]+os.sep+"loc"):
                 self.st_locDir.set(os.path.split(tmp)[0]+os.sep+"loc")
-                CURRENTCONFIG.set("Paths", "loc_directory", os.path.split(tmp)[0]+os.sep+"loc")
-        CURRENTCONFIG.set("Paths", "fasta_directory",tmp)
+                CURRENTCONFIG.set(CF_PATHS, "loc_directory", os.path.split(tmp)[0]+os.sep+"loc")
+        CURRENTCONFIG.set(CF_PATHS, "fasta_directory",tmp)
         return tmp
     def askLocDir(self):
         tmp= filedialog.askdirectory()
@@ -899,21 +906,21 @@ class ScytheWizard(tk.Tk):
         if self.ent_locDir.get()=="":
             if os.path.isdir(os.path.split(tmp)[0]+os.sep+"fa"):
                 self.st_locDir.set(os.path.split(tmp)[0]+os.sep+"fa")
-                CURRENTCONFIG.set("Paths", "fasta_directory",os.path.split(tmp)[0]+os.sep+"fa")
-        CURRENTCONFIG.set("Paths", "loc_directory",tmp)
+                CURRENTCONFIG.set(CF_PATHS, "fasta_directory",os.path.split(tmp)[0]+os.sep+"fa")
+        CURRENTCONFIG.set(CF_PATHS, "loc_directory",tmp)
         return filedialog.tmp()
     def askGrpFile(self):
         tmp= filedialog.askopenfilename()
         self.ent_grpFile.config(state=tk.NORMAL)
         self.st_grpFile.set(tmp)
-        CURRENTCONFIG.set("Paths", "grp_file",tmp)
+        CURRENTCONFIG.set(CF_PATHS, "grp_file",tmp)
         return tmp
     def askOutDir(self):
         tmp= filedialog.askdirectory(mustexist=False)
         print(tmp)
         self.ent_outDir.config(state=tk.NORMAL)
         self.st_outDir.set(tmp)
-        CURRENTCONFIG.set("Paths", CF_PATHS_output_directory,tmp)
+        CURRENTCONFIG.set(CF_PATHS, CF_PATHS_output_directory,tmp)
         #if self.ent_locDir.get()=="":
         #    if os.path.isdir(os.path.split(tmp)[0]+os.sep+"fa"):
         #        self.st_Dir.set(os.path.split(tmp)[0]+os.sep+"fa")
