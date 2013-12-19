@@ -8,11 +8,13 @@ class Pep(object):
         self.pep  = pep
         self.length = length
         self.isLongest = None
-def prepareLocFromFasta(fasta):
-    print("PL")
+def prepareLocFromFasta(fasta, outfile):
     genes = {}
     longest = {}
-    out = fasta+".tmp"
+    if not outfile:
+        out = fasta+".loc"
+    else:
+        out = outfile
     fp = FastaParser()
     out = open(out,'w')
     for i in fp.read_fasta(fasta):
@@ -42,14 +44,24 @@ def prepareLocFromFasta(fasta):
 def q(s):
     return ('"'+s+'"')
 def usage():
-    pass
+    print ("""
+    ##############################
+    #
+    ##############################
+    
+    -i, --infile=FASTA
+    -o, --output=FILE        
+    -h, --help
+    """)
+    sys.exit(2)
 def main():
 
     ###################################
     infile = None
+    outfile = None
     ###################################
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], "i:h", ["infile=","help"])
+        opts, args = getopt.gnu_getopt(sys.argv[1:], "i:o:h", ["infile=","outfile=","help"])
     except getopt.GetoptError as err:
         print (str(err))
         usage()
@@ -67,7 +79,7 @@ def main():
         usage()
     
     
-    prepareLocFromFasta(infile)
+    prepareLocFromFasta(infile, outfile)
 
 if __name__ == "__main__":
     main()

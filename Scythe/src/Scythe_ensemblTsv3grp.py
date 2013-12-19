@@ -92,8 +92,9 @@ def readTsvFiles(listoftsv, outfile):
     #print(len(seen))
     cntr = 0
     for s in seen:
-        if s not in done:
-            res+=str(cntr)+"\t"+s+"\t"+"\t".join(ortho[s])
+        notyetdone = [o for o in ortho[s] if o not in done]
+        if s not in done and notyetdone:
+            res+=str(cntr)+"\t"+s+"\t"+"\t".join(notyetdone)
             res+="\n"
             cntr+=1
             done.add(s)

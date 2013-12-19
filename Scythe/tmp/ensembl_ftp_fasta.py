@@ -4,13 +4,21 @@ import tarfile
 import zipfile
 import gzip
 #ftp://ftp.ensembl.org/pub/release-73/fasta/homo_sapiens/pep/README
-def ensembl_ftp_fasta(release=73, specieslist=["homo_sapiens"]):
+def ensembl_ftp_fasta(release=74, specieslist=[]):
     dirlist = []
+    if (specieslist==[]):
+        print("Warning: No set of species selected")
+        exit(0)
     ftp = FTP('ftp.ensembl.org')
     ftp.login()                    
     ftp.cwd('pub') #ftp://ftp.ensembl.org/pub/
     ftp.retrlines('LIST', callback=dirlist.append)           # list directory contents
-    dirlist = [r for r in dirlist if "release-73"  in r and "fasta" in r]
+    #print(dirlist)
+    dirlist = [r for r in dirlist if "release-"+str(release)  in r and "fasta" in r]
+    print(dirlist)
+    if(len(dirlist) ==0):
+        print("Nothing available for release-"+str(release))
+        exit(1)
     ftprelhome = dirlist[0].split(" ")[-1]
     ftp.cwd(ftprelhome)
     ftp.retrlines('LIST', callback=dirlist.append)
@@ -50,6 +58,6 @@ def xtract(cfile, outpath = "."):
     
 
 def main():
-    ensembl_ftp_fasta(release=73, specieslist=["homo_sapiens","mus_musculus","pan_troglodytes"])
+    ensembl_ftp_fasta(release=74, specieslist=["homo_sapiens","mus_musculus","pan_troglodytes"])
 
 main()

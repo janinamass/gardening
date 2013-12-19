@@ -1,6 +1,7 @@
 #todo:
-#update config on next click
-#spawn new thread for actual program (w/ cancel possibility)
+#get rid of *info* field
+#retrieve fasta from ftp
+
 
 import tkinter as tk
 import configparser
@@ -19,7 +20,8 @@ root=tk.Tk()
 root.title("Scythe GUI alpha")
 root.iconbitmap('@scy.xbm')
 import os
-
+import ensembl_ortho_mysql
+import ensembl2grp
 
 global LOGSTR
 LOGSTR = ""
@@ -611,11 +613,45 @@ class EnsemblSelector(tk.Listbox):
             self.itemlist=itemlist    
             self.speclist=speclist
             self.rellist = rellist
+            self.b_ensOK = tk.Button(self.top, text="OK", command=self.onEnsOK)
+            self.b_ensQuit = tk.Button(self.top, text="Cancel", command=self.onEnsQuit)
+            self.b_ensOK.grid(row=1, column=0,sticky="E", padx=60)
+            self.b_ensQuit.grid(row=1, column=0,sticky="E", padx=0)
+            
+            
+            
             self.prepRun(itemlist)
         def onEnsOK(self):
             print("onOK")
             specs,rel = self.readListBox()
-            ensembl.useEnsemblDB(specs,rel, self.outdir)
+            #ensembl.useEnsemblDB(specs,rel, self.outdir)
+            print("wait...", self.outdir, specs, rel)
+            self.b_ensOK.configure(state=tk.DISABLED)
+            self.b_ensQuit.configure(state=tk.DISABLED)
+           # ensembl.getSequencesFromFTP(self.outdir, rel, specs)
+            fapath = self.outdir+os.sep+"fa"
+        
+            locpath = self.outdir+os.sep+"loc"
+            print("fasta done",self.outdir)
+            for i in specs:
+                print(i)
+                try:
+                    ensembl.prepareLocFromFasta(fapath+os.sep+i+".fa",locpath+os.sep,i  )
+                except IOError as e:
+                    print(e)
+                    print("Warning: No such fasta: ",fapath+os.sep+i+".fa")
+                    ###test:TODO deal with different releases: Throw warning, has to be done manually
+            listoftsv=ensembl_ortho_mysql.fetchOrthoFromMySQL(specieslist = specs, release=rel[0])
+            grpstring =""
+            for i in specs:
+                grpstring+=i[0:2]
+            grpfile = self.outdir+os.sep+grpstring+".grp" 
+            ensembl2grp.readTsvFiles(listoftsv=listoftsv, outfile=grpfile)
+            self.top.destroy()
+            CURRENTCONFIG.set(CF_PATHS,CF_PATHS_fasta_directory, fapath+os.sep)
+            CURRENTCONFIG.set(CF_PATHS,CF_PATHS_loc_directory, locpath+os.sep)
+            CURRENTCONFIG.set(CF_PATHS,CF_PATHS_grp_file, grpfile)
+            #ScytheWizard(root).prepRun(reloadFields=False)
             #dat = ensembl.specInfo()
             #print(dat)
         def onEnsQuit(self):
@@ -631,10 +667,10 @@ class EnsemblSelector(tk.Listbox):
             for item in itemlist:
                 self.lb.insert(tk.END, item)
             self.lb.grid(row=0, column=0)
-            b_ensOK = tk.Button(self.top, text="OK", command=self.onEnsOK)
-            b_ensQuit = tk.Button(self.top, text="Cancel", command=self.onEnsQuit)
-            b_ensOK.grid(row=1, column=0,sticky="E", padx=60)
-            b_ensQuit.grid(row=1, column=0,sticky="E", padx=0)
+            #b_ensOK = tk.Button(self.top, text="OK", command=self.onEnsOK)
+            #b_ensQuit = tk.Button(self.top, text="Cancel", command=self.onEnsQuit)
+            #b_ensOK.grid(row=1, column=0,sticky="E", padx=60)
+            #b_ensQuit.grid(row=1, column=0,sticky="E", padx=0)
         def readListBox(self):
             items = self.lb.curselection()
             print(items)
@@ -670,7 +706,7 @@ class ScytheWizard(tk.Tk):
         
         setCurrentConf(tempconf)
         print(CURRENTCONFIG)
-    def prepRun(self):
+    def prepRun(self, reloadFields=True):
         global SCYTHE_PROCESS
         scythe.VERBOSE=False
         #config = CURRENTCONFIG
@@ -678,9 +714,10 @@ class ScytheWizard(tk.Tk):
         
         #############09.12.13 ######
         #update config one more time
-        self.setConfigFromFields()
+        if reloadFields:
+            self.setConfigFromFields()
         #CURRENTCONFIG.set(CF_PATHS, CF_PATHS_output_directory,self.ent_outDir.get())
-        print("Read entry fields one more time", CURRENTCONFIG.get(CF_PATHS, CF_PATHS_output_directory))
+            print("Read entry fields one more time", CURRENTCONFIG.get(CF_PATHS, CF_PATHS_output_directory))
         
         
         ###############################################
@@ -690,6 +727,10 @@ class ScytheWizard(tk.Tk):
         #outdir to
         outdir = CURRENTCONFIG.get(CF_PATHS,CF_PATHS_output_directory)
         #catch unset outdir
+        cleanUp="yes"
+        scythe.GLOBMAX = False
+        scythe.GLOBSUM = False
+        
         print(useEnsembl)
         if useEnsembl == "yes":
             ens = EnsemblSelector(outdir)
@@ -727,7 +768,11 @@ class ScytheWizard(tk.Tk):
         fastaList = os.listdir(faDir)
         #gffList = None
         delim = CURRENTCONFIG.get(CF_FASTAHEADER,CF_FASTAHEADER_delimiter).strip('"')
-        asID = int(CURRENTCONFIG.get(CF_FASTAHEADER,CF_FASTAHEADER_part))
+        try:
+            asID = int(CURRENTCONFIG.get(CF_FASTAHEADER,CF_FASTAHEADER_part))
+        except ValueError as e:
+            print(e)
+            asID=None
         stopAfter = False
         gapOpen= CURRENTCONFIG.get(CF_PENALTIES,CF_PENALTIES_gap_open_cost)
         gapExtend =CURRENTCONFIG.get(CF_PENALTIES,CF_PENALTIES_gap_extend_cost)
