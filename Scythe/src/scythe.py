@@ -341,6 +341,13 @@ def findGlobalMax(avd, seqDct, singles, all, coll, uncoll, defaultForms):
     globMaxIds = ""
     globMaxSps = ""
     #print(avd)
+    ###############33
+    #
+    #
+    if avd =={}:
+        print("avd empty")
+        return(None,None)
+    
     for u in uncoll: #uncollected species
         tmpspec = seqDct[u].species
         
@@ -378,6 +385,8 @@ def findGlobalMax(avd, seqDct, singles, all, coll, uncoll, defaultForms):
 
 def algo(avd, seqDct, singles, all, defaultForms):
     print("AVD",avd)
+    if avd =={}:
+        return(None)
     """Process distance matrix"""
     # avd is a two dimensional dictionary with sequence identifiers as indices
     # it represents the distance / scoring matrix
@@ -512,8 +521,7 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
                     print(ae)
                     data="#"
                     print("WARNING:", fileA, fileB,"excluded")
-                    avd["#"]["#"]=0
-                    avd["#"]["#"]=0 #somehow make this deal with titin...
+                    yield((None,None))
                     
                 data  =  fulldata.decode("utf-8")
                 for l in data.split("\n"):
@@ -603,19 +611,25 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
         outfile = frame._srfa+".".join([s.name,"fa"])
         outfiles[s.name] = open(outfile, 'a')
     for r,R in makeFasta(specsList, grp, frame, stopAfter, gapOpen,gapExtend):
-        outfileGroup = frame._srofa+".".join([R,"fa"])
-        outfilesGroups[R] = open(outfileGroup, 'a')
-        for s in specsList:   
-            tmp = r[1]
-            ok  = [x for x in tmp if x in s.cds]
-            if ok:
-                ok = ok[0]
-                outfiles[s.name].write(r[0][ok].toFasta())
-                outfilesGroups[R].write(r[0][ok].toFasta())
-        cnt+=1
-        #####
-        #outfiles[s.name].close()
-        outfilesGroups[R].close()
+        #########
+        if r is None:
+            print ("skip")
+            continue
+        else:
+            #############
+            outfileGroup = frame._srofa+".".join([R,"fa"])
+            outfilesGroups[R] = open(outfileGroup, 'a')
+            for s in specsList:   
+                tmp = r[1]
+                ok  = [x for x in tmp if x in s.cds]
+                if ok:
+                    ok = ok[0]
+                    outfiles[s.name].write(r[0][ok].toFasta())
+                    outfilesGroups[R].write(r[0][ok].toFasta())
+            cnt+=1
+            #####
+            #outfiles[s.name].close()
+            outfilesGroups[R].close()
     if cleanUp:
         annoy("# Cleaning up...")
         frame.cleanUp()
