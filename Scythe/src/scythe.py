@@ -511,6 +511,10 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
                 except AssertionError as ae:
                     print(ae)
                     data="#"
+                    print("WARNING:", fileA, fileB,"excluded")
+                    avd["#"]["#"]=0
+                    avd["#"]["#"]=0 #somehow make this deal with titin...
+                    
                 data  =  fulldata.decode("utf-8")
                 for l in data.split("\n"):
                     if l.startswith("#"):

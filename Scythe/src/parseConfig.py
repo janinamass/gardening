@@ -86,17 +86,25 @@ for i in [CF_MODE_use_ensembl,CF_MODE_use_local_files]:
 for i in [CF_PATHS_fasta_directory,CF_PATHS_loc_directory,CF_PATHS_grp_file,CF_PATHS_output_directory ]:
     MAXCONFIG.set(CF_PATHS,i,"unset")
 for i in [CF_CLEANUP_clean_up_directories]:
-    MAXCONFIG.set(CF_CLEANUP,i,"unset")
+    MAXCONFIG.set(CF_CLEANUP,i,"yes")
 for i in [CF_RUN_max_threads,CF_RUN_split_input]:
-    MAXCONFIG.set(CF_RUN,i,"unset")
+    MAXCONFIG.set(CF_RUN,i,"1")
 for i in [CF_PENALTIES_gap_open_cost,CF_PENALTIES_gap_extend_cost,CF_PENALTIES_substitution_matrix]:
-    MAXCONFIG.set(CF_PENALTIES,i,"unset")
+    if i == CF_PENALTIES_gap_open_cost:        
+        MAXCONFIG.set(CF_PENALTIES,i,"10")
+    if  i == CF_PENALTIES_gap_extend_cost: 
+         MAXCONFIG.set(CF_PENALTIES,i,"0.5")
+    if i == CF_PENALTIES_substitution_matrix:
+        MAXCONFIG.set(CF_PENALTIES,i,"EBLOSUM62")
 for i in [CF_ALGORITHM_use_global_max,CF_ALGORITHM_use_default,CF_ALGORITHM_use_global_sum   ]:
     MAXCONFIG.set(CF_ALGORITHM,i,"unset")
 for i in [CF_PARALOGS_include_paralogs  ]:
     MAXCONFIG.set(CF_PARALOGS,i,"unset")
 for i in [CF_FASTAHEADER_delimiter, CF_FASTAHEADER_part]:
-    MAXCONFIG.set(CF_FASTAHEADER,i,"unset")
+    if i == CF_FASTAHEADER_delimiter:  
+        MAXCONFIG.set(CF_FASTAHEADER,i,'" "')
+    if i == CF_FASTAHEADER_part:
+        MAXCONFIG.set(CF_FASTAHEADER,i,"0")
 for i in MAXCONFIG.items():
     print(i)
 ######################################
@@ -246,6 +254,7 @@ class ScytheConfigEditor():
                 ############TODO################
                 elif t == CF_FASTAHEADER:
                     fr = fr_fastaheader
+                    print("fastaheader_fr")
                 ################################
                 else:
                     print("No such section:",t)
@@ -331,7 +340,7 @@ class ScytheConfigEditor():
     def onSetConfigApply(self):
         print("configapply")
         self.setConfigFromFields()
-        Infobox().todo()
+        #Infobox().todo()
     def onSetConfigOK(self,event):
         print("configapply")
         self.setConfigFromFields()
@@ -358,6 +367,14 @@ class ScytheConfigEditor():
         tempconf.set(CF_RUN, CF_RUN_split_input, self.var_subsec[CF_RUN][1].get())
         #CLEANUP
         tempconf.set(CF_CLEANUP, CF_CLEANUP_clean_up_directories, self.var_subsec[CF_CLEANUP][0].get())
+        #Fasta header
+        tempconf.set(CF_FASTAHEADER, CF_FASTAHEADER_delimiter, self.var_subsec[CF_FASTAHEADER][0].get())
+        print("blabla",self.var_subsec[CF_FASTAHEADER][0].get())
+        tempconf.set(CF_FASTAHEADER, CF_FASTAHEADER_part, self.var_subsec[CF_FASTAHEADER][1].get())
+        print("III",self.var_subsec[CF_FASTAHEADER][0].get())
+        tempconf.set(CF_FASTAHEADER, CF_FASTAHEADER_part,self.st_fasta_header_part.get())
+        tempconf.set(CF_FASTAHEADER, CF_FASTAHEADER_delimiter,self.st_fasta_header_delimiter.get())
+
         #output
         #outputprefix:
         #tempconf.set(CF_OUTPUT,CF_OUTPUT_output_prefix,self.en_config_outpref.get())
@@ -397,8 +414,16 @@ class ScytheConfigEditor():
         self.var_subsec[CF_PARALOGS][0].set(CURRENTCONFIG.get(CF_PARALOGS,self.txt_subsec[CF_PARALOGS][0]))
         #########TODO 02.12.13 ???
         self.var_subsec[CF_FASTAHEADER][0].set(CURRENTCONFIG.get(CF_FASTAHEADER,self.txt_subsec[CF_FASTAHEADER][0]))
+        #self.var_subsec[CF_FASTAHEADER][1].set(CURRENTCONFIG.get(CF_FASTAHEADER,self.st_fasta_header_part))
 
-        
+        print(self.txt_subsec[CF_FASTAHEADER][0])
+        print(CURRENTCONFIG.get(CF_FASTAHEADER,self.txt_subsec[CF_FASTAHEADER][0]))
+        self.var_subsec[CF_FASTAHEADER][0].set(CURRENTCONFIG.get(CF_FASTAHEADER,self.txt_subsec[CF_FASTAHEADER][0]))
+        print(CURRENTCONFIG.get(CF_FASTAHEADER,self.txt_subsec[CF_FASTAHEADER][1]))
+        self.var_subsec[CF_FASTAHEADER][1].set(CURRENTCONFIG.get(CF_FASTAHEADER,self.txt_subsec[CF_FASTAHEADER][1]))
+        self.st_fasta_header_part.set(CURRENTCONFIG.get(CF_FASTAHEADER, CF_FASTAHEADER_part))
+        self.st_fasta_header_delimiter.set(CURRENTCONFIG.get(CF_FASTAHEADER, CF_FASTAHEADER_delimiter))
+
 
 class Infobox():
     @logged
@@ -621,6 +646,14 @@ class EnsemblSelector(tk.Listbox):
             
             
             self.prepRun(itemlist)
+        def fileExists(self,filename):
+            try:
+                tmp = open(filename,'r')
+                tmp.close()
+            except IOError as e:
+                return(False)
+            return(True)
+                
         def onEnsOK(self):
             print("onOK")
             specs,rel = self.readListBox()
@@ -628,30 +661,47 @@ class EnsemblSelector(tk.Listbox):
             print("wait...", self.outdir, specs, rel)
             self.b_ensOK.configure(state=tk.DISABLED)
             self.b_ensQuit.configure(state=tk.DISABLED)
-           # ensembl.getSequencesFromFTP(self.outdir, rel, specs)
             fapath = self.outdir+os.sep+"fa"
+            tmp = [s for s in specs if not self.fileExists(fapath+os.sep+s+".fa")]
+            unrel = [s for s in specs if self.fileExists(fapath+os.sep+s+".fa")]
+            specs = tmp
+            for u in unrel:
+                print("already there: "+fapath+os.sep+u+".fa")
+            ensembl.getSequencesFromFTP(self.outdir, rel, specs)
+           
         
             locpath = self.outdir+os.sep+"loc"
             print("fasta done",self.outdir)
             for i in specs:
                 print(i)
-                try:
-                    ensembl.prepareLocFromFasta(fapath+os.sep+i+".fa",locpath+os.sep,i  )
-                except IOError as e:
-                    print(e)
-                    print("Warning: No such fasta: ",fapath+os.sep+i+".fa")
+                if not self.fileExists(locpath+os.sep+i+".loc"):
+                    try:
+                        ensembl.prepareLocFromFasta(fapath+os.sep+i+".fa",locpath+os.sep,i  )
+                    except IOError as e:
+                        print(e)
+                        print("Warning: No such fasta: ",fapath+os.sep+i+".fa")
+                else:
+                    print("already there: "+locpath+os.sep+u+".loc")
                     ###test:TODO deal with different releases: Throw warning, has to be done manually
-            listoftsv=ensembl_ortho_mysql.fetchOrthoFromMySQL(specieslist = specs, release=rel[0])
+            
             grpstring =""
             for i in specs:
                 grpstring+=i[0:2]
             grpfile = self.outdir+os.sep+grpstring+".grp" 
-            ensembl2grp.readTsvFiles(listoftsv=listoftsv, outfile=grpfile)
+            if self.fileExists(grpfile):
+                 print("alredy there:", grpfile)
+            else:
+                listoftsv=ensembl_ortho_mysql.fetchOrthoFromMySQL(specieslist = specs, release=rel[0])
+            #grpstring =""
+            #for i in specs:
+            #    grpstring+=i[0:2]
+            
+                ensembl2grp.readTsvFiles(listoftsv=listoftsv, outfile=grpfile)
             self.top.destroy()
             CURRENTCONFIG.set(CF_PATHS,CF_PATHS_fasta_directory, fapath+os.sep)
             CURRENTCONFIG.set(CF_PATHS,CF_PATHS_loc_directory, locpath+os.sep)
             CURRENTCONFIG.set(CF_PATHS,CF_PATHS_grp_file, grpfile)
-            #ScytheWizard(root).prepRun(reloadFields=False)
+            ScytheWizard(root).prepRun(reloadFields=False)
             #dat = ensembl.specInfo()
             #print(dat)
         def onEnsQuit(self):
@@ -660,6 +710,7 @@ class EnsemblSelector(tk.Listbox):
         #def cancelRun(self, process):
         #    process.terminate()
         def prepRun(self, itemlist):
+            print("EnsemblSelectorPrepRun")
             #pass
             #top = tk.Toplevel(root)
             #top.title("Ensembl Species Selector")
@@ -706,7 +757,7 @@ class ScytheWizard(tk.Tk):
         
         setCurrentConf(tempconf)
         print(CURRENTCONFIG)
-    def prepRun(self, reloadFields=True):
+    def prepRun(self, reloadFields=True): ####TODO!
         global SCYTHE_PROCESS
         scythe.VERBOSE=False
         #config = CURRENTCONFIG
