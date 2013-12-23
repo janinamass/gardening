@@ -1,7 +1,11 @@
 #todo:
 #get rid of *info* field
-#retrieve fasta from ftp
-
+#close selecor box after downloads
+#show "waiting" window
+#show "done" windo when finished
+#write Error file
+#clean up/ delete temp files if "cleanup", even when crashing
+ 
 
 import tkinter as tk
 import configparser

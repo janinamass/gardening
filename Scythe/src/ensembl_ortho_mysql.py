@@ -189,4 +189,4 @@ def fetchOrthoFromMySQL(specieslist = ["homo_sapiens","pan_troglodytes","mus_mus
     
     makeTable(genomeDB_ids, orthoSpec2stableIds, orthoIds, outfile)
     return(OUTFILES)
-fetchOrthoFromMySQL()
+#fetchOrthoFromMySQL()
