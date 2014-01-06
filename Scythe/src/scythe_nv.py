@@ -7,7 +7,7 @@ import glob
 import getopt
 from itertools import chain
 import configparser
-
+import datetime
 path = os.path.join(os.path.dirname(__file__), 'BioHelpers/*.py')
 #-- import from BioHelpers --#
 for infile in glob.glob(path):
@@ -30,7 +30,7 @@ def usage():
     """Print help."""
     print ("""
     ######################################
-    #  scythe.py v0.5b   [10/31/2013 JM] #
+    # scythe.py v0.6   [02 Jan 2014 JM]  #
     ######################################
   usage:
      scythe.py -i DIR -g .grpFILE --cleanup
@@ -166,12 +166,12 @@ def parseConfig(pathconfig):
     namesList = os.listdir(faDir)
     namesList = [n[0:3] for n in namesList]
     
-    print(delim,"DELIMITER", asID)
-    print(groups)
-    print(namesList)
-    print(gapOpen,gapExtend )
-    print(faDir, faFileList)
-    print("LODIR", locDir)
+    #print(delim,"DELIMITER", asID)
+    #print(groups)
+    #print(namesList)
+    #print(gapOpen,gapExtend )
+    #print(faDir, faFileList)
+    #print("LOCDIR", locDir)
     runScythe(groups=groups, delim=delim.strip('"'), 
               asID=asID, faFileList=faFileList, 
               namesList=namesList, cleanUp=cleanUp, 
@@ -184,12 +184,7 @@ def parseConfig(pathconfig):
 
 
 
-#-- be verbose --#
-def annoy(*args):
-    """Prints if VERBOSE is set to True. Use for debugging."""
-    if VERBOSE==True:
-        print(*args)
-#----------------#
+
 def append_add(dct, key, val, unique = False):
     """Append new (unique) value to the list of 'key'. 
     If 'key' does not exist, create new list.
@@ -260,7 +255,6 @@ def checkSingle(avd, seqDct, singles, all):
 
 
 def getPairwiseAsTuples(avd):
-    annoy("pairwise")
     firstdim = avd.keys()
     secdim = []
     pwdict={}
@@ -296,12 +290,11 @@ def adddyn(listoftuples, pairwisedist, actualdict, allkeys, sequencesdct):
                         #print("WILL BE added to ",l)
                         try:
                             addscore = addscore+pairwisedist[(l,k)]
-                            #annoy("added:",(l,k), pairwisedist[(l,k)]) 
                         except KeyError as ke:
                             try:
                                 addscore = addscore+pairwisedist[(k,l)]#both di i,j an j,i
-                                annoy("k, added:",(k,l), pairwisedist[(k,l)])
                             except KeyError:
+                                #FixThis
                                 pass
                                 print("KEYERROR",ke)
                     tmdct[newtup] = tmdct[t]+addscore
@@ -310,7 +303,6 @@ def adddyn(listoftuples, pairwisedist, actualdict, allkeys, sequencesdct):
 def algo_globsum(avd, seqDct, defaults):
     processed, unprocessed, coll, uncoll, species2id  = initCollProc(avd, seqDct)
     pairwise,allkeys = getPairwiseAsTuples(avd)
-    #annoy("#@\t",pairwise, allkeys)
     actual = pairwise.copy()
     lot = actual.keys()
     keylengths = [len(key) for key in lot]
@@ -345,7 +337,7 @@ def findGlobalMax(avd, seqDct, singles, all, coll, uncoll, defaultForms):
     #
     #
     if avd =={}:
-        print("avd empty")
+        #print("avd empty")
         return(None,None)
     
     for u in uncoll: #uncollected species
@@ -361,7 +353,8 @@ def findGlobalMax(avd, seqDct, singles, all, coll, uncoll, defaultForms):
                 tieList = [n for (n, e) in enumerate(scorel) if e == tmpMax]
                 #print(u,"tmpmax: ", [(n,e) for (n, e) in enumerate(scorel) if e == tmpMax],tieList)
                 if len(tieList) >1:
-                    annoy("tmpMax ties", [(n,e,skl[n],u ) for (n, e) in enumerate(scorel) if e == tmpMax])
+                    pass
+                    #print("tmpMax ties", [(n,e,skl[n],u ) for (n, e) in enumerate(scorel) if e == tmpMax])
                 #favoring defaults:
                 fav = [(skl[n],u)  for n in tieList if (skl[n] in defaultForms and u in defaultForms)]
                 fav1 = [(skl[n],u)  for n in tieList if (skl[n] in defaultForms or u in defaultForms)]
@@ -384,7 +377,7 @@ def findGlobalMax(avd, seqDct, singles, all, coll, uncoll, defaultForms):
     return(globMaxIds, globMaxSps)
 
 def algo(avd, seqDct, singles, all, defaultForms):
-    print("AVD",avd)
+    #print("AVD",avd)
     if avd =={}:
         return(None)
     """Process distance matrix"""
@@ -396,14 +389,13 @@ def algo(avd, seqDct, singles, all, defaultForms):
     if not GLOBMAX:
         processed, unprocessed, coll, uncoll, species2id = checkSingle(avd, seqDct, singles, all)  
     #singles round
-        annoy("# After singles check:","\n#\t unprocessed",unprocessed,
-              "\n#\t processed",processed,"\n#\t collected",coll,"\n#\t uncollected",
-              uncoll,"\n# ", species2id)
+        #frame.writeLog("debug","# After singles check:","\n#\t unprocessed "+unprocessed+
+              #"\n#\t processed "+processed+"\n#\t collected "+coll+"\n#\t uncollected "+uncoll+"\n# "+species2id)
     
     if not coll or GLOBMAX:
         globMaxIds, globMaxSps = findGlobalMax(avd, seqDct, singles, all, coll, uncoll, defaultForms)
-        annoy("# global max pair:", globMaxIds, globMaxSps)
-        print("GLM",globMaxIds)
+        #print("# global max pair:", globMaxIds, globMaxSps)
+        #print("GLM",globMaxIds)
         coll.add(globMaxIds[0])
         coll.add(globMaxIds[1])
         processed.add(globMaxSps[0])
@@ -415,14 +407,14 @@ def algo(avd, seqDct, singles, all, defaultForms):
    
     while(unprocessed):
         if coll: #already collected
-            print(avd)
+            #print(avd)
             for c in coll:
                 cmax = -1
                 cmaxid = ""
                 cmaxsp = ""
                 for up in unprocessed:#not yet processed
                     for uc in species2id[up]:
-                        print(uc)
+                        #print(uc)
                         if uc in avd: # is in distance dict
                             try: 
                                 tmp = int(avd[uc][c])
@@ -432,7 +424,7 @@ def algo(avd, seqDct, singles, all, defaultForms):
                             if (tmp >cmax or (tmp == cmax and uc in defaultForms)) :
                                 # tie resolved
                                 cmax = int(avd[uc][c])
-                                print("new max ", avd[uc][c], uc, c)
+                                #frame.writeLog("debug","new max "+avd[uc][c]+" "+uc+" "+c)
                                 cmaxid = uc
                                 cmaxsp = up
                                 cmax=tmp
@@ -452,14 +444,12 @@ def algo(avd, seqDct, singles, all, defaultForms):
             processed.add(cmaxsp)
         else:
             print("?")
-    annoy("# to do: ",unprocessed)
-    annoy("# processed: ",processed)
-    annoy("# trash: ",uncoll)
-    annoy("# collected: ",coll)
-    annoy("# \t#------------------------#")
+    #frame.writeLog("debug","#to do: "+unprocessed+"\n# processed: "+processed\
+    #            +"\n# trash: "+uncoll+"\n# collected: "+coll)
     return(seqDct, coll, species2id)
 
 def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
+    print("makeFasta")
     singles = set()
     allSpec = set()
     seqDct = {}
@@ -474,14 +464,13 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
         for i in l._defForm:
             defaultForms.add(i)
     debug_stop = 0
+    print(group, "d", group._names)
     for g in group.groups:
-        print(group, "d", group._names)
-
         if stopAfter and g > stopAfter:
             break
         spl = list(group.groups[g])
         allSpec = set(spl)
-        
+        print(g)
         for s in spl:
             #print("FAT, "+frame._fat)
             outfile = frame._fat+".".join([str(g),s,"fa"])
@@ -499,11 +488,13 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
     test = "" 
     deb=0
     for g in group.groups:
+        print(g)
         avd = None
         avd = AutoViviDict()
         if stopAfter and g> stopAfter:
             break
-        annoy("# \t#-- Processing group",g,"--#")
+        frame.writeLog("debug","#-- Processing group"+str(g)+"--#")
+        #print("#-- Processing group"+str(g)+"--#")
         spl = list(group.groups[g])
         for i in range(0,len(spl)-1):
             for j in range(i+1,len(spl)):
@@ -523,6 +514,7 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
                     print(ae)
                     data="#"
                     print("WARNING:", fileA, fileB,"excluded")
+                    frame.writeLog("error","WARNING:"+fileA+" "+fileB+" excluded, AssertionError")
                     yield((None,None))
                     
                 data  =  fulldata.decode("utf-8")
@@ -532,7 +524,7 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
                     else:
                         tmp = pattern.findall(l)
                         if tmp:
-                            print(tmp)
+                            #print(tmp)
                             res = tmp[0]
                             score = int(float(res[2])*10)
                             avd[res[0]][res[1]]=score
@@ -542,6 +534,122 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
 
         else:
             yield(algo(avd, seqDct, singles, allSpec, defaultForms),str(g))
+
+def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, inDir, outDir, gapOpen, gapExtend, locDir=None, faDir=None):
+    print(delim,"rsDELIMITER", asID)
+    stopAfter=int(stopAfter)
+    specsList = []
+    grpMapList = []
+    print(inDir,locDir)
+    locDir = locDir+os.sep
+    faDir = faDir+os.sep
+    if locDir:
+        locFileList = os.listdir(locDir)
+        print("locdir set", locFileList)
+    else:
+        locFileList = os.listdir(inDir+"/loc/")
+    if groups:
+        if locDir:
+            locfl = [locDir+x for x in locFileList]
+        else:
+            locfl = [inDir+"/loc/"+x for x in locFileList]
+        dct = GrpParser().groupDct(groups, locf=locfl)
+        #print(dct)
+    else:
+        usage()
+        
+    frame = ScytheFrame(path=outDir)
+    frame.mkAllDirs()
+    frame.mkLogFiles()
+    
+    grp = ScytheGroup("tmpgrp", grpMapList)
+    grp = ScytheGroup("tmpgrp", grpMapList)
+    frame = ScytheFrame(path=outDir)
+    frame.mkAllDirs()
+   
+    outfiles = {}
+    outfilesGroups = {}
+    
+    outfiles = {}
+    outfilesGroups = {}
+    cnt = 0
+   # locFileList = os.listdir(inDir+"/loc/")
+    for n,f in zip(namesList,faFileList):
+        print(namesList, faFileList,"match")
+        """Find matching .loc and .fa files"""
+        #locFileList = os.listdir(inDir+"/loc/")
+        if locDir:
+            locFileList = os.listdir(locDir)
+        else:
+            locFileList = os.listdir(inDir+"/loc/")
+        pf = ".".join(f.split(".")[:-1])
+        #print("PF",pf)
+        pf = pf.split("_")[0]
+        #print("PF2",pf)
+        #print("LOC",locFileList)
+        locFileList = [x for x in locFileList if x.startswith(pf)]
+        #print("lfl",locFileList)
+        #try:
+        #    locFileList[0] == ""
+        #except IndexError as ke:
+        #    print("Something is wrong. File names don't match, please try renaming.",ke)
+        #    exit(2)
+        n = n.strip()
+        if locDir:
+            specsList.append(ScytheSpec(name = n, format = "loc", source = locDir+locFileList[0], fasta = faDir+f))
+
+        else:
+            specsList.append(ScytheSpec(name = n, format = "loc", source = inDir+"/loc/"+locFileList[0], fasta = inDir+"/fa/"+f))
+        for a in specsList:
+            frame.writeLog("info",a.name+" "+a.fasta)
+        if locDir:
+            grpMapList.append(ScytheGroupMap(name=n, locfile=locDir+locFileList[0], dct=dct, separator=delim, asID=asID))
+        else:
+            grpMapList.append(ScytheGroupMap(name=n, locfile =inDir+"/loc/"+locFileList[0], dct=dct, separator=delim, asID=asID))
+    
+    
+    
+    for g in grpMapList:
+        g.free()
+    for sp in specsList:
+        sp.fillDefForm()
+        sp.fillLociCDS()
+        sp.fillSequences(sep = delim, asID=asID)
+    
+    
+    for s in specsList:
+        outfile = frame._srfa+".".join([s.name,"fa"])
+        outfiles[s.name] = open(outfile, 'a')
+    for r,R in makeFasta(specsList, grp, frame, stopAfter, gapOpen,gapExtend):
+        #########
+        if r is None:
+            print ("skip")
+            continue
+        else:
+            #############
+            outfileGroup = frame._srofa+".".join([R,"fa"])
+            outfilesGroups[R] = open(outfileGroup, 'a')
+            for s in specsList:   
+                tmp = r[1]
+                ok  = [x for x in tmp if x in s.cds]
+                if ok:
+                    ok = ok[0]
+                    outfiles[s.name].write(r[0][ok].toFasta())
+                    outfilesGroups[R].write(r[0][ok].toFasta())
+            cnt+=1
+            #####
+            #outfiles[s.name].close()
+            outfilesGroups[R].close()
+    if cleanUp:
+        print("# Cleaning up...")
+        frame.writeLog("info", "Cleaning up...")
+        frame.cleanUp()
+        print("# ...done.")
+        frame.writeLog("info"," ...done.")
+    for out in outfiles.values():
+        out.close()
+    print("\ndone.")
+    ##########################################################
 
 def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, inDir, outDir, gapOpen, gapExtend, locDir=None, faDir=None):
     print(delim,"rsDELIMITER", asID)
@@ -594,7 +702,8 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
         else:
             specsList.append(ScytheSpec(name = n, format = "loc", source = inDir+"/loc/"+locFileList[0], fasta = inDir+"/fa/"+f))
         for a in specsList:
-            annoy("#\t",a.name,a.fasta)
+            pass
+            #annoy("#\t",a.name,a.fasta)
         if locDir:
             grpMapList.append(ScytheGroupMap(name=n, locfile=locDir+locFileList[0], dct=dct, separator=delim, asID=asID))
         else:
@@ -637,14 +746,29 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
             #outfiles[s.name].close()
             outfilesGroups[R].close()
     if cleanUp:
-        annoy("# Cleaning up...")
+        #annoy("# Cleaning up...")
         frame.cleanUp()
-        annoy("# ...done.")
+        #annoy("# ...done.")
         
     for out in outfiles.values():
         out.close()
     print("\ndone.")
-    ##########################################################
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 def main():
     global VERBOSE
     global GLOBMAX
@@ -719,17 +843,17 @@ def main():
         if VERBOSE:
             for o, a in opts:
                 if o in ("-v", "--verbose","-c", "--cleanup"):
-                    annoy(o, "set")
+                    print(o, "set")
                 else:
-                    annoy(o, "set to",a)
+                    print(o, "set to",a)
     
         if not (inDir and groups):
             print(logo)
             usage()
         
         try:
-            annoy(os.listdir(inDir+"/fa/"))
-            annoy(os.listdir(inDir+"/loc/"))
+            print(os.listdir(inDir+"/fa/"))
+            print(os.listdir(inDir+"/loc/"))
         except OSError as e:
             print(e)
             print("Please provide a directory containing folders 'fa' with fasta files and 'loc' with .loc files.")

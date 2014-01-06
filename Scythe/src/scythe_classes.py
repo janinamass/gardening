@@ -1,8 +1,11 @@
 import re, sys, os, subprocess, string, random
 from gffFastaTools import FastaParser, FastaHelper, GFFParser
+import datetime
+import time
 #####################################
-# updated 04/18/2013 by J.Mass 		#
-# version 0.7						#
+# updated 01/02/2014 by J.Mass 		#
+# version 0.8                       #
+# changed: Error logging            #
 #####################################
 ##################################
 class ScytheError(Exception):
@@ -213,6 +216,7 @@ class ScytheGroup(ScytheBase):
 	def __init__(self, name = None, groupMaps = None):
 		self._groups = {}
 		self._names = []
+		self._name = name
 		self._groups = AutoViviDict()
 		if groupMaps:
 			for g in groupMaps:
@@ -369,6 +373,9 @@ class ScytheFrame(object):
         self._sr = self._path+"/ScytheResults/"
         self._srfa = self._sr+"/fasta/"
         self._srofa = self._sr+"/orthogroups_fasta/"
+        self._infolog = self._sr+os.sep+"info.log"
+        self._debuglog = self._sr+os.sep+"debug.log"
+        self._errorlog = self._sr+os.sep+"error.log"
         ##########test for /dev/shm ######
         rdev = self.testRamDev()
         if rdev:
@@ -398,6 +405,40 @@ class ScytheFrame(object):
             os.makedirs(self._srofa)
         if not os.path.isdir(self._fat):
             os.makedirs(self._fat)
+    def mkLogFiles(self):
+    	try:
+    		infohandle = open(self._infolog,'w')
+    		infohandle.write(datetime.datetime.now().strftime("%D_%T")+"\t started")
+    		infohandle.close()
+    		debughandle = open(self._debuglog,'w')
+    		debughandle.write(datetime.datetime.now().strftime("%D_%T")+"\t started")
+    		debughandle.close()
+    		errorhandle = open(self._errorlog,'w')
+    		errorhandle.close()
+    	except IOError as e:
+    		print(e)
+    		sys.exit(1)
+    def writeLog(self,type="info", s=""):
+    	timestamp = time.time()
+    	file = ""
+    	s = str(timestamp)+"\t"+datetime.datetime.now().strftime("%D_%T")+"\t"+s
+    	if (type == "info"):
+    		file = self._infolog
+    	elif (type == "error"):
+    		file = self._errorlog
+    	elif (type == "debug"):
+    		file = self._debuglog
+    	else:
+    		print('type can only be "info","error" or "debug"')
+    	try:
+    		handle = open(file, 'a+')
+    		handle.write(s)
+    		handle.write("\n")
+    		handle.close()
+    	except IOError as e:
+    		print(e)
+    		print(self._sr,type)
+    	
     def testRamDev(self):
     	rand = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(2))
     	ramdevpath = "/dev/shm/ScytheFastaTemp"+"_"+rand+"/"
@@ -439,9 +480,9 @@ class ScytheFrame(object):
                                                                             gapOpen,
                                                                             gapExtend
                                                                             )
-        print(cmd)
+        #self.writeLog("debug", cmd)
         ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, close_fds=True)
-        print("RET arrived")
+        #print("RET arrived")
         #retval = ret.wait()
         #ret.stdout.close()
         return(ret)
@@ -451,4 +492,5 @@ class ScytheFrame(object):
    
     def cleanUp(self):
     	for f in os.listdir(self._fat):
-    		os.remove("/".join([self._fat,f]))
+    		print(f)
+    		os.remove(os.sep.join([self._fat,f]))

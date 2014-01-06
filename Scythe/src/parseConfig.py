@@ -18,7 +18,8 @@ from tkinter import Listbox
 import multiprocessing
 from scytheGUI_classes import ScytheConvertDialogLoc
 from scytheGUI_classes import ScytheConvertDialogGrp
-import scythe
+import scythe_nv as scythe
+#import scythe
 import ensembl 
 root=tk.Tk()
 root.title("Scythe GUI alpha")
@@ -26,6 +27,7 @@ root.iconbitmap('@scy.xbm')
 import os
 import ensembl_ortho_mysql
 import ensembl2grp
+import sys
 
 global LOGSTR
 LOGSTR = ""
@@ -479,7 +481,7 @@ class Infobox():
         
 class ScytheMenu(tk.Frame):
   
-    def __init__(self, parent):
+    def __init__(self, parent, arg = None):
         tk.Frame.__init__(self, parent)   
         self.parent = parent        
         self.initGUI()
@@ -487,6 +489,10 @@ class ScytheMenu(tk.Frame):
         initConfCurrent()
         self.scythewizard= ScytheWizard(self.parent)
         self.configEditor = None
+        if arg:
+            print(arg)
+            self.loadConfigArg(arg)
+            
     def initGUI(self):
         menubar = tk.Menu(self.parent)
         self.parent.config(menu=menubar)
@@ -529,6 +535,16 @@ class ScytheMenu(tk.Frame):
     def onNewRun(self):
         self.scythewizard=ScytheWizard(self.parent)
         self.confighandler.reset()
+    def loadConfigArg(self,arg):
+        cfg = self.confighandler.currentconfig.read(arg)
+        global CURRENTCONFIG
+        CURRENTCONFIG=self.confighandler.currentconfig
+        self.scythewizard.st_fastaDir.set(self.confighandler.currentconfig.get(CF_PATHS,'fasta_directory') )
+        self.scythewizard.st_locDir.set(self.confighandler.currentconfig.get(CF_PATHS,'loc_directory') )
+        self.scythewizard.st_grpFile.set(self.confighandler.currentconfig.get(CF_PATHS,'grp_file') )
+        self.scythewizard.st_outDir.set(self.confighandler.currentconfig.get(CF_PATHS,'output_directory') )
+        
+        self.onSetOptions()
     def onLoadConfig(self):
         formats = [('Scythe configuration','*.scy')]  
         tmp = tk.filedialog.askopenfilename(parent=self.parent,filetypes=[('Scythe configuration','*.scy')],title="Load configuration...")
@@ -1051,8 +1067,12 @@ class ScytheWizard(tk.Tk):
 
 
 
-
-app=ScytheMenu(root)
+try:
+    arg = sys.argv[1]
+except IndexError as e:
+    app=ScytheMenu(root)
+else:
+    app=ScytheMenu(root,arg)
 
 root.mainloop()
 
