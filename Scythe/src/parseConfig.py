@@ -19,6 +19,8 @@ import multiprocessing
 from scytheGUI_classes import ScytheConvertDialogLoc
 from scytheGUI_classes import ScytheConvertDialogGrp
 import scythe_nv as scythe
+import rmSubsetsFromGrp4 as mergeSubsets
+
 #import scythe
 import ensembl 
 root=tk.Tk()
@@ -707,7 +709,7 @@ class EnsemblSelector(tk.Listbox):
             grpstring =""
             for i in specs:
                 grpstring+=i[0:2]
-            grpfile = self.outdir+os.sep+grpstring+".grp" 
+            grpfile = self.outdir+os.sep+grpstring+"_tmp.grp" 
             if self.fileExists(grpfile):
                  print("alredy there:", grpfile)
             else:
@@ -717,10 +719,18 @@ class EnsemblSelector(tk.Listbox):
             #    grpstring+=i[0:2]
             
                 ensembl2grp.readTsvFiles(listoftsv=listoftsv, outfile=grpfile)
+                #####update
+                outNoSubsets=self.outdir+os.sep+grpstring+".full.grp"
+                out = self.outdir+os.sep+grpstring+".shared_by_all.grp"
+                
+                numspec= mergeSubsets.filterGroups(grpfile,None, None, False)
+                mergeSubsets.mergeSubsets(grpfile,outNoSubsets, True)
+                mergeSubsets.filterGroups(outNoSubsets, out, numspec, False)
+                
             self.top.destroy()
             CURRENTCONFIG.set(CF_PATHS,CF_PATHS_fasta_directory, fapath+os.sep)
             CURRENTCONFIG.set(CF_PATHS,CF_PATHS_loc_directory, locpath+os.sep)
-            CURRENTCONFIG.set(CF_PATHS,CF_PATHS_grp_file, grpfile)
+            CURRENTCONFIG.set(CF_PATHS,CF_PATHS_grp_file, out)
             ScytheWizard(root).prepRun(reloadFields=False)
             #dat = ensembl.specInfo()
             #print(dat)

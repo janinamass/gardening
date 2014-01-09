@@ -38,17 +38,24 @@ class Orthogroup(object):
         purge= False
         for i in self._list:
             tmplist.append(i)
+            if i == "ENSBTAG00000000417":
+                        print(i,dct)
+                        #print( i != dct[i[0:6]])
             if i[0:6] in dct:
                 if i != dct[i[0:6]]:
-                    #print("Shit.",dct[i[0:6]],i)
+                    
+                    print("Shit.",dct[i[0:6]],i)
                     purge=True
                     #return(None)
             else:
                 dct[i[0:6]]=i
         for j in other._list:
+            if j == "ENSBTAG00000000417":
+                        print(j,dct)
+                        #print( j != dct[j[0:6]])
             if j[0:6] in dct:
                 if j != dct[j[0:6]]:
-                    #print("Shit.",dct[j[0:6]],j)
+                    print("Shit.",dct[j[0:6]],j)
                     purge=True
                     #return(None)
             else:
@@ -160,7 +167,7 @@ def checkConsistency(grp, outfile, rename=False):
     print("# non redundant ",ok)
     print("# redundant ",redundant)      
     o.close()
-    o = open("bla",'w')
+    o = open(outfile+"_bla",'w')
     for k in kglist:
         o.write(k)
         o.write("\n")
@@ -198,7 +205,7 @@ def checkConsistency(grp, outfile, rename=False):
 #     g.close()
 #     o.close()
 #===============================================================================
-def filterGroups(grp, out, numspec=None,rename=False):
+def filterGroups(grp, outfile, numspec=None,rename=False):
     kglist = []
     
     try:
@@ -227,7 +234,7 @@ def filterGroups(grp, out, numspec=None,rename=False):
         usage()
     try:
         #print(out)
-        out = open(out,'w')
+        out = open(outfile,'w')
     except IOError as e:
         print(e)
         usage()
@@ -247,7 +254,7 @@ def filterGroups(grp, out, numspec=None,rename=False):
                 kglist.append(m)
     out.close()
     #return(numspec)
-    o = open("bla1",'w')
+    o = open(outfile+"_bla",'w')
     print("bla")
     for k in kglist:
         o.write(k)
@@ -300,8 +307,10 @@ def main():
     #filterRedundancyPlusPlus(grp,outNoSubsets, rename)
     
     numspec= filterGroups(grp,"tmp1", numspec, rename)
-    checkConsistency(grp,outNoSubsets, rename)
-    filterGroups(outNoSubsets, out, numspec, rename)
+    checkConsistency(grp,"tmp2",rename)
+                     #outNoSubsets, rename)
+    filterGroups("tmp2", "tmp3", numspec, rename)
+     #            outNoSubsets, out, numspec, rename)
     #filterRedundancy("tmp", outNoSubsets)
     #filterRedundancy(outNoSubsets,"tmp")
 
