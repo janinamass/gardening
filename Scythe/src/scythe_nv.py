@@ -19,26 +19,26 @@ from clusteringTools import *
 from scythe_classes import *
 #----/import------------------#
 logo = """
-          _____            __  __       
-         / ___/_______  __/ /_/ /_  ___ 
+          _____            __  __
+         / ___/_______  __/ /_/ /_  ___
          \__ \/ ___/ / / / __/ __ \/ _ \\
         ___/ / /__/ /_/ / /_/ / / /  __/
-       /____/\___/\__, /\__/_/ /_/\___/ 
+       /____/\___/\__, /\__/_/ /_/\___/
                  /____/"""
 #-- usage --#
 def usage():
     """Print help."""
     print ("""
     ######################################
-    # scythe.py v0.6   [02 Jan 2014 JM]  #
+    # scythe.py v0.65   [30 Jan 2014 JM] #
     ######################################
   usage:
      scythe.py -i DIR -g .grpFILE --cleanup
-     
+
   usage with configuration file:
      scythe.py --config configuration.scy
 
-  general options:  
+  general options:
     -C, --config                     use configuration file instead of
                                      command line parameters
     -c, --cleanup                    remove temporary files when done
@@ -51,7 +51,7 @@ def usage():
 
   alignment options:
      -O, --gap_open=FLOAT           needleall gap opening cost [default 10]
-     -E, --gap_extend=FLOAT         needleall gap extension cost  
+     -E, --gap_extend=FLOAT         needleall gap extension cost
 
   fasta options:
     -d, --delim=STRING               split fasta headers at STRING
@@ -59,7 +59,7 @@ def usage():
                                      (default:0)
   debug options:
     -s, --stop_after=NUM             stop after NUM groups
-  
+
   further help:
     Please see documentation in the 'doc'-directory.
     """)
@@ -118,21 +118,21 @@ def parseConfig(pathconfig):
 # CF_PENALTIES: CF_PENALTIES_gap_open_cost, CF_PENALTIES_gap_extend_cost
 #    CF_PENALTIES_substitution_matrix
 # CF_ALGORITHM: CF_ALGORITHM_use_global_max,CF_ALGORITHM_use_default,
-#     CF_ALGORITHM_use_global_sum 
+#     CF_ALGORITHM_use_global_sum
 # CF_PARALOGS:[CF_PARALOGS_include_paralogs  ]:
-  
+
     config = configparser.ConfigParser()
     print(config.sections())
     print(pathconfig)
     config.read(pathconfig)
     print(config.sections())
-    print(config.sections())
+    
     for c in config:
         print(c)
    # print(config)
     #global VERBOSE
     global GLOBMAX
-    global GLOBSUM 
+    global GLOBSUM
     #VERBOSE = None
     if config.get(CF_ALGORITHM,CF_ALGORITHM_use_global_max)!="yes":
         GLOBMAX = False
@@ -142,13 +142,13 @@ def parseConfig(pathconfig):
         GLOBSUM = False
     else:
         GLOBSUM = True
-    
+
     if config.get(CF_CLEANUP,CF_CLEANUP_clean_up_directories) !="yes":
         cleanUp = False
     else:
         cleanUp = True
-    
-   ####TODO delimiter, asID from Config file ### 
+
+   
     groups= config.get(CF_PATHS,CF_PATHS_grp_file)
     namesList = None
     faDir = config.get(CF_PATHS,CF_PATHS_fasta_directory)
@@ -165,16 +165,16 @@ def parseConfig(pathconfig):
     faFileList = os.listdir(faDir)
     namesList = os.listdir(faDir)
     namesList = [n[0:3] for n in namesList]
-    
+
     #print(delim,"DELIMITER", asID)
     #print(groups)
     #print(namesList)
     #print(gapOpen,gapExtend )
     #print(faDir, faFileList)
     #print("LOCDIR", locDir)
-    runScythe(groups=groups, delim=delim.strip('"'), 
-              asID=asID, faFileList=faFileList, 
-              namesList=namesList, cleanUp=cleanUp, 
+    runScythe(groups=groups, delim=delim.strip('"'),
+              asID=asID, faFileList=faFileList,
+              namesList=namesList, cleanUp=cleanUp,
               stopAfter=stopAfter, inDir=inDir, outDir=outDir,
               gapOpen=gapOpen, gapExtend=gapExtend,
               locDir=locDir,faDir=faDir)
@@ -186,7 +186,7 @@ def parseConfig(pathconfig):
 
 
 def append_add(dct, key, val, unique = False):
-    """Append new (unique) value to the list of 'key'. 
+    """Append new (unique) value to the list of 'key'.
     If 'key' does not exist, create new list.
     """
     if key in dct:
@@ -233,7 +233,7 @@ def checkSingle(avd, seqDct, singles, all):
             tmpspec = seqDct[skey].species
             uncoll.add(skey)
             unprocessed.add(tmpspec)
-            append_add(species2id, tmpspec, skey, unique=True)        
+            append_add(species2id, tmpspec, skey, unique=True)
     # adding to coll, uncoll, proc, unproc
     for fkey in avd.keys():
         # fkey key for first dimension
@@ -243,9 +243,9 @@ def checkSingle(avd, seqDct, singles, all):
             coll.add(fkey)
         # if fkey in singles and tmpspec not in processed:
             unprocessed.remove(tmpspec)
-            processed.add(tmpspec)    
+            processed.add(tmpspec)
         skl=list(avd[fkey].keys())
-        
+
         for o in [x for x in skl if x in singles and seqDct[x].species in unprocessed]:
             unprocessed.remove(seqDct[o].species)
             processed.add(seqDct[o].species)
@@ -263,7 +263,7 @@ def getPairwiseAsTuples(avd):
          if f not in listofkeys:
              listofkeys.append(f)
          for s in avd[f].keys():
-            if s not in listofkeys: 
+            if s not in listofkeys:
                  listofkeys.append(s)
             pwdict[(f,s)]=  avd[f][s]
     return(pwdict.copy(), listofkeys)
@@ -272,7 +272,7 @@ def adddyn(listoftuples, pairwisedist, actualdict, allkeys, sequencesdct):
     tmdct = actualdict.copy()
     lenot = [len(t) for t  in listoftuples]
     maxlen = max(lenot)
-    listoftuples = [t for t in listoftuples if len(t) == maxlen] 
+    listoftuples = [t for t in listoftuples if len(t) == maxlen]
     for t in listoftuples:#start with pairwise dist (i,j)
          #print("TUPLE ",t)
          specdone=[sequencesdct[e].species for e in t]
@@ -308,7 +308,7 @@ def algo_globsum(avd, seqDct, defaults):
     keylengths = [len(key) for key in lot]
     while(max(keylengths) < len(unprocessed)): #proxy for num of spec
         newdct = adddyn(lot, pairwise, actual, allkeys, seqDct)
-        actual = newdct 
+        actual = newdct
         lot = newdct.keys()
         keylengths = [len(key) for key in lot]
     tupkeys = []
@@ -339,10 +339,10 @@ def findGlobalMax(avd, seqDct, singles, all, coll, uncoll, defaultForms):
     if avd =={}:
         #print("avd empty")
         return(None,None)
-    
+
     for u in uncoll: #uncollected species
         tmpspec = seqDct[u].species
-        
+
         if avd[u]:
             skl=list(avd[u].keys())
             scorel=list(avd[u].values())
@@ -383,15 +383,15 @@ def algo(avd, seqDct, singles, all, defaultForms):
     """Process distance matrix"""
     # avd is a two dimensional dictionary with sequence identifiers as indices
     # it represents the distance / scoring matrix
-    # the seqDct maps identifiers to the actual ScytheSequence objects 
+    # the seqDct maps identifiers to the actual ScytheSequence objects
     # so that checking for their species etc becomes more convenient
-    processed, unprocessed, coll, uncoll, species2id  = initCollProc(avd, seqDct)#, singles, all) 
+    processed, unprocessed, coll, uncoll, species2id  = initCollProc(avd, seqDct)#, singles, all)
     if not GLOBMAX:
-        processed, unprocessed, coll, uncoll, species2id = checkSingle(avd, seqDct, singles, all)  
+        processed, unprocessed, coll, uncoll, species2id = checkSingle(avd, seqDct, singles, all)
     #singles round
         #frame.writeLog("debug","# After singles check:","\n#\t unprocessed "+unprocessed+
               #"\n#\t processed "+processed+"\n#\t collected "+coll+"\n#\t uncollected "+uncoll+"\n# "+species2id)
-    
+
     if not coll or GLOBMAX:
         globMaxIds, globMaxSps = findGlobalMax(avd, seqDct, singles, all, coll, uncoll, defaultForms)
         #print("# global max pair:", globMaxIds, globMaxSps)
@@ -404,7 +404,7 @@ def algo(avd, seqDct, singles, all, defaultForms):
         uncoll.remove(globMaxIds[1])
         unprocessed.remove(globMaxSps[0])
         unprocessed.remove(globMaxSps[1])
-   
+
     while(unprocessed):
         if coll: #already collected
             #print(avd)
@@ -416,7 +416,7 @@ def algo(avd, seqDct, singles, all, defaultForms):
                     for uc in species2id[up]:
                         #print(uc)
                         if uc in avd: # is in distance dict
-                            try: 
+                            try:
                                 tmp = int(avd[uc][c])
                             except TypeError as e:
                                 tmp = -1
@@ -450,6 +450,7 @@ def algo(avd, seqDct, singles, all, defaultForms):
 
 def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
     print("makeFasta")
+    allSingle = set()
     singles = set()
     allSpec = set()
     seqDct = {}
@@ -461,80 +462,112 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
     defaultForms = set()
     for l in listofspecies:
         sp[l.name] = l
+        print("specname", l.name,l)
         for i in l._defForm:
             defaultForms.add(i)
     debug_stop = 0
-    print(group, "d", group._names)
+    #print(group, "d", group._names)
     for g in group.groups:
+#try to avoid unnecessary needle calls
+        gAllSingle=None
         if stopAfter and g > stopAfter:
             break
         spl = list(group.groups[g])
+        #print("\t@@@ list of species in ",g,spl)
         allSpec = set(spl)
-        print(g)
+        #print("\t@@@", spl)
+        #print(g)
         for s in spl:
             #print("FAT, "+frame._fat)
             outfile = frame._fat+".".join([str(g),s,"fa"])
             out = open(outfile, "w")
             spa = group.groups[g][s]
             for locus in spa:
+                print("\t@@@",locus,spa,len(spa))
                 if len(spa)==1:
                     singles.add(locus)
+                    if gAllSingle is None or gAllSingle is True:
+                        gAllSingle=True
+                    else:
+                        gAllSingle=gAllSingle
+                else:
+                    gAllSingle=False
                 try:
                     out.write(sp[s].sequences[locus].toFasta())
+
                     seqDct[sp[s].sequences[locus].name]=sp[s].sequences[locus]
                 except KeyError as ke:
                     print ("Are all gene models in your fasta files? - KeyError for ",ke)
             out.close()
-    test = "" 
+            #print("\t@@@",singles)
+        if gAllSingle:
+            allSingle.add(g)
+    test = ""
     deb=0
+    #print("allSingle",allSingle)
+#TODO check if all members of orthogroup are 'singles' and skip needle call completely
     for g in group.groups:
-        print(g)
-        avd = None
-        avd = AutoViviDict()
-        if stopAfter and g> stopAfter:
-            break
-        frame.writeLog("debug","#-- Processing group"+str(g)+"--#")
-        #print("#-- Processing group"+str(g)+"--#")
-        spl = list(group.groups[g])
-        for i in range(0,len(spl)-1):
-            for j in range(i+1,len(spl)):
-                outfile = frame._fat+".".join([str(g),spl[i],"fa"])
-                fileA = outfile
-                outfile = frame._fat+".".join([str(g),spl[j],"fa"])
-                fileB = outfile
-                outfile=frame._sr+".".join([str(g),spl[i],spl[i+1],"needle"])
-                try: 
-                    print("CALLING NEEDLE")
-                    task = frame.callNeedleAll(fileA, fileB, outfile = outfile,stdout=True, gapOpen=gapOpen, gapExtend=gapExtend)
-                    print("TASK CALLED")
-                    fulldata = task.stdout.read()
-                    assert task.wait() == 0
-                    task.stdout.close()
-                except AssertionError as ae:
-                    print(ae)
-                    data="#"
-                    print("WARNING:", fileA, fileB,"excluded")
-                    frame.writeLog("error","WARNING:"+fileA+" "+fileB+" excluded, AssertionError")
-                    yield((None,None))
-                    
-                data  =  fulldata.decode("utf-8")
-                for l in data.split("\n"):
-                    if l.startswith("#"):
-                        break
-                    else:
-                        tmp = pattern.findall(l)
-                        if tmp:
-                            #print(tmp)
-                            res = tmp[0]
-                            score = int(float(res[2])*10)
-                            avd[res[0]][res[1]]=score
-                            avd[res[1]][res[0]]=score
-        if GLOBSUM:
-            yield(algo_globsum(avd, seqDct, defaultForms),str(g))       
+        print(g, g in allSingle)#ok so far
+        if g in allSingle:
+            spl = list(group.groups[g])
+            of=open(frame._srofa+".".join([str(g),"FA"]),'w')
+            print(frame._srofa+".".join([str(g),"FA"]))
 
-        else:
-            yield(algo(avd, seqDct, singles, allSpec, defaultForms),str(g))
+            for s in spl:
+                spa = group.groups[g][s]
+                for locus in spa:
+                    print(s, locus,g)
+                    of.write(sp[s].sequences[locus].toFasta())
+            of.close()
+            continue
+        else: ##new
+######from avd = None
+            avd = None
+            avd = AutoViviDict()
+            if stopAfter and g> stopAfter:
+                break
+            frame.writeLog("debug","#-- Processing group"+str(g)+"--#")
+            #print("#-- Processing group"+str(g)+"--#")
+            spl = list(group.groups[g])
+            for i in range(0,len(spl)-1):
+                for j in range(i+1,len(spl)):
+                    outfile = frame._fat+".".join([str(g),spl[i],"fa"])
+                    fileA = outfile
+                    outfile = frame._fat+".".join([str(g),spl[j],"fa"])
+                    fileB = outfile
+                    outfile=frame._sr+".".join([str(g),spl[i],spl[i+1],"needle"])
+                    try:
+                        print("CALLING NEEDLE")
+                        task = frame.callNeedleAll(fileA, fileB, outfile = outfile,stdout=True, gapOpen=gapOpen, gapExtend=gapExtend)
+                        print("TASK CALLED")
+                        fulldata = task.stdout.read()
+                        assert task.wait() == 0
+                        task.stdout.close()
+                    except AssertionError as ae:
+                        print(ae)
+                        data="#"
+                        print("WARNING:", fileA, fileB,"excluded")
+                        frame.writeLog("error","WARNING:"+fileA+" "+fileB+" excluded, AssertionError")
+                        yield((None,None))
 
+                    data  =  fulldata.decode("utf-8")
+                    for l in data.split("\n"):
+                        if l.startswith("#"):
+                            break
+                        else:
+                            tmp = pattern.findall(l)
+                            if tmp:
+                                #print(tmp)
+                                res = tmp[0]
+                                score = int(float(res[2])*10)
+                                avd[res[0]][res[1]]=score
+                                avd[res[1]][res[0]]=score
+            if GLOBSUM:
+                yield(algo_globsum(avd, seqDct, defaultForms),str(g))
+
+            else:
+                yield(algo(avd, seqDct, singles, allSpec, defaultForms),str(g))
+        #to the very end
 def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, inDir, outDir, gapOpen, gapExtend, locDir=None, faDir=None):
     print(delim,"rsDELIMITER", asID)
     stopAfter=int(stopAfter)
@@ -557,19 +590,19 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
         #print(dct)
     else:
         usage()
-        
+
     frame = ScytheFrame(path=outDir)
     frame.mkAllDirs()
     frame.mkLogFiles()
-    
+
     grp = ScytheGroup("tmpgrp", grpMapList)
     grp = ScytheGroup("tmpgrp", grpMapList)
     frame = ScytheFrame(path=outDir)
     frame.mkAllDirs()
-   
+
     outfiles = {}
     outfilesGroups = {}
-    
+
     outfiles = {}
     outfilesGroups = {}
     cnt = 0
@@ -606,17 +639,17 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
             grpMapList.append(ScytheGroupMap(name=n, locfile=locDir+locFileList[0], dct=dct, separator=delim, asID=asID))
         else:
             grpMapList.append(ScytheGroupMap(name=n, locfile =inDir+"/loc/"+locFileList[0], dct=dct, separator=delim, asID=asID))
-    
-    
-    
+
+
+
     for g in grpMapList:
         g.free()
     for sp in specsList:
         sp.fillDefForm()
         sp.fillLociCDS()
         sp.fillSequences(sep = delim, asID=asID)
-    
-    
+
+
     for s in specsList:
         outfile = frame._srfa+".".join([s.name,"fa"])
         outfiles[s.name] = open(outfile, 'a')
@@ -629,7 +662,7 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
             #############
             outfileGroup = frame._srofa+".".join([R,"fa"])
             outfilesGroups[R] = open(outfileGroup, 'a')
-            for s in specsList:   
+            for s in specsList:
                 tmp = r[1]
                 ok  = [x for x in tmp if x in s.cds]
                 if ok:
@@ -714,11 +747,11 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
         sp.fillDefForm()
         sp.fillLociCDS()
         sp.fillSequences(sep = delim, asID=asID)
-    
+
     grp = ScytheGroup("tmpgrp", grpMapList)
     frame = ScytheFrame(path=outDir)
     frame.mkAllDirs()
-   
+
     outfiles = {}
     outfilesGroups = {}
     cnt = 0
@@ -734,7 +767,7 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
             #############
             outfileGroup = frame._srofa+".".join([R,"fa"])
             outfilesGroups[R] = open(outfileGroup, 'a')
-            for s in specsList:   
+            for s in specsList:
                 tmp = r[1]
                 ok  = [x for x in tmp if x in s.cds]
                 if ok:
@@ -749,33 +782,33 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
         #annoy("# Cleaning up...")
         frame.cleanUp()
         #annoy("# ...done.")
-        
+
     for out in outfiles.values():
         out.close()
     print("\ndone.")
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def main():
     global VERBOSE
     global GLOBMAX
-    global GLOBSUM 
+    global GLOBSUM
     VERBOSE = None
     GLOBMAX = False
-    GLOBSUM = False 
+    GLOBSUM = False
     cleanUp = False
     groups = None
     namesList = None
@@ -783,20 +816,20 @@ def main():
     outDir = "./"
     fastaList = None
     gffList = None
-    delim = None 
+    delim = None
     asID = 0
     stopAfter = False
     gapOpen=str(10)
     gapExtend =str(0.5)
     isUsingConfig = False
     ##################################
-    
+
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], "C:i:o:s:d:a:g:O:E:mcvhM", 
+        opts, args = getopt.gnu_getopt(sys.argv[1:], "C:i:o:s:d:a:g:O:E:mcvhM",
                                         ["config=","in_dir=","out_dir=",
                                          "stop_after=",
                                          "delim=", "asID=",
-                                         "groups=","gap_open=", "gap_extend=","global_max","cleanup", 
+                                         "groups=","gap_open=", "gap_extend=","global_max","cleanup",
                                          "verbose", "help","global_sum"]
                                        )
     except getopt.GetoptError as err:
@@ -807,7 +840,7 @@ def main():
         if o in ("-C", "--config"):
             print(logo)
             parseConfig(a)
-            
+
             isUsingConfig=True
         elif o in ("-i", "--in_dir"):
             inDir = a
@@ -826,31 +859,31 @@ def main():
         elif o in ("-c", "--cleanup"):
             cleanUp = True
         elif o in ("-m", "--global_max"):
-            GLOBMAX = True 
+            GLOBMAX = True
         elif o in ("-M", "--global_sum"):
             GLOBSUM = True
         elif o in ("-O", "--gap_open"):
             gapOpen = a
         elif o in ("-E", "--gap_extend"):
             gapExtend = a
-         
+
         elif o in ("-h", "--help"):
             usage()
         else:
             assert False, "unhandled option"
     if not isUsingConfig:
-        
+
         if VERBOSE:
             for o, a in opts:
                 if o in ("-v", "--verbose","-c", "--cleanup"):
                     print(o, "set")
                 else:
                     print(o, "set to",a)
-    
+
         if not (inDir and groups):
             print(logo)
             usage()
-        
+
         try:
             print(os.listdir(inDir+"/fa/"))
             print(os.listdir(inDir+"/loc/"))
@@ -858,23 +891,23 @@ def main():
             print(e)
             print("Please provide a directory containing folders 'fa' with fasta files and 'loc' with .loc files.")
             usage()
-            
+
         faFileList = os.listdir(inDir+"/fa/")
         namesList = os.listdir(inDir+"/fa/")
         namesList = [n[0:3] for n in namesList]
-        #print (namesList)        
-    
+        #print (namesList)
+
         if (len(faFileList)!=len(namesList)):
             print("Names:", namesList)
             print("Fasta files:", faFileList)
             usage()
-        
-        runScythe(groups=groups, delim=delim, 
-                  asID=asID, faFileList=faFileList, 
-                  namesList=namesList, cleanUp=cleanUp, 
+
+        runScythe(groups=groups, delim=delim,
+                  asID=asID, faFileList=faFileList,
+                  namesList=namesList, cleanUp=cleanUp,
                   stopAfter=stopAfter, inDir=inDir, outDir=outDir, gapOpen=gapOpen, gapExtend=gapExtend)
 
 #----------------------------------------------------------------#
-   
+
 if __name__ == "__main__":
     main()

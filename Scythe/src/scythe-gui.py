@@ -374,9 +374,9 @@ class ScytheConfigEditor():
         tempconf.set(CF_CLEANUP, CF_CLEANUP_clean_up_directories, self.var_subsec[CF_CLEANUP][0].get())
         #Fasta header
         tempconf.set(CF_FASTAHEADER, CF_FASTAHEADER_delimiter, self.var_subsec[CF_FASTAHEADER][0].get())
-        print("blabla",self.var_subsec[CF_FASTAHEADER][0].get())
+        #print("blabla",self.var_subsec[CF_FASTAHEADER][0].get())
         tempconf.set(CF_FASTAHEADER, CF_FASTAHEADER_part, self.var_subsec[CF_FASTAHEADER][1].get())
-        print("III",self.var_subsec[CF_FASTAHEADER][0].get())
+        #print("III",self.var_subsec[CF_FASTAHEADER][0].get())
         tempconf.set(CF_FASTAHEADER, CF_FASTAHEADER_part,self.st_fasta_header_part.get())
         tempconf.set(CF_FASTAHEADER, CF_FASTAHEADER_delimiter,self.st_fasta_header_delimiter.get())
 
@@ -693,7 +693,7 @@ class EnsemblSelector(tk.Listbox):
                         print(e)
                         print("Warning: No such fasta: ",fapath+os.sep+i+".fa")
                 else:
-                    print("already there: "+locpath+os.sep+u+".loc")
+                    print("already there: "+locpath+os.sep+i+".loc")
                     ###test:TODO deal with different releases: Throw warning, has to be done manually
             
             grpstring =""
@@ -704,7 +704,7 @@ class EnsemblSelector(tk.Listbox):
                  print("alredy there:", grpfile)
             else:
                 listoftsv=ensembl_ortho_mysql.fetchOrthoFromMySQL(specieslist = specs, release=rel[0])
-            #grpstring =""
+            #grpstring =""..    
             #for i in specs:
             #    grpstring+=i[0:2]
             

@@ -13,12 +13,15 @@ from gffFastaTools import FastaParser
 ####19.12
 def getSequencesFromFTP(outdir, release, specieslist=[]):
     path=outdir+os.sep+"fa"
+    tmppath = outdir+os.sep+"tmp"
     print(outdir, release, specieslist)
     if len(release)==1:
         release = release[0]
         dirlist = []
         if not os.path.isdir(path):
                 os.makedirs(path)
+        if not os.path.isdir(tmppath):
+                os.makedirs(tmppath)
         if (specieslist==[]):
             print("Warning: No set of species selected")
             exit(0)
@@ -45,11 +48,13 @@ def getSequencesFromFTP(outdir, release, specieslist=[]):
             ftp.retrlines('LIST', callback=falist.append)
             falist = [f for f in falist if "all.fa" in f][0]
             fafile = falist.split(" ")[-1]
-            outfaname = spec+".fa.gz"
+            outfaname = tmppath+os.sep+spec+".fa.gz"
+            print("@outfaname", outfaname)
             outfa = open(outfaname,'wb')
             ftp.retrbinary("RETR "+fafile,outfa.write)
             outfa.close()
             xtract(outfaname, path)
+            print("@path")
             ftp.cwd("/pub/"+ftprelhome)
        
         ftp.quit()
@@ -68,10 +73,12 @@ def xtract(cfile, outpath = "."):
     
     if cfile.endswith('.gz'):
         dzf = ".".join(cfile.split(".")[:-1])
+        print(dzf, dzf[-1])
         #gzip 
         gzf = gzip.open(cfile,'rb')
         content = gzf.read()
-        out = open(outpath+os.sep+dzf,'wb')
+        out = open(outpath+os.sep+dzf.split(os.sep)[-1],'wb')
+        #out = open(dzf,'wb')
         out.write(content)
         out.close
         gzf.close()
