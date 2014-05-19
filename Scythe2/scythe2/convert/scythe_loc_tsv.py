@@ -58,20 +58,6 @@ def howTo():
     """
 class WrongNumberOfColumnsException(Exception):
     pass
-def checkTsv(custom=None, infile = None):
-    print(custom)
-    with open(infile,'r') as f:
-        h = f.readline().strip()
-    print(h)
-    header = h.split("\t")
-    f = lambda x: x.lower().replace(" ","")
-    header_tmp = [f(h) for h in header]
-    if len(custom)!=len(header):
-        raise WrongNumberOfColumnsException("Lengths of header and file don't match! ", custom, header)
-
-    for c,h in zip(custom,header_tmp):
-        if not c in h:
-            raise Warning("Something wrong with the headers:"+",".join(header))
 
 def writeLoc(genesDct, outfile):
     f = lambda x: "\t".join(genesDct[x])
@@ -146,71 +132,14 @@ def readTsv(infile=None):
                         genesp[tmpg].append(tmp[protein_index])
 
     return(genest.copy(),genesp.copy())
-def readEnsemblLoc(ensembleLoc, outfile, lenDct=None):
-    out=open(outfile,"w")
-    infile = open(ensembleLoc,"r")
-    numLoc = 0
-    numTr = 0
-    locDct = {}
-    maxDct = {} #max length of transcript at locus
-    longestTr = {}
-    missing = False
-    for l in infile:
-        if "Ensembl" in l:
-            continue
-        l = l.strip()
-        tmp = l.split("\t")
-        if tmp[0] not in locDct:
-            numLoc+=1
-            numTr+=1
-            locDct[tmp[0]]=[tmp[1]]
-        else:
-            numTr+=1
-            locDct[tmp[0]].append(tmp[1])
-
-    if lenDct:
-        for l,tr in locDct.items():
-            try:
-                maxDct[l] = max([lenDct[i] for i in tr])
-            except KeyError as ke:
-                tmp=[]
-                missing = True
-                for i in tr:
-                    if i in lenDct:
-                        tmp.append(i)
-                    else:
-                        lenDct[i]=0
-                        tmp.append(i)
-                maxDct[l] = max([lenDct[i] for i in tmp])
-                if not maxDct[l]:
-                    #last resort
-                    maxDct[l]=tr[0]
-            longestTr[l]=[t for t in tr if lenDct[t] == maxDct[l]]
-            #print(longestTr[l])
-            longestTr[l] = longestTr[l][0]
-        locDct2 = locDct.copy()
-        for loc,tr in locDct2.items():#rm
-            locDct[loc] = [t for t in tr if t != longestTr[loc]]
-        for loc,tr in locDct.items():
-            out.write(loc+"\t"+longestTr[loc]+"\t"+"\t".join(tr)+"\n")
-        if missing:
-            print("# There were missing lengths\n")
-
-    else: #no lengths given
-        for loc,tr in locDct.items():
-            out.write(loc+"\t"+"\t".join(tr)+"\n")
-    out.close()
-    printInfo(numLoc=numLoc, numTr=numTr, outfile=outfile, verb=VERB)
-
 
 def main():
-    custom = None
     outfile = None
     outfilep = None
     in_tsv = None
-    default_header = ["gene","transcript","protein", "length"]
+    header = ["gene","transcript","protein", "length"]
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], "f:hHo:c:", ["file=","help","HELP","output=","custom="])
+        opts, args = getopt.gnu_getopt(sys.argv[1:], "f:hHo:", ["file=","help","HELP","output="])
     except getopt.GetoptError as err:
         print (str(err))
         usage()
@@ -232,20 +161,11 @@ def main():
     if not outfile:
             outfile = in_tsv+".loc"
             outfilep = in_tsv+".locp"
-    if custom:
-        header = custom.split(",")
-        valid = [h for h in header if h in default_header]
-        if not default_header[0] in valid:
-            usage()
-        elif not default_header[1] in valid and not default_header[2] in valid:
-            usage()
-    else:
-        valid = default_header
-    try:
-        checkTsv(custom = valid , infile = in_tsv)
-    except WrongNumberOfColumnsException as e:
-        print(str(e))
-        usage()
+    #try:
+    #    checkTsv(infile = in_tsv)
+   # except WrongNumberOfColumnsException as e:
+    #    print(str(e))
+    #    usage()
 
     genest, genesp = readTsv(in_tsv)
     if genest:
