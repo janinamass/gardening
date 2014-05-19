@@ -99,12 +99,12 @@ def readTsv(infile=None):
                     try:
                         genesp[tmpg] = [tmp[protein_index]]
                     except IndexError as e:
-                        sys.stderr.write(str(tmp)+" ignored (missing protein id field)\n")
+                        sys.stderr.write(str(tmp)+" (missing protein id field)\n")
                 if length_index:
                     try:
                         maxlen[tmpg] = tmp[length_index]
                     except IndexError as e:
-                        sys.stderr.write(str(tmp)+" ignored (missing length field)\n")
+                        sys.stderr.write(str(tmp)+" (missing length field)\n")
                         maxlen[tmpg] = 0
             else:
                 if length_index:
@@ -124,13 +124,20 @@ def readTsv(infile=None):
                             if protein_index:
                                 genesp[tmpg].append(tmp[protein_index])
                     except IndexError as e:
-                        sys.stderr.write(str(tmp)+" ignored (missing length field)\n")
+                        sys.stderr.write(str(tmp)+" (missing length field)\n")
                 else:
                     if transcript_index:
                         genest[tmpg].append(tmp[transcript_index])
                     if protein_index:
-                        genesp[tmpg].append(tmp[protein_index])
-
+                        try:
+                            genesp[tmpg].append(tmp[protein_index])
+                        except KeyError as e:
+                            try:
+                                genesp[tmpg]=[tmp[protein_index]]
+                            except IndexError as e:
+                                sys.stderr.write(str(tmp)+" (missing protein id field)\n")
+                        except IndexError as e:
+                                sys.stderr.write(str(tmp)+" (missing protein id field)\n")
     return(genest.copy(),genesp.copy())
 
 def main():
