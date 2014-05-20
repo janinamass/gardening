@@ -8,7 +8,7 @@ to minimize sources for misalignment in an automated fashion.
 Please see the `Tutorial` on how to use Scythe.
 
 Algorithms and Application
-===========
+==========================
 Scythe performs pairwise global alignments [NEED1970] to measure the similarity between transcripts.
 Transcripts are only compared between species.
 There are three main strategies implemented in Scythe to deal with the sequences after scoring:
@@ -20,6 +20,7 @@ Alternatively, the maximum-sum (mx_sum_) approach calculates the score for all t
 Please note, that this approach might not be feasable for large data sets.
 
 .. mx_sum:
+
 mx_sum
 ------
 mx_sum (maximum-sum)
@@ -28,6 +29,7 @@ There are however scenarios where this would not represent the desired result: I
 their pairwise score to all other sequences is always taken into account and may favor sequences that are less dissimilar to the outlier.
 
 .. sl_ref:
+
 sl_ref
 ------
 sl_ref(single-linkage-reference)... 
@@ -36,6 +38,7 @@ focus on finding similar gene models given one reference species, e. g. when the
 has already decided on a splice variant in one species.
 
 .. sl_glob:
+
 sl_glob
 -------
 sl_glob (single-linkage-global) due to the single linkage selection approach, the algorithm starting with the best match-
@@ -54,6 +57,6 @@ Command line interface
 ======================
 
 Graphical User Interface
-=======================
+=========================
 
 

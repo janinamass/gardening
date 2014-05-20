@@ -16,7 +16,7 @@ Contents:
 
    Tutorial
 
-.. program-output:: ../../scythe2/convert/scythe_loc_gff.py -H
+.. command-output:: ../../scythe2/convert/scythe_loc_gff.py -H
 
 .. program-output:: ../../scythe2/convert/scythe_loc_tsv.py -H
 

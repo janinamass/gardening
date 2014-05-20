@@ -42,7 +42,10 @@ def formatHelp():
     howTo()
 
 def howTo():
-    """
+    """Print an ENSEMBLE example query"""
+    print("""
+    example ensembl query:
+
     http://www.ensembl.org/biomart/
     <?xml version="1.0" encoding="UTF-8"?>
     <!DOCTYPE Query>
@@ -55,7 +58,7 @@ def howTo():
     <Attribute name = "cds_length" />
     </Dataset>
     </Query>
-    """
+    """)
 class WrongNumberOfColumnsException(Exception):
     pass
 

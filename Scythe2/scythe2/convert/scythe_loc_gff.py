@@ -43,11 +43,11 @@ def formatHelp():
 
 
     #-------- gff version 3 input format ----------------------#
-    example:
+    example (tab is shown as \\t):
 
     ##gff-version 3
-    L1\texample\tgene\t1000\t9000\t.\t+\t.\tID=L1;Name=L1;Note=example
-    L1.a\texample\tmRNA\t1000\t9000\t.\t+\t.\tID=L1.a;Parent=L1;Name=L1.a
+    L1i\\texample\\tgene\\t1000\\t9000\\t.\\t+\\t.\\tID=L1;Name=L1;Note=example
+    L1.a\\texample\\tmRNA\\t1000\\t9000\\t.\\t+\\t.\\tID=L1.a;Parent=L1;Name=L1.a
 
 
     Note that this script only relies on the "ID" and "Parent" tags,
