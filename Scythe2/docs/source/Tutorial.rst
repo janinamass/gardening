@@ -56,9 +56,18 @@ Converters
 Scythe uses a simple formats to store gene-transcript and ortholog information.
 See the `Format` section for details. !todo
 For the `loc` format, converters from tab-separated files (eg. download from ENSEMBL via BioMart) and gff3 are included.
-For
+
+.. automodule:: scythe2.convert
+    
+    :undoc-members:
 
 loc
 ~~~
-Call scythe
+
+.. program-output:: ../../scythe2/convert/scythe_loc_gff.py -H
+
+.. program-output:: ../../scythe2/convert/scythe_loc_tsv.py -H
+
+grp
+~~~
 

@@ -50,18 +50,3 @@ sl_glob (single-linkage-global) due to the single linkage selection approach, th
 ing pair should provide a good starting point in absence of a reference gene model and
 may be able circumvent outliers.
 
-
-Format
-======
-
-Converters
-==========
-
-
-Command line interface
-======================
-
-Graphical User Interface
-=========================
-
-
