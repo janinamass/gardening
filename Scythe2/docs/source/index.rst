@@ -1,0 +1,40 @@
+.. Scythe documentation master file, created by
+   sphinx-quickstart on Tue May 20 08:09:48 2014.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+Welcome to Scythe's documentation!
+==================================
+Scythe -- Selection of Conserved Transcripts by Homology Evaluation
+
+Contents:
+
+.. toctree::
+   :maxdepth: 2
+
+   Introduction
+
+   Tutorial
+
+.. program-output:: ../../scythe2/convert/scythe_loc_gff.py -H
+
+.. program-output:: ../../scythe2/convert/scythe_loc_tsv.py -H
+
+.. automodule:: scythe2.convert
+    :undoc-members:
+
+.. automodule:: scythe2.convert.scythe_loc_gff
+    :members:
+    :undoc-members:
+
+.. automodule:: scythe2.convert.scythe_loc_tsv
+    :undoc-members:
+    :members:
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+
