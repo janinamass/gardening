@@ -101,21 +101,6 @@ def parseConfig(pathconfig):
     CF_FASTAHEADER_delimiter = "fasta_header_delimiter"
     CF_FASTAHEADER_part = "fasta_header_part"
     ##############################################
-# SECTIONS
-# CF_MODE: CF_MODE_use_ensembl,CF_MODE_use_local_files
-# CF_PATHS: CF_PATHS_fasta_directory, CF_PATHS_loc_directory,CF_PATHS_grp_file,
-#       CF_PATHS_output_directory
-# CF_OUTPUT: CF_OUTPUT_attach_output_prefix, CF_OUTPUT_output_prefix,
-#     CF_OUTPUT_output_orthogroups, CF_OUTPUT_output_species_fasta
-#     CF_OUTPUT_merge_species_fasta_with_defaults
-# CF_CLEANUP: CF_CLEANUP_clean_up_directories
-# CF_RUN: CF_RUN_max_threads, CF_RUN_split_input,CF_RUN_split_each,
-#    CF_RUN_use_seqan
-# CF_PENALTIES: CF_PENALTIES_gap_open_cost, CF_PENALTIES_gap_extend_cost
-#    CF_PENALTIES_substitution_matrix
-# CF_ALGORITHM: CF_ALGORITHM_use_global_max,CF_ALGORITHM_use_default,
-#     CF_ALGORITHM_use_global_sum
-# CF_PARALOGS:[CF_PARALOGS_include_paralogs  ]:
 
     config = configparser.ConfigParser()
     print(config.sections())
@@ -162,12 +147,6 @@ def parseConfig(pathconfig):
     namesList = os.listdir(faDir)
     namesList = [n[0:3] for n in namesList]
 
-    #print(delim,"DELIMITER", asID)
-    #print(groups)
-    #print(namesList)
-    #print(gapOpen,gapExtend )
-    #print(faDir, faFileList)
-    #print("LOCDIR", locDir)
     runScythe(groups=groups, delim=delim.strip('"'),
               asID=asID, faFileList=faFileList,
               namesList=namesList, cleanUp=cleanUp,
@@ -328,10 +307,6 @@ def findGlobalMax(avd, seqDct, singles, all, coll, uncoll, defaultForms):
     globMax = -1
     globMaxIds = ""
     globMaxSps = ""
-    #print(avd)
-    ###############33
-    #
-    #
     if avd =={}:
         #print("avd empty")
         return(None,None)
@@ -754,9 +729,11 @@ def main():
     global VERBOSE
     global GLOBMAX
     global GLOBSUM
+    global SL_REF
     VERBOSE = None
     GLOBMAX = False
     GLOBSUM = False
+    SL_REF = False
     cleanUp = False
     groups = None
     namesList = None
@@ -773,12 +750,21 @@ def main():
     ##################################
 
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], "C:i:o:s:d:a:g:O:E:mcvhM",
-                                        ["config=","in_dir=","out_dir=",
-                                         "stop_after=",
-                                         "delim=", "asID=",
-                                         "groups=","gap_open=", "gap_extend=","global_max","cleanup",
-                                         "verbose", "help","global_sum"]
+        opts, args = getopt.gnu_getopt(sys.argv[1:], "C:i:G:o:s:d:a:O:E:rgmcvh",
+                                        ["config=",
+                                        "in_dir=",
+                                        "groups=",
+                                        "out_dir=",
+                                        "stop_after=",
+                                        "delim=", "asID=",
+                                        "gap_open=",
+                                        "gap_extend=",
+                                        "sl_ref",
+                                        "sl_glob",
+                                        "mx_sum",
+                                        "cleanup",
+                                        "verbose",
+                                        "help"]
                                        )
     except getopt.GetoptError as err:
         print (str(err))
@@ -800,15 +786,17 @@ def main():
             delim = a
         elif o in ("-a", "--asID"):
             asID = int(a)
-        elif o in ("-g", "--groups"):
+        elif o in ("-G", "--groups"):
             groups = a
         elif o in ("-v", "--verbose"):
             VERBOSE = True
         elif o in ("-c", "--cleanup"):
             cleanUp = True
-        elif o in ("-m", "--global_max"):
+        elif o in ("-r", "--sl_ref"):
+            SL_REF = True
+        elif o in ("-g", "--sl_glob"):
             GLOBMAX = True
-        elif o in ("-M", "--global_sum"):
+        elif o in ("-m", "--mx_sum"):
             GLOBSUM = True
         elif o in ("-O", "--gap_open"):
             gapOpen = a
