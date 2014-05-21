@@ -4,8 +4,9 @@ Introduction
 Scythe picks best matching transcripts for one-to-one orthologous genes from two or more species.
 The goal is to provide the best, i.e. most homologous set of sequences, for a subsequent multiple sequence alignment in order
 to minimize sources for misalignment in an automated fashion.
+Scythe will perform pairwise global alignments using the Needleman-Wunsch algorithm [NE1970] as implemented in needleall as part of the EMBOSS package [EMB2000].
 
-Please see the `Tutorial` on how to use Scythe.
+Please see the :ref:`tutorial` on how to use Scythe.
 
 .. [NEE1970] Needleman, Saul B.; and Wunsch, Christian D. (1970). "A general method applicable to the search for similarities in the amino acid sequence of two proteins". Journal of Molecular Biology 48 (3): 443–53. doi:10.1016/0022-2836(70)90057-4. PMID 5420325.
 
@@ -49,4 +50,11 @@ sl_glob
 sl_glob (single-linkage-global) due to the single linkage selection approach, the algorithm starting with the best match-
 ing pair should provide a good starting point in absence of a reference gene model and
 may be able circumvent outliers.
+
+.. bf:
+
+bf_msa
+------
+!todo
+brute force all vs all msa comparison using mafft
 

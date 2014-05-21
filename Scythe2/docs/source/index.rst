@@ -20,6 +20,10 @@ Contents:
 
    Format
 
+   Converters 
+ 
+   ConfigurationFiles
+
    Modules
 
 Indices and tables
