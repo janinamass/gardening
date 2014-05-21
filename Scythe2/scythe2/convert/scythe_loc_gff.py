@@ -133,7 +133,6 @@ def read_gff2loc(infile, outfile):
 	rawstr = r"""(Name=)(.*);pacid.*(longest=)(.*);(Parent=)(.*)"""
 	cnt = 0
 	for ln in infile:
-                print(ln)
 		s =ln
 		m = re.findall(rawstr, s)
 		if len(m)  >0:

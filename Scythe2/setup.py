@@ -5,7 +5,7 @@ setup(
         author='Janina Mass',
         author_email='janina.mass@hhu.de',
         packages=find_packages(),
-        scripts=['scythe2/convert/scythe_loc_gff.py', 'scythe2/convert/scythe_loc_gff.py'],
+        scripts=['scythe2/convert/scythe_loc_gff.py', 'scythe2/convert/scythe_loc_gff.py','scythe2/scythe2.py'],
         license='GPLv3',
         description='Find best set of transcripts for one-to-one orthologous genes from two or more species',
         long_description=open('README.txt').read(),
