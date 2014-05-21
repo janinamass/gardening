@@ -8,7 +8,7 @@ from ftplib import FTP
 import tarfile
 import zipfile
 import gzip
-from helpers.gffFastaTools import FastaParser
+from helpers.fastahelper import FastaParser
 
 ####19.12
 def getSequencesFromFTP(outdir, release, specieslist=[]):
