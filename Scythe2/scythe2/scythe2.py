@@ -5,9 +5,20 @@ import subprocess
 import os
 import glob
 import getopt
+import re
 from itertools import chain
 import configparser
 import datetime
+
+from helpers.grphelper import GrpParser
+from helpers.scythecore import ScytheSpec
+from helpers.scythecore import ScytheGroupMap, ScytheGroup
+from helpers.scythecore import ScytheFrame
+#!to get rid of that:
+from helpers.scythecore import AutoViviDict
+
+from helpers.fastahelper import FastaParser
+
 #----/import------------------#
 
 logo = """

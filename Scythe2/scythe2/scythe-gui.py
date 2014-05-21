@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import sys
+import re
 
 import tkinter as tk
 import configparser
@@ -13,7 +14,7 @@ from tkinter import OptionMenu
 from tkinter import Scale
 from tkinter import Listbox
 
-import scythe_nv as scythe
+import scythe2 as scythe
 
 from gui.dialogs import ScytheConvertDialogLoc
 from gui.dialogs import ScytheConvertDialogGrp
@@ -752,9 +753,7 @@ class ScytheWizard(tk.Tk):
 
         ###############################################
         #check whether ensembl or local is checked
-        print("CHECK ens")
         useEnsembl= CURRENTCONFIG.get(CF_MODE, CF_MODE_use_ensembl)
-        print("CONF", CURRENTCONFIG, CURRENTCONFIG.get(CF_MODE, CF_MODE_use_ensembl))
         useLocal = CURRENTCONFIG.get(CF_MODE, CF_MODE_use_local_files)
         #outdir to
         outdir = CURRENTCONFIG.get(CF_PATHS,CF_PATHS_output_directory)
@@ -763,9 +762,9 @@ class ScytheWizard(tk.Tk):
         scythe.GLOBMAX = False
         scythe.GLOBSUM = False
 
-        print(useEnsembl, "ENSEMBL")
         if useEnsembl == "yes" and reloadFields: #has just come back from EnsemblSelector
             ens = EnsemblSelector(outdir)
+            print("Will download from ENSEMBL")
         else:
 
             if  useLocal == "yes":
@@ -806,8 +805,8 @@ class ScytheWizard(tk.Tk):
             print(e)
             asID=None
         stopAfter = False
-        gapOpen= CURRENTCONFIG.get(CF_PENALTIES,CF_PENALTIES_gap_open_cost)
-        gapExtend =CURRENTCONFIG.get(CF_PENALTIES,CF_PENALTIES_gap_extend_cost)
+        gapOpen = CURRENTCONFIG.get(CF_PENALTIES,CF_PENALTIES_gap_open_cost)
+        gapExtend = CURRENTCONFIG.get(CF_PENALTIES,CF_PENALTIES_gap_extend_cost)
         faFileList = os.listdir(faDir)
         namesList = os.listdir(faDir)
         namesList = [n[0:3] for n in namesList]
@@ -821,10 +820,13 @@ class ScytheWizard(tk.Tk):
 
         ##run scythe
         #order matters for argument list
-        p = multiprocessing.Process(target=scythe.runScythe,args=[groups,delim,asID,namesList,cleanUp,stopAfter,faFileList,inDir,outDir,gapOpen, gapExtend,locDir,faDir])
-        SCYTHE_PROCESS = p
-        p.start()
-        print (p, p.is_alive())
+        #!todo why should that start already?
+        if not reloadFields:
+            p = multiprocessing.Process(target=scythe.runScythe,args=[groups,delim,asID,namesList,cleanUp,stopAfter,faFileList,inDir,outDir,gapOpen, gapExtend,locDir,faDir])
+            SCYTHE_PROCESS = p
+
+            p.start()
+            print (p, p.is_alive())
 
     def cancelRun(self, process):
         if process:
