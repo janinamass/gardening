@@ -1,39 +1,39 @@
 #!/usr/bin/env python3
-
-
-#todo:
-#close selecor box after downloads
-#show "waiting" window
-#show "done" windo when finished
-#write Error file
-#clean up/ delete temp files if "cleanup", even when crashing
-
+import os
+import sys
 
 import tkinter as tk
 import configparser
-import os
+import multiprocessing
+
 from tkinter import filedialog
 from tkinter import messagebox
 from tkinter import ttk
 from tkinter import OptionMenu
 from tkinter import Scale
 from tkinter import Listbox
-import multiprocessing
+
+import scythe_nv as scythe
+
 from gui.dialogs import ScytheConvertDialogLoc
 from gui.dialogs import ScytheConvertDialogGrp
-import scythe_nv as scythe
+
+
 import helpers.mergeSubsets as mergeSubsets
-wd = os.path.join(os.path.dirname(__file__))
-print(wd)
-#import scythe
-import helpers.ensembl
-root=tk.Tk()
-root.title("Scythe GUI alpha")
-root.iconbitmap("@"+wd+os.sep+"scy.xbm")
-import os
 import helpers.ensembl_ortho_mysql
 import helpers.ensembl2grp
-import sys
+import helpers.ensembl as ensembl
+
+
+wd = os.path.join(os.path.dirname(__file__))
+
+root=tk.Tk()
+root.title("Scythe GUI alpha")
+try:
+    root.iconbitmap("@"+wd+os.sep+"gui"+os.sep+"scy.xbm")
+except tk.TclError as e:
+    print(e)
+    root.iconbitmap(None)
 
 global LOGSTR
 LOGSTR = ""
@@ -1075,6 +1075,3 @@ else:
     app=ScytheMenu(root,arg)
 
 root.mainloop()
-
-
-

@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import filedialog
-import scythe2.convert.scythe_loc_gff
+import convert.scythe_loc_gff
 #import Scythe_ensembl2loc
 
 import os
