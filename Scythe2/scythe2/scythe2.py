@@ -484,6 +484,7 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
                     task = frame.callNeedleAll(fileA, fileB, outfile = outfile,stdout=True, gapOpen=gapOpen, gapExtend=gapExtend)
                     print("TASK CALLED")
                     fulldata = task.stdout.read()
+                    print(fulldata)
                     assert task.wait() == 0
                     task.stdout.close()
                 except AssertionError as ae:
