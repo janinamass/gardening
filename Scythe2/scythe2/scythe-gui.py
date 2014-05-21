@@ -44,10 +44,8 @@ SCYTHE_PROCESS = None
 global CURRENTCONFIG
 CURRENTCONFIG = configparser.ConfigParser()
 BACKUPCONFIG = configparser.ConfigParser()
-
-#print(CURRENTCONFIG,BACKUPCONFIG)
-
-#setup labels
+######################################
+###      fun with config files    ####
 ############ labels ##################
 CF_MODE = "Mode"
 CF_MODE_use_ensembl = "use_ensembl"
@@ -111,7 +109,7 @@ for i in [CF_PENALTIES_gap_open_cost,CF_PENALTIES_gap_extend_cost,CF_PENALTIES_s
          MAXCONFIG.set(CF_PENALTIES,i,"0.5")
     if i == CF_PENALTIES_substitution_matrix:
         MAXCONFIG.set(CF_PENALTIES,i,"EBLOSUM62")
-
+#todo clean up algo var names
 for i in [CF_ALGORITHM_use_global_max,CF_ALGORITHM_use_default,CF_ALGORITHM_use_global_sum   ]:
     MAXCONFIG.set(CF_ALGORITHM,i,"unset")
 for i in [CF_PARALOGS_include_paralogs  ]:
@@ -121,9 +119,8 @@ for i in [CF_FASTAHEADER_delimiter, CF_FASTAHEADER_part]:
         MAXCONFIG.set(CF_FASTAHEADER,i,'" "')
     if i == CF_FASTAHEADER_part:
         MAXCONFIG.set(CF_FASTAHEADER,i,"0")
-for i in MAXCONFIG.items():
-    print(i)
-######################################
+####
+
 #q'n'd
 def initConfCurrent():
     global CURRENTCONFIG
@@ -136,6 +133,7 @@ def initConfCurrent():
         for j in MAXCONFIG.options(i):
             print(i,j)
             CURRENTCONFIG.set(i,j,MAXCONFIG.get(i,j))
+
 def backupConf():
     global CURRENTCONFIG
     global BACKUPCONFIG
@@ -146,6 +144,7 @@ def backupConf():
              pass
         for j in CURRENTCONFIG.options(i):
             BACKUPCONFIG.set(i,j,CURRENTCONFIG.get(i,j) )
+
 def backupConfTo(newconf):
     global CURRENTCONFIG
     for i in CURRENTCONFIG.sections():
@@ -155,6 +154,7 @@ def backupConfTo(newconf):
              pass
         for j in CURRENTCONFIG.options(i):
             newconf.set(i,j,CURRENTCONFIG.get(i,j) )
+
 def setCurrentConf(newconf):
     global CURRENTCONFIG
     for i in newconf.sections():
@@ -164,6 +164,7 @@ def setCurrentConf(newconf):
              pass
         for j in newconf.options(i):
             CURRENTCONFIG.set(i,j,newconf.get(i,j) )
+
 def restoreConf():
      global BACKUPCONFIG
      global CURRENTCONFIG
@@ -174,20 +175,9 @@ def restoreConf():
              pass
          for j in  BACKUPCONFIG.options(i):
              CURRENTCONFIG.set(i,j,BACKUPCONFIG.get(i,j))
-######################################
-def logged(f):
-    global LOGSTR
-    def wrapped(*args, **kargs):
-        global LOGSTR
-        print ("%s called..." % f.__name__)
-        try:
-            LOGSTR=LOGSTR+f.__name__+str(args)+str(kargs)
-            return f(*args, **kargs)
-        finally:
-            print ("..Done.")
-            print(LOGSTR)
-    return wrapped
-
+##########################
+# /config files
+##########################
 class ConfigHandler():
     def __init__(self):
         self._currentconfig = configparser.ConfigParser()
@@ -427,6 +417,19 @@ class ScytheConfigEditor():
         self.st_fasta_header_part.set(CURRENTCONFIG.get(CF_FASTAHEADER, CF_FASTAHEADER_part))
         self.st_fasta_header_delimiter.set(CURRENTCONFIG.get(CF_FASTAHEADER, CF_FASTAHEADER_delimiter))
 
+# !todo useful?
+def logged(f):
+    global LOGSTR
+    def wrapped(*args, **kargs):
+        global LOGSTR
+        print ("%s called..." % f.__name__)
+        try:
+            LOGSTR=LOGSTR+f.__name__+str(args)+str(kargs)
+            return f(*args, **kargs)
+        finally:
+            print ("..Done.")
+            print(LOGSTR)
+    return wrapped
 
 class Infobox():
     @logged
@@ -435,25 +438,22 @@ class Infobox():
         messagebox.showinfo(title="Todo...", message = message )
     @logged
     def about(self):
-        message="Scythe GUI 0.4 \nOctober 2013\nJ. Mass\n"
+        message="Scythe GUI v0.1.0 (May 2014)\nJ. Mass\nThis is under construction."
         messagebox.showinfo(title="About Scythe", message = message )
 
-    #def wanttosave(self):
-    #    pass
     def bepatient(self):
         message="Scythe is running\n This may take some time.\n"
         messagebox.showinfo(title="Running", message = message )
+
     def saveConfig(self):
         formats = [('Scythe configuration','*.scy')]
         tmp= tk.filedialog.asksaveasfilename(parent=self.parent,filetypes=formats ,title="Save configuration as...")
+
     def showConfig(self):
         global CURRENTCONFIG
         tmp = ConfigHandler()
-        print(CURRENTCONFIG)
+        #print(CURRENTCONFIG)
         tmp.currentconfig=CURRENTCONFIG
-        #read configuration
-        #print("tmp", tmp)
-        #print("tmp.cc", tmp.currentconfig)
         message = ""
         for section in tmp.currentconfig.sections():
             message += "["+section +"]\n"
@@ -466,14 +466,8 @@ class Infobox():
         scrollv = tk.Scrollbar(top, command=txt.yview)
         txt.insert(tk.INSERT,message)
         txt.configure(yscrollcommand=scrollv.set, state=tk.DISABLED, background="black", foreground="green" )
-
         txt.grid(row=0, column=0)
         scrollv.grid(row=0, column=1)
-
-
-
-
-
 
 
 class ScytheMenu(tk.Frame):
@@ -500,6 +494,7 @@ class ScytheMenu(tk.Frame):
         fileMenu.add_command(label="Load configuration...", command=self.onLoadConfig)
         fileMenu.add_command(label="Save configuration...", command=self.onSaveConfig)
 
+#todo: separate converters for each file type
         convertMenu = tk.Menu(fileMenu)
         convertMenu.add_command(label="convert orthology information to .grp", command=self.onConvertToGrp)
         convertMenu.add_command(label="convert loci/transcript information to .loc", command=self.onConvertToLoc)
@@ -512,26 +507,25 @@ class ScytheMenu(tk.Frame):
         optionsMenu.add_command(label="Show configuration...", command=self.onShowOptions)
         optionsMenu.add_command(label="Set configuration...", command=self.onSetOptions)
 
-        #infoMenu = tk.Menu(menubar)
-        #infoMenu.add_command(label="Show log...", command=self.onShowLog)
-
         helpMenu = tk.Menu(menubar)
         helpMenu.add_command(label="About...", command=self.onAbout)
 
         menubar.add_cascade(label="File", menu=fileMenu)
         menubar.add_cascade(label="Options", menu=optionsMenu)
-        #menubar.add_cascade(label="Info", menu=infoMenu)
         menubar.add_cascade(label="Help", menu=helpMenu)
         #self.onNewRun()
+#todo: converters!
     def onConvertToGrp(self):
         ScytheConvertDialogGrp()
     def onConvertToLoc(self):
         ScytheConvertDialogLoc()
+
     def onExit(self):
         self.quit()
     def onNewRun(self):
         self.scythewizard=ScytheWizard(self.parent)
         self.confighandler.reset()
+
     def loadConfigArg(self,arg):
         cfg = self.confighandler.currentconfig.read(arg)
         global CURRENTCONFIG
@@ -542,6 +536,7 @@ class ScytheMenu(tk.Frame):
         self.scythewizard.st_outDir.set(self.confighandler.currentconfig.get(CF_PATHS,'output_directory') )
 
         self.onSetOptions()
+
     def onLoadConfig(self):
         formats = [('Scythe configuration','*.scy')]
         tmp = tk.filedialog.askopenfilename(parent=self.parent,filetypes=[('Scythe configuration','*.scy')],title="Load configuration...")
@@ -560,22 +555,12 @@ class ScytheMenu(tk.Frame):
             self.scythewizard.ent_locDir.configure(state=tk.NORMAL)
             self.scythewizard.ent_grpFile.configure(state=tk.NORMAL)
             self.scythewizard.ent_outDir.configure(state=tk.NORMAL)
-        #for section in cfg.sections():
-        #    print(section)
-        #    for option in cfg.options(section):
-        #        print (" ", option, "=", cfg.get(section, option))
-
-
-
-        #self.scythewizard.st_fastaDir.set(cfg["Local_directories"]['fasta_directory'])
-        #print(self.confighandler.cuurentconfig())
         return tmp
+
     def onSaveConfig(self):
         formats = [('Scythe configuration','*.scy')]
         tmp= tk.filedialog.asksaveasfilename(parent=self.parent,filetypes=formats ,title="Save configuration as...")
-        print(tmp)
         global CURRENTCONFIG
-        print(CURRENTCONFIG)
         try:
             out = open(tmp,"w")
             CURRENTCONFIG.write(out)
@@ -585,44 +570,18 @@ class ScytheMenu(tk.Frame):
         #self.ent_grpFile.config(state=tk.NORMAL)
         #self.st_grpFile.set(tmp)
         return tmp
-    def onShowLog(self):
-        pass
-    def onEnsembl(self):
-        pass
 
-    def onLocal(self):
-        pass
     def onAbout(self):
         Infobox().about()
 
-    def onConvertFiles(self):
-        pass
     def onShowOptions(self):
         Infobox().showConfig()
 
-
-        #Infobox().todo()
-    #def restoreOldConfig(self):
-    #    CURRENTCONFIG = configparser.ConfigParser(BACKUPCONFIG)
-    #def saveNewConfig(self):
-    #    CURRENTCONFIG = configparser.ConfigParser(self.tempconfig)
-    #    BACKUPCONFIG = configparser.ConfigParser(CURRENTCONFIG)
-
-#     def applyPenalties(self):
-#         pass
-#     def applyOutput(self):
-#         pass
-#     def applyCleanup(self):
-#         pass
-#     def applyRun(self):
-#         pass
-#     def applyAlgorithm(self):
-#         pass
-#     def applyParalogs(self):
-#         pass
     def onSetOptions(self):
         self.configEditor = ScytheConfigEditor()
+
 class EnsemblSelector(tk.Listbox):
+        """Show available species on ENSEMBL"""
         lb = None
         top= None
 
@@ -635,7 +594,9 @@ class EnsemblSelector(tk.Listbox):
             speclist = []
             rellist = []
             itemlist = []
+#todo ensembl specInfo
             data = ensembl.specInfo()
+            print(data)
             self.data = data
             self.outdir = outdir
             top = tk.Toplevel(root)
@@ -660,10 +621,8 @@ class EnsemblSelector(tk.Listbox):
             self.b_ensQuit = tk.Button(self.top, text="Cancel", command=self.onEnsQuit)
             self.b_ensOK.grid(row=1, column=0,sticky="E", padx=60)
             self.b_ensQuit.grid(row=1, column=0,sticky="E", padx=0)
-
-
-
             self.prepRun(itemlist)
+
         def fileExists(self,filename):
             try:
                 tmp = open(filename,'r')
@@ -673,9 +632,7 @@ class EnsemblSelector(tk.Listbox):
             return(True)
 
         def onEnsOK(self):
-            print("onOK")
             specs,rel = self.readListBox()
-            #ensembl.useEnsemblDB(specs,rel, self.outdir)
             print("wait...", self.outdir, specs, rel)
             self.b_ensOK.configure(state=tk.DISABLED)
             self.b_ensQuit.configure(state=tk.DISABLED)
@@ -687,8 +644,6 @@ class EnsemblSelector(tk.Listbox):
                 print("already there: "+fapath+os.sep+u+".fa")
             if (len(tmp)>0):
                 ensembl.getSequencesFromFTP(self.outdir, rel, tmp)
-
-
             locpath = self.outdir+os.sep+"loc"
             print("fasta done",self.outdir)
             for i in specs:
@@ -701,7 +656,7 @@ class EnsemblSelector(tk.Listbox):
                         print("Warning: No such fasta: ",fapath+os.sep+i+".fa")
                 else:
                     print("already there: "+locpath+os.sep+u+".loc")
-                    ###test:TODO deal with different releases: Throw warning, has to be done manually
+                    ###TODO deal with different releases: Throw warning, has to be done manually
 
             grpstring =""
             for i in specs:
@@ -709,6 +664,7 @@ class EnsemblSelector(tk.Listbox):
             grpfile = self.outdir+os.sep+grpstring+"_tmp.grp"
             if self.fileExists(grpfile):
                  print("alredy there:", grpfile)
+#todo ensembl_ortho_mysql
             else:
                 listoftsv=ensembl_ortho_mysql.fetchOrthoFromMySQL(specieslist = specs, release=rel[0])
             #grpstring =""
@@ -719,23 +675,22 @@ class EnsemblSelector(tk.Listbox):
                 #####update
             outNoSubsets=self.outdir+os.sep+grpstring+".full.grp"
             out = self.outdir+os.sep+grpstring+".shared_by_all.grp"
-
+#todo mergeSubsets
             numspec= mergeSubsets.filterGroups(grpfile,None, None, False)
             mergeSubsets.mergeSubsets(grpfile,outNoSubsets, True)
             mergeSubsets.filterGroups(outNoSubsets, out, numspec, False)
-
+            #destroy window
             self.top.destroy()
+
             CURRENTCONFIG.set(CF_PATHS,CF_PATHS_fasta_directory, fapath+os.sep)
             CURRENTCONFIG.set(CF_PATHS,CF_PATHS_loc_directory, locpath+os.sep)
             CURRENTCONFIG.set(CF_PATHS,CF_PATHS_grp_file, out)
             ScytheWizard(root).prepRun(reloadFields=False)
-            #dat = ensembl.specInfo()
-            #print(dat)
+
         def onEnsQuit(self):
             print("onQuit")
             self.top.destroy()
-        #def cancelRun(self, process):
-        #    process.terminate()
+
         def prepRun(self, itemlist):
             print("EnsemblSelectorPrepRun")
             #pass
@@ -784,23 +739,22 @@ class ScytheWizard(tk.Tk):
 
         setCurrentConf(tempconf)
         print(CURRENTCONFIG)
+#todo ?
     def prepRun(self, reloadFields=True): ####TODO!
         global SCYTHE_PROCESS
         scythe.VERBOSE=False
-        #config = CURRENTCONFIG
-        print("prep run called")
+        print("prepRun called")
 
-        #############09.12.13 ######
         #update config one more time
         if reloadFields:
             self.setConfigFromFields()
-        #CURRENTCONFIG.set(CF_PATHS, CF_PATHS_output_directory,self.ent_outDir.get())
             print("Read entry fields one more time", CURRENTCONFIG.get(CF_PATHS, CF_PATHS_output_directory))
-
 
         ###############################################
         #check whether ensembl or local is checked
+        print("CHECK ens")
         useEnsembl= CURRENTCONFIG.get(CF_MODE, CF_MODE_use_ensembl)
+        print("CONF", CURRENTCONFIG, CURRENTCONFIG.get(CF_MODE, CF_MODE_use_ensembl))
         useLocal = CURRENTCONFIG.get(CF_MODE, CF_MODE_use_local_files)
         #outdir to
         outdir = CURRENTCONFIG.get(CF_PATHS,CF_PATHS_output_directory)
@@ -809,7 +763,7 @@ class ScytheWizard(tk.Tk):
         scythe.GLOBMAX = False
         scythe.GLOBSUM = False
 
-        print(useEnsembl)
+        print(useEnsembl, "ENSEMBL")
         if useEnsembl == "yes" and reloadFields: #has just come back from EnsemblSelector
             ens = EnsemblSelector(outdir)
         else:
@@ -844,7 +798,7 @@ class ScytheWizard(tk.Tk):
         outDir = CURRENTCONFIG.get(CF_PATHS,CF_PATHS_output_directory)+os.sep
         locDir = CURRENTCONFIG.get(CF_PATHS,CF_PATHS_loc_directory)+os.sep
         fastaList = os.listdir(faDir)
-        #gffList = None
+
         delim = CURRENTCONFIG.get(CF_FASTAHEADER,CF_FASTAHEADER_delimiter).strip('"')
         try:
             asID = int(CURRENTCONFIG.get(CF_FASTAHEADER,CF_FASTAHEADER_part))
@@ -859,11 +813,11 @@ class ScytheWizard(tk.Tk):
         namesList = [n[0:3] for n in namesList]
 
 
-        print(groups)
-        print(namesList)
-        print(gapOpen,gapExtend )
-        print(faDir, faFileList)
-        print("Loc", locDir)
+        #print(groups)
+        #print(namesList)
+        #print(gapOpen,gapExtend )
+        #print(faDir, faFileList)
+        #print("Loc", locDir)
 
         ##run scythe
         #order matters for argument list
@@ -871,25 +825,7 @@ class ScytheWizard(tk.Tk):
         SCYTHE_PROCESS = p
         p.start()
         print (p, p.is_alive())
-        #multiprocessing.Process.
-        #threads.append(p)
-        #scythe.runScythe(groups=groups, delim=delim,
-        #          asID=asID, faFileList=faFileList,
-        #          namesList=namesList, cleanUp=cleanUp,
-        #          stopAfter=stopAfter, inDir=inDir, outDir=outDir,
-        #          gapOpen=gapOpen, gapExtend=gapExtend,
-        #          locDir=locDir,faDir=faDir)
 
-
-
-
-                ################
-            #scythe.runScythe(groups=groups, delim=delim,
-            #  asID=asID, faFileList=faFileList,
-            #  namesList=namesList, cleanUp=cleanUp,
-            #  stopAfter=stopAfter, inDir=inDir, outDir=outDir,
-            #  gapOpen=gapOpen, gapExtend=gapExtend,
-            #  locDir=locDir,faDir=faDir)
     def cancelRun(self, process):
         if process:
             process.terminate()
@@ -897,6 +833,7 @@ class ScytheWizard(tk.Tk):
             process = None
         else:
             print("No running process.")
+
     def initWizard(self):
         global SCYTHE_PROCESS
         #Labels
@@ -918,6 +855,7 @@ class ScytheWizard(tk.Tk):
         self.st_grpFile.set("")
         self.st_outDir= tk.StringVar()
         self.st_outDir.set("")
+
         #Entries
         self.ent_fastaDir = tk.Entry(root, width = 30,
                                      textvariable = self.st_fastaDir, state = tk.DISABLED)
@@ -935,20 +873,16 @@ class ScytheWizard(tk.Tk):
         self.b_grpFile = tk.Button(text="open...",command=self.askGrpFile, state=tk.DISABLED)#self.askopenfilename)
         self.b_outDir = tk.Button(text="open...",command=self.askOutDir, state=tk.DISABLED)#self.askopenfilename)
 
-        ######21.10
         self.b_next = tk.Button(root, text="Next...", command = self.prepRun)
         self.b_quit = tk.Button(root, text="Quit", command = self.quit)
-        #####06.12
         self.b_cancel = tk.Button(root, text = "Cancel", command = lambda: self.cancelRun(SCYTHE_PROCESS))
         ######
 
-        #Checkuttons
+        #Checkbuttons
         self.cb_use_ensembl = tk.Checkbutton(root, text='use ENSEMBL',variable=self.int_ensembl,
                                          command=self.useEnsembl)
         self.cb_use_local = tk.Checkbutton(root, text='use local files',variable=self.int_local,
                                          command=self.useLocal, state=tk.NORMAL)
-
-
 
         #add to grid
         self.cb_use_ensembl.grid(row=0, column=0 )
@@ -971,17 +905,16 @@ class ScytheWizard(tk.Tk):
         self.ent_outDir.grid(row=4, column=1, sticky="E")
         self.b_outDir.grid(row=4, column=2, sticky="E")
 
-        #self.b_convertOrtho.grid(row=3,column=3)
         self.b_next.grid(row=5, column=1, sticky="E")
         self.b_quit.grid(row=5, column=2, sticky="W")
         self.b_cancel.grid(row=5, column=3, sticky="E")
+
     def useLocal(self):
         global CURRENTCONFIG
-        print("CURRENTCONFIG",CURRENTCONFIG)
+        #print("CURRENTCONFIG",CURRENTCONFIG)
         if self.int_local.get() ==1:
             CURRENTCONFIG.set(CF_MODE, "use_local_files", "yes")
             CURRENTCONFIG.set(CF_MODE, "use_ensembl_api", "no")
-            #self.st_fastaDir
             self.ent_fastaDir.config(state=tk.NORMAL)
             self.ent_locDir.config(state=tk.NORMAL)
             self.ent_grpFile.config(state=tk.NORMAL)
@@ -997,7 +930,7 @@ class ScytheWizard(tk.Tk):
         else:
             CURRENTCONFIG.set("Mode", "use_local_files", "no")
             CURRENTCONFIG.set("Mode", "use_ensembl_api", "no")
-            #self.st_fastaDir="some"
+
             self.ent_fastaDir.config(state=tk.DISABLED)
             self.ent_locDir.config(state=tk.DISABLED)
             self.ent_grpFile.config(state=tk.DISABLED)
@@ -1012,7 +945,6 @@ class ScytheWizard(tk.Tk):
 
     def askFastaDir(self):
         tmp= filedialog.askdirectory()
-        print(tmp)
         self.ent_fastaDir.config(state=tk.NORMAL)
         self.st_fastaDir.set(tmp)
         if self.ent_locDir.get()=="":
@@ -1021,6 +953,7 @@ class ScytheWizard(tk.Tk):
                 CURRENTCONFIG.set(CF_PATHS, "loc_directory", os.path.split(tmp)[0]+os.sep+"loc")
         CURRENTCONFIG.set(CF_PATHS, "fasta_directory",tmp)
         return tmp
+
     def askLocDir(self):
         tmp= filedialog.askdirectory()
         print(tmp)
@@ -1032,31 +965,24 @@ class ScytheWizard(tk.Tk):
                 CURRENTCONFIG.set(CF_PATHS, "fasta_directory",os.path.split(tmp)[0]+os.sep+"fa")
         CURRENTCONFIG.set(CF_PATHS, "loc_directory",tmp)
         return filedialog.tmp()
+
     def askGrpFile(self):
         tmp= filedialog.askopenfilename()
         self.ent_grpFile.config(state=tk.NORMAL)
         self.st_grpFile.set(tmp)
         CURRENTCONFIG.set(CF_PATHS, "grp_file",tmp)
         return tmp
+
     def askOutDir(self):
         tmp= filedialog.askdirectory(mustexist=False)
-        print(tmp)
         self.ent_outDir.config(state=tk.NORMAL)
         self.st_outDir.set(tmp)
         CURRENTCONFIG.set(CF_PATHS, CF_PATHS_output_directory,tmp)
-        #if self.ent_locDir.get()=="":
-        #    if os.path.isdir(os.path.split(tmp)[0]+os.sep+"fa"):
-        #        self.st_Dir.set(os.path.split(tmp)[0]+os.sep+"fa")
-        #return filedialog.tmp()
 
     def useEnsembl(self):
-        CURRENTCONFIG.set("Mode", "use_local_files", "no")
-        CURRENTCONFIG.set("Mode", "use_ensembl_api", "yes")
-        print(self.int_ensembl)
-        print(self.ent_fastaDir)
+        CURRENTCONFIG.set(CF_MODE, CF_MODE_use_local_files, "no")
+        CURRENTCONFIG.set(CF_MODE, CF_MODE_use_ensembl, "yes")
         if self.int_ensembl.get() ==1:
-
-            print("True", self.st_fastaDir)
             self.ent_fastaDir.config(state=tk.DISABLED)
             self.ent_locDir.config(state=tk.DISABLED)
             self.ent_outDir.config(state=tk.NORMAL)
@@ -1069,16 +995,16 @@ class ScytheWizard(tk.Tk):
             self.cb_use_local.config(state=tk.NORMAL)
             self.b_outDir.config(state=tk.DISABLED)
             self.ent_outDir.config(state=tk.DISABLED)
-            CURRENTCONFIG.set("Mode", "use_local_files", "no")
-            CURRENTCONFIG.set("Mode", "use_ensembl_api", "no")
-
-
+            CURRENTCONFIG.set(CF_MODE, CF_MODE_use_local_files, "no")
+            CURRENTCONFIG.set(CF_MODE, CF_MODE_use_ensembl, "no")
 
 try:
+    #use config file
     arg = sys.argv[1]
 except IndexError as e:
     app=ScytheMenu(root)
 else:
+    # from scratch
     app=ScytheMenu(root,arg)
 
 root.mainloop()
