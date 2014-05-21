@@ -18,17 +18,16 @@ import scythe_nv as scythe
 from gui.dialogs import ScytheConvertDialogLoc
 from gui.dialogs import ScytheConvertDialogGrp
 
-
 import helpers.mergeSubsets as mergeSubsets
-import helpers.ensembl_ortho_mysql
-import helpers.ensembl2grp
+import helpers.ensembl_ortho_mysql as ensembl_ortho_mysql
+import helpers.ensembl2grp as ensembl2grp
 import helpers.ensembl as ensembl
 
 
 wd = os.path.join(os.path.dirname(__file__))
 
 root=tk.Tk()
-root.title("Scythe GUI alpha")
+root.title("Scythe GUI 0.1.0")
 try:
     root.iconbitmap("@"+wd+os.sep+"gui"+os.sep+"scy.xbm")
 except tk.TclError as e:
@@ -36,16 +35,22 @@ except tk.TclError as e:
     root.iconbitmap(None)
 
 global LOGSTR
+#todo ?
 LOGSTR = ""
+
 global SCYTHE_PROCESS
 SCYTHE_PROCESS = None
+
 global CURRENTCONFIG
 CURRENTCONFIG = configparser.ConfigParser()
 BACKUPCONFIG = configparser.ConfigParser()
-print(CURRENTCONFIG,BACKUPCONFIG)
+
+#print(CURRENTCONFIG,BACKUPCONFIG)
+
+#setup labels
 ############ labels ##################
 CF_MODE = "Mode"
-CF_MODE_use_ensembl = "use_ensembl_api"
+CF_MODE_use_ensembl = "use_ensembl"
 CF_MODE_use_local_files = "use_local_files"
 CF_PATHS = "Paths"
 CF_PATHS_fasta_directory = "fasta_directory"
@@ -62,18 +67,15 @@ CF_PENALTIES_gap_open_cost = "gap_open_cost"
 CF_PENALTIES_gap_extend_cost="gap_extend_cost"
 CF_PENALTIES_substitution_matrix="substitution_matrix"
 CF_ALGORITHM = "Algorithm"
-CF_ALGORITHM_use_global_max ="use_global_max"
-CF_ALGORITHM_use_default="use_default"
-CF_ALGORITHM_use_global_sum="use_global_sum"
+CF_ALGORITHM_use_global_max ="use_sl_glob"
+CF_ALGORITHM_use_default="use_sl_ref"
+CF_ALGORITHM_use_global_sum="use_mx_sum"
 CF_PARALOGS="Paralogs"
 CF_PARALOGS_include_paralogs = "include_paralogs"
-###### TODO 02.12.13 #######
 CF_FASTAHEADER="Fasta_header"
 CF_FASTAHEADER_delimiter = "fasta_header_delimiter"
 CF_FASTAHEADER_part = "fasta_header_part"
 ############################
-
-
 
 ##################options###########################
 OPTIONS = {}
@@ -85,8 +87,10 @@ for o in [CF_PARALOGS_include_paralogs, CF_ALGORITHM_use_global_max,CF_ALGORITHM
     OPTIONS[o]=yn
 
 MAXCPU=multiprocessing.cpu_count
-###################################################
+
 SECTIONS = [CF_MODE,CF_PATHS, CF_CLEANUP, CF_RUN, CF_PENALTIES,CF_ALGORITHM,CF_PARALOGS, CF_FASTAHEADER]
+
+#setup dummy config
 MAXCONFIG = configparser.ConfigParser()
 for i in SECTIONS:
     MAXCONFIG.add_section(i)
@@ -96,8 +100,10 @@ for i in [CF_PATHS_fasta_directory,CF_PATHS_loc_directory,CF_PATHS_grp_file,CF_P
     MAXCONFIG.set(CF_PATHS,i,"unset")
 for i in [CF_CLEANUP_clean_up_directories]:
     MAXCONFIG.set(CF_CLEANUP,i,"yes")
+#todo multi cpu support
 for i in [CF_RUN_max_threads,CF_RUN_split_input]:
     MAXCONFIG.set(CF_RUN,i,"1")
+
 for i in [CF_PENALTIES_gap_open_cost,CF_PENALTIES_gap_extend_cost,CF_PENALTIES_substitution_matrix]:
     if i == CF_PENALTIES_gap_open_cost:
         MAXCONFIG.set(CF_PENALTIES,i,"10")
@@ -105,6 +111,7 @@ for i in [CF_PENALTIES_gap_open_cost,CF_PENALTIES_gap_extend_cost,CF_PENALTIES_s
          MAXCONFIG.set(CF_PENALTIES,i,"0.5")
     if i == CF_PENALTIES_substitution_matrix:
         MAXCONFIG.set(CF_PENALTIES,i,"EBLOSUM62")
+
 for i in [CF_ALGORITHM_use_global_max,CF_ALGORITHM_use_default,CF_ALGORITHM_use_global_sum   ]:
     MAXCONFIG.set(CF_ALGORITHM,i,"unset")
 for i in [CF_PARALOGS_include_paralogs  ]:
