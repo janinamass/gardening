@@ -9,8 +9,7 @@ from itertools import chain
 import configparser
 import datetime
 #----/import------------------#
-#!TODO: fix command line parameters: sl_ref sl_glob mx_sum
-#TODO manage imports
+
 logo = """
           _____            __  __
          / ___/_______  __/ /_/ /_  ___
@@ -20,7 +19,6 @@ logo = """
                  /____/"""
 #-- usage --#
 def usage():
-    """Print help."""
     print ("""
     ######################################
     # scythe.py v0.1                     #
@@ -37,11 +35,9 @@ def usage():
     -c, --cleanup                    remove temporary files when done
     -h, --help                       prints this
     -i, --in_dir=DIR                 folder w/ subfolders "fa" and "loc"
-    #!todo
     -r, --sl_ref                     find best matches to reference
     -g, --sl_glob                    best scoring pair as seed
     -m, --mx_sum                     optimize sum of pairwise scores
-    #!/todo
     -o, --out_dir=DIR                output directory [default:./]
     -v, --verbose                    be wordy
 
@@ -96,11 +92,9 @@ def parseConfig(pathconfig):
     CF_ALGORITHM_use_global_sum="use_global_sum"
     CF_PARALOGS="Paralogs"
     CF_PARALOGS_include_paralogs = "include_paralogs"
-    ###################todo 02.12.12 #############
     CF_FASTAHEADER="Fasta_header"
     CF_FASTAHEADER_delimiter = "fasta_header_delimiter"
     CF_FASTAHEADER_part = "fasta_header_part"
-    ##############################################
 
     config = configparser.ConfigParser()
     print(config.sections())
@@ -713,13 +707,9 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
                     outfiles[s.name].write(r[0][ok].toFasta())
                     outfilesGroups[R].write(r[0][ok].toFasta())
             cnt+=1
-            #####
-            #outfiles[s.name].close()
             outfilesGroups[R].close()
     if cleanUp:
-        #annoy("# Cleaning up...")
         frame.cleanUp()
-        #annoy("# ...done.")
 
     for out in outfiles.values():
         out.close()
