@@ -190,7 +190,6 @@ class ScytheConvertDialogLoc():
         outhandle = open(outputfilename,'w')
         outhandle.write(res)
     def convertFolder(self, folder):
-        import os
         outfolder = folder.split(os.sep)[0:-1]
         outfolder.append("loc")
         outfolder = os.sep.join(outfolder)
@@ -231,7 +230,6 @@ class ScytheConvertDialogLoc():
         self.concatFiles(locfiles, folder+os.sep+"all.loc")
     def convertSingleFile(self, f):
         print("convertFile")
-        import os
         print(f)
         #gfffiles = []
         #tsvfiles = []
