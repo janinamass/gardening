@@ -79,6 +79,8 @@ or with configuration file `conf.py` ::
  scythe-gui.py conf.scy
 
 (Read more about configuration files under :ref:`ConfigurationFiles`)
+Please note that Scythe will write intermediate files to current working directory, you might want to create a new directory for each run beforehand.
+Data that was already downloaded from ENSEMBL will not be downloaded twice. If you want to reuse this data but try different parameters, just change the output directory (via the GUI) and start Scythe from the same working directory.
 
 Command line interface
 ~~~~~~~~~~~~~~~~~~~~~~
