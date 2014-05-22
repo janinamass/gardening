@@ -118,60 +118,6 @@ for i in [CF_FASTAHEADER_delimiter, CF_FASTAHEADER_part]:
         MAXCONFIG.set(CF_FASTAHEADER,i,"0")
 ####
 
-#q'n'd
-def initConfCurrent():
-    global CURRENTCONFIG
-    global MAXCONFIG
-    for i in MAXCONFIG.sections():
-        try:
-            CURRENTCONFIG.add_section(i)
-        except configparser.DuplicateSectionError as e:
-             pass
-        for j in MAXCONFIG.options(i):
-            print(i,j)
-            CURRENTCONFIG.set(i,j,MAXCONFIG.get(i,j))
-
-def backupConf():
-    global CURRENTCONFIG
-    global BACKUPCONFIG
-    for i in CURRENTCONFIG.sections():
-        try:
-            BACKUPCONFIG.add_section(i)
-        except configparser.DuplicateSectionError as e:
-             pass
-        for j in CURRENTCONFIG.options(i):
-            BACKUPCONFIG.set(i,j,CURRENTCONFIG.get(i,j) )
-
-def backupConfTo(newconf):
-    global CURRENTCONFIG
-    for i in CURRENTCONFIG.sections():
-        try:
-            newconf.add_section(i)
-        except configparser.DuplicateSectionError as e:
-             pass
-        for j in CURRENTCONFIG.options(i):
-            newconf.set(i,j,CURRENTCONFIG.get(i,j) )
-
-def setCurrentConf(newconf):
-    global CURRENTCONFIG
-    for i in newconf.sections():
-        try:
-            CURRENTCONFIG.add_section(i)
-        except configparser.DuplicateSectionError as e:
-             pass
-        for j in newconf.options(i):
-            CURRENTCONFIG.set(i,j,newconf.get(i,j) )
-
-def restoreConf():
-     global BACKUPCONFIG
-     global CURRENTCONFIG
-     for i in BACKUPCONFIG.sections():
-         try:
-             CURRENTCONFIG.add_section(i)
-         except configparser.DuplicateSectionError as e:
-             pass
-         for j in  BACKUPCONFIG.options(i):
-             CURRENTCONFIG.set(i,j,BACKUPCONFIG.get(i,j))
 ##########################
 # /config files
 ##########################
@@ -186,9 +132,62 @@ class ConfigHandler():
         self._currentconfig=config
 
     def reset(self):
-        initConfCurrent()
+        self.initConfCurrent()
         print("full reset")
+#q'n'd
+    def initConfCurrent(self):
+        global CURRENTCONFIG
+        global MAXCONFIG
+        for i in MAXCONFIG.sections():
+            try:
+                CURRENTCONFIG.add_section(i)
+            except configparser.DuplicateSectionError as e:
+                 pass
+            for j in MAXCONFIG.options(i):
+                print(i,j)
+                CURRENTCONFIG.set(i,j,MAXCONFIG.get(i,j))
 
+    def backupConf(self):
+        global CURRENTCONFIG
+        global BACKUPCONFIG
+        for i in CURRENTCONFIG.sections():
+            try:
+                BACKUPCONFIG.add_section(i)
+            except configparser.DuplicateSectionError as e:
+                 pass
+            for j in CURRENTCONFIG.options(i):
+                BACKUPCONFIG.set(i,j,CURRENTCONFIG.get(i,j) )
+
+    def backupConfTo(self, newconf):
+        global CURRENTCONFIG
+        for i in CURRENTCONFIG.sections():
+            try:
+                newconf.add_section(i)
+            except configparser.DuplicateSectionError as e:
+                 pass
+            for j in CURRENTCONFIG.options(i):
+                newconf.set(i,j,CURRENTCONFIG.get(i,j) )
+
+    def setCurrentConf(self, newconf):
+        global CURRENTCONFIG
+        for i in newconf.sections():
+            try:
+                CURRENTCONFIG.add_section(i)
+            except configparser.DuplicateSectionError as e:
+                 pass
+            for j in newconf.options(i):
+                CURRENTCONFIG.set(i,j,newconf.get(i,j) )
+
+    def restoreConf(self):
+         global BACKUPCONFIG
+         global CURRENTCONFIG
+         for i in BACKUPCONFIG.sections():
+             try:
+                 CURRENTCONFIG.add_section(i)
+             except configparser.DuplicateSectionError as e:
+                 pass
+             for j in  BACKUPCONFIG.options(i):
+                 CURRENTCONFIG.set(i,j,BACKUPCONFIG.get(i,j))
 
 class ScytheConfigEditor():
     def __init__(self):
@@ -196,9 +195,10 @@ class ScytheConfigEditor():
         global CURRENTCONFIG
         global MAXCONFIG
         global CF_MODE
-        backupConf()
+        self.confighandler = ConfigHandler()
+        self.confighandler.backupConf()
         tmpconfig= configparser.ConfigParser()
-        backupConfTo(tmpconfig)
+        self.confighandler.backupConfTo(tmpconfig)
         top = tk.Toplevel()
         top.title("Set configuration")
         nb = ttk.Notebook(top)
@@ -342,13 +342,13 @@ class ScytheConfigEditor():
         self.setConfigFromFields()
 
     def onSetConfigCancel(self):
-        restoreConf()
+        self.confighandler.restoreConf()
         print("RESTORED-->CURRENTCONF set")
         #self.restoreOldConfig()
         print("Config CANCEL")
     def setConfigFromFields(self):
         tempconf = configparser.ConfigParser()
-        backupConfTo(tempconf)
+        self.confighandler.backupConfTo(tempconf)
         #get all values from fields
         #penalties
         tempconf.set(CF_PENALTIES,CF_PENALTIES_gap_open_cost,self.var_subsec[CF_PENALTIES][0].get() )
@@ -369,7 +369,7 @@ class ScytheConfigEditor():
         tempconf.set(CF_FASTAHEADER, CF_FASTAHEADER_part,self.st_fasta_header_part.get())
         tempconf.set(CF_FASTAHEADER, CF_FASTAHEADER_delimiter,self.st_fasta_header_delimiter.get())
 
-        setCurrentConf(tempconf)
+        self.confighandler.setCurrentConf(tempconf)
         print(CURRENTCONFIG)
         for t in  tempconf.options(CF_PENALTIES):
             print(t)
@@ -466,7 +466,7 @@ class ScytheMenu(tk.Frame):
         self.parent = parent
         self.initGUI()
         self.confighandler = ConfigHandler()
-        initConfCurrent()
+        self.confighandler.initConfCurrent()
         self.scythewizard= ScytheWizard(self.parent)
         self.configEditor = None
         if arg:
@@ -714,18 +714,19 @@ class ScytheWizard(tk.Tk):
     def __init__(self, parent):
         self.parent = parent
         self.initWizard()
+        self.confighandler = ConfigHandler()
     def quit(self):
         root.destroy()
     def setConfigFromFields(self):
         tempconf = configparser.ConfigParser()
-        backupConfTo(tempconf)
+        self.confighandler.backupConfTo(tempconf)
         tempconf.set(CF_PATHS, CF_PATHS_output_directory,self.ent_outDir.get())
         tempconf.set(CF_PATHS, CF_PATHS_fasta_directory,self.ent_fastaDir.get())
         tempconf.set(CF_PATHS, CF_PATHS_loc_directory,self.ent_locDir.get())
         tempconf.set(CF_PATHS, CF_PATHS_grp_file,self.ent_grpFile.get())
 
 
-        setCurrentConf(tempconf)
+        self.confighandler.setCurrentConf(tempconf)
         print(CURRENTCONFIG)
 #todo ?
     def prepRun(self, reloadFields=True): ####TODO!
