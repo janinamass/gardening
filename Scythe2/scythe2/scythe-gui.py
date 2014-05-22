@@ -686,40 +686,25 @@ class EnsemblSelector(tk.Listbox):
             ScytheWizard(root).prepRun(reloadFields=False)
 
         def onEnsQuit(self):
-            print("onQuit")
+            #print("onQuit")
             self.top.destroy()
 
         def prepRun(self, itemlist):
-            print("EnsemblSelectorPrepRun")
-            #pass
-            #top = tk.Toplevel(root)
-            #top.title("Ensembl Species Selector")
-            #tmp = Listbox(top,selectmode='multiple',exportselection=0)
+            #print("EnsemblSelectorPrepRun")
             for item in itemlist:
                 self.lb.insert(tk.END, item)
             self.lb.grid(row=0, column=0)
-            #b_ensOK = tk.Button(self.top, text="OK", command=self.onEnsOK)
-            #b_ensQuit = tk.Button(self.top, text="Cancel", command=self.onEnsQuit)
-            #b_ensOK.grid(row=1, column=0,sticky="E", padx=60)
-            #b_ensQuit.grid(row=1, column=0,sticky="E", padx=0)
+
         def readListBox(self):
             items = self.lb.curselection()
-            print(items)
+            #print(items)
             print(self.speclist)
             selecteditemsspec = [self.speclist[int(item)] for item in items]
             selecteditemsrel = [self.rellist[int(item)] for item in items]
 
             print(selecteditemsspec, selecteditemsrel)
             return(selecteditemsspec, selecteditemsrel)
-#def callScythe(groups,delim,asID,faFileList,namesList, cleanUp, stopAfter=stopAfter, inDir=inDir, outDir=outDir,
-#              gapOpen=gapOpen, gapExtend=gapExtend,
-#              locDir=locDir,faDir=faDir):
-#    scythe.runScythe(groups=groups, delim=delim,
-#              asID=asID, faFileList=faFileList,
-#              namesList=namesList, cleanUp=cleanUp,
-#              stopAfter=stopAfter, inDir=inDir, outDir=outDir,
-#              gapOpen=gapOpen, gapExtend=gapExtend,
-#              locDir=locDir,faDir=faDir)
+
 class ScytheWizard(tk.Tk):
     def __init__(self, parent):
         self.parent = parent
@@ -735,14 +720,12 @@ class ScytheWizard(tk.Tk):
         tempconf.set(CF_PATHS, CF_PATHS_loc_directory,self.ent_locDir.get())
         tempconf.set(CF_PATHS, CF_PATHS_grp_file,self.ent_grpFile.get())
 
-
         self.confighandler.setCurrentConf(tempconf)
         print(CURRENTCONFIG)
-#todo ?
+
     def prepRun(self, reloadFields=True): ####TODO!
         global SCYTHE_PROCESS
         scythe.VERBOSE=False
-        print("prepRun called")
 
         #update config one more time
         if reloadFields:
@@ -756,6 +739,9 @@ class ScytheWizard(tk.Tk):
         #outdir to
         outdir = CURRENTCONFIG.get(CF_PATHS,CF_PATHS_output_directory)
         #catch unset outdir
+        if not outdir:
+            outdir = os.getcwd()
+        #???
         cleanUp="yes"
         scythe.GLOBMAX = False
         scythe.GLOBSUM = False
@@ -790,10 +776,18 @@ class ScytheWizard(tk.Tk):
 
         groups= CURRENTCONFIG.get(CF_PATHS,CF_PATHS_grp_file)
         namesList = None
-        faDir = CURRENTCONFIG.get(CF_PATHS,CF_PATHS_fasta_directory)+os.sep
-        inDir = faDir+os.sep
-        outDir = CURRENTCONFIG.get(CF_PATHS,CF_PATHS_output_directory)+os.sep
-        locDir = CURRENTCONFIG.get(CF_PATHS,CF_PATHS_loc_directory)+os.sep
+        faDir = CURRENTCONFIG.get(CF_PATHS,CF_PATHS_fasta_directory)
+        if not faDir.endswith(os.sep):
+            faDir+=os.sep
+        inDir = faDir
+        outDir = CURRENTCONFIG.get(CF_PATHS,CF_PATHS_output_directory)
+        if not outDir:
+            outDir = os.getcwd()
+        if not outDir.endswith(os.sep):
+            outDir+=os.sep
+        locDir = CURRENTCONFIG.get(CF_PATHS,CF_PATHS_loc_directory)
+        if not locDir.endswith(os.sep):
+            locDir+=os.sep
         fastaList = os.listdir(faDir)
 
         delim = CURRENTCONFIG.get(CF_FASTAHEADER,CF_FASTAHEADER_delimiter).strip('"')
@@ -810,19 +804,12 @@ class ScytheWizard(tk.Tk):
         namesList = [n[0:3] for n in namesList]
 
 
-        #print(groups)
-        #print(namesList)
-        #print(gapOpen,gapExtend )
-        #print(faDir, faFileList)
-        #print("Loc", locDir)
 
-        ##run scythe
+        #run scythe
         #order matters for argument list
-        #!todo why should that start already?
         if not reloadFields:
             p = multiprocessing.Process(target=scythe.runScythe,args=[groups,delim,asID,namesList,cleanUp,stopAfter,faFileList,inDir,outDir,gapOpen, gapExtend,locDir,faDir])
             SCYTHE_PROCESS = p
-
             p.start()
             print (p, p.is_alive())
 
@@ -911,7 +898,6 @@ class ScytheWizard(tk.Tk):
 
     def useLocal(self):
         global CURRENTCONFIG
-        #print("CURRENTCONFIG",CURRENTCONFIG)
         if self.int_local.get() ==1:
             CURRENTCONFIG.set(CF_MODE, "use_local_files", "yes")
             CURRENTCONFIG.set(CF_MODE, "use_ensembl_api", "no")
