@@ -531,7 +531,7 @@ class ScytheMenu(tk.Frame):
         cfg = self.confighandler.currentconfig.read(tmp)
         global CURRENTCONFIG
         CURRENTCONFIG=self.confighandler.currentconfig
-        if self.confighandler.currentconfig.get(CF_MODE,'use_local_files')=='yes':
+        if self.confighandler.currentconfig.get(CF_MODE,CF_MODE_use_local_files)=='yes':
             self.scythewizard.st_fastaDir.set(self.confighandler.currentconfig.get(CF_PATHS,'fasta_directory') )
             self.scythewizard.st_locDir.set(self.confighandler.currentconfig.get(CF_PATHS,'loc_directory') )
             self.scythewizard.st_grpFile.set(self.confighandler.currentconfig.get(CF_PATHS,'grp_file') )
@@ -543,6 +543,16 @@ class ScytheMenu(tk.Frame):
             self.scythewizard.ent_locDir.configure(state=tk.NORMAL)
             self.scythewizard.ent_grpFile.configure(state=tk.NORMAL)
             self.scythewizard.ent_outDir.configure(state=tk.NORMAL)
+        elif self.confighandler.currentconfig.get(CF_MODE,CF_MODE_use_ensembl)=='yes':
+            self.scythewizard.st_outDir.set(self.confighandler.currentconfig.get(CF_PATHS,'output_directory') )
+            self.scythewizard.cb_use_ensembl.select()
+            self.scythewizard.cb_use_ensembl.configure(state=tk.NORMAL)
+            self.scythewizard.cb_use_local.configure(state=tk.DISABLED)
+            self.scythewizard.ent_fastaDir.configure(state=tk.DISABLED)
+            self.scythewizard.ent_locDir.configure(state=tk.DISABLED)
+            self.scythewizard.ent_grpFile.configure(state=tk.DISABLED)
+            self.scythewizard.ent_outDir.configure(state=tk.NORMAL)
+
         return tmp
 
     def onSaveConfig(self):
@@ -992,9 +1002,9 @@ try:
     #use config file
     arg = sys.argv[1]
 except IndexError as e:
+    #from scratch
     app=ScytheMenu(root)
 else:
-    # from scratch
     app=ScytheMenu(root,arg)
 
 root.mainloop()
