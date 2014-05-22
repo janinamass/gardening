@@ -13,6 +13,8 @@ Important! needleall seems to be broken in EMBOSS 6.6.0.0; this is working with 
 
 .. [EMB2000] EMBOSS: The European Molecular Biology Open Software Suite (2000) Rice,P. Longden,I. and Bleasby, A.Trends in Genetics 16, (6) pp276--277
 
+.. _algo:
+
 Algorithms and Application
 ==========================
 Scythe performs pairwise global alignments [NEED1970] to measure the similarity between transcripts.
@@ -26,7 +28,7 @@ Every gene is processed individually, a `reference species` is only local to a g
 Alternatively, the maximum-sum (mx_sum_) approach calculates the score for all transcript pairings between the species and return a maximum-scoring set.
 Please note that this approach might not be feasable for large data sets.
 
-.. mx_sum:
+.. _mx_sum:
 
 mx_sum
 ------
@@ -35,7 +37,7 @@ max sum algorithm returns an optimal solution for the problem of score maximizat
 There are, however, scenarios where this would not represent the desired result: In cases of single-transcript outliers,
 their pairwise score to all other sequences is always taken into account and may favor sequences that are less dissimilar to the outlier.
 
-.. sl_ref:
+.. _sl_ref:
 
 sl_ref
 ------
