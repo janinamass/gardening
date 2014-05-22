@@ -1,2 +1,3 @@
 include *.txt
+include scythe2/gui/*.xbm
 recursive-include docs *.txt
