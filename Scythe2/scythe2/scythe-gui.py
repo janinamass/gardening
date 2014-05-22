@@ -16,8 +16,8 @@ from tkinter import Listbox
 
 import scythe2 as scythe
 
-from gui.dialogs import ScytheConvertDialogLoc
-from gui.dialogs import ScytheConvertDialogGrp
+#from gui.dialogs import ScytheConvertDialogLoc
+#from gui.dialogs import ScytheConvertDialogGrp
 
 import helpers.mergeSubsets as mergeSubsets
 import helpers.ensembl_ortho_mysql as ensembl_ortho_mysql
@@ -484,11 +484,10 @@ class ScytheMenu(tk.Frame):
         fileMenu.add_command(label="Save configuration...", command=self.onSaveConfig)
 
 #todo: separate converters for each file type
-        convertMenu = tk.Menu(fileMenu)
-        convertMenu.add_command(label="convert orthology information to .grp", command=self.onConvertToGrp)
-        convertMenu.add_command(label="convert loci/transcript information to .loc", command=self.onConvertToLoc)
-
-        fileMenu.add_cascade(label='Convert files...', menu=convertMenu, underline=0)
+        #convertMenu = tk.Menu(fileMenu)
+        #convertMenu.add_command(label="convert orthology information to .grp", command=self.onConvertToGrp)
+        #convertMenu.add_command(label="convert loci/transcript information to .loc", command=self.onConvertToLoc)
+        #fileMenu.add_cascade(label='Convert files...', menu=convertMenu, underline=0)
 
         fileMenu.add_command(label="Exit", command=self.onExit)
 
@@ -504,10 +503,10 @@ class ScytheMenu(tk.Frame):
         menubar.add_cascade(label="Help", menu=helpMenu)
         #self.onNewRun()
 #todo: converters!
-    def onConvertToGrp(self):
-        ScytheConvertDialogGrp()
-    def onConvertToLoc(self):
-        ScytheConvertDialogLoc()
+    #def onConvertToGrp(self):
+    #    ScytheConvertDialogGrp()
+    #def onConvertToLoc(self):
+    #    ScytheConvertDialogLoc()
 
     def onExit(self):
         self.quit()
