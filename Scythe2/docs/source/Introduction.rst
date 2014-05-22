@@ -7,6 +7,7 @@ to minimize sources for misalignment in an automated fashion.
 Scythe will perform pairwise global alignments using the Needleman-Wunsch algorithm [NE1970] as implemented in needleall as part of the EMBOSS package [EMB2000].
 
 Please see the :ref:`tutorial` on how to use Scythe.
+Important! needleall seems to be broken in EMBOSS 6.6.0.0; this is working with needleall from EMBOSS 6.4.0.0.
 
 .. [NEE1970] Needleman, Saul B.; and Wunsch, Christian D. (1970). "A general method applicable to the search for similarities in the amino acid sequence of two proteins". Journal of Molecular Biology 48 (3): 443–53. doi:10.1016/0022-2836(70)90057-4. PMID 5420325.
 
