@@ -69,8 +69,6 @@ CF_ALGORITHM = "Algorithm"
 CF_ALGORITHM_use_global_max ="use_sl_glob"
 CF_ALGORITHM_use_default="use_sl_ref"
 CF_ALGORITHM_use_global_sum="use_mx_sum"
-CF_PARALOGS="Paralogs"
-CF_PARALOGS_include_paralogs = "include_paralogs"
 CF_FASTAHEADER="Fasta_header"
 CF_FASTAHEADER_delimiter = "fasta_header_delimiter"
 CF_FASTAHEADER_part = "fasta_header_part"
@@ -80,14 +78,14 @@ CF_FASTAHEADER_part = "fasta_header_part"
 OPTIONS = {}
 #dropdown menus
 yn =["yes","no"]
-for o in [CF_PARALOGS_include_paralogs, CF_ALGORITHM_use_global_max,CF_ALGORITHM_use_default,
+for o in [CF_ALGORITHM_use_global_max,CF_ALGORITHM_use_default,
           CF_ALGORITHM_use_global_sum,CF_RUN_split_input, CF_CLEANUP_clean_up_directories,
           CF_MODE_use_local_files,CF_MODE_use_ensembl]:
     OPTIONS[o]=yn
 
 MAXCPU=multiprocessing.cpu_count
 
-SECTIONS = [CF_MODE,CF_PATHS, CF_CLEANUP, CF_RUN, CF_PENALTIES,CF_ALGORITHM,CF_PARALOGS, CF_FASTAHEADER]
+SECTIONS = [CF_MODE,CF_PATHS, CF_CLEANUP, CF_RUN, CF_PENALTIES,CF_ALGORITHM, CF_FASTAHEADER]
 
 #setup dummy config
 MAXCONFIG = configparser.ConfigParser()
@@ -113,8 +111,6 @@ for i in [CF_PENALTIES_gap_open_cost,CF_PENALTIES_gap_extend_cost,CF_PENALTIES_s
 #todo clean up algo var names
 for i in [CF_ALGORITHM_use_global_max,CF_ALGORITHM_use_default,CF_ALGORITHM_use_global_sum   ]:
     MAXCONFIG.set(CF_ALGORITHM,i,"unset")
-for i in [CF_PARALOGS_include_paralogs  ]:
-    MAXCONFIG.set(CF_PARALOGS,i,"unset")
 for i in [CF_FASTAHEADER_delimiter, CF_FASTAHEADER_part]:
     if i == CF_FASTAHEADER_delimiter:
         MAXCONFIG.set(CF_FASTAHEADER,i,'" "')
@@ -219,7 +215,6 @@ class ScytheConfigEditor():
         fr_cleanup = ttk.Frame(nb,width=200, height=100)
         fr_run = ttk.Frame(nb,width=200, height=100)
         fr_algorithm = ttk.Frame(nb,width=200, height=100)
-        fr_paralogs = ttk.Frame(nb,width=200, height=100)
         fr_fastaheader = ttk.Frame(nb,width=200, height=100)
 
         #######labels########################
@@ -254,9 +249,7 @@ class ScytheConfigEditor():
                     fr = fr_penalties
                 elif t == CF_ALGORITHM:
                     fr = fr_algorithm
-                elif t == CF_PARALOGS:
-                    fr = fr_paralogs
-                ############TODO################
+
                 elif t == CF_FASTAHEADER:
                     fr = fr_fastaheader
                     print("fastaheader_fr")
@@ -333,8 +326,6 @@ class ScytheConfigEditor():
         nb.add(fr_cleanup, text=CF_CLEANUP)
         nb.add(fr_run, text=CF_RUN)
         nb.add(fr_algorithm, text=CF_ALGORITHM)
-        #nb.add(fr_paralogs, text=CF_PARALOGS)
-        ###################TODO#################
         nb.add(fr_fastaheader, text=CF_FASTAHEADER)
 
         nb.grid()
@@ -404,9 +395,6 @@ class ScytheConfigEditor():
         self.var_subsec[CF_ALGORITHM][0].set(CURRENTCONFIG.get(CF_ALGORITHM,self.txt_subsec[CF_ALGORITHM][0]))
         self.var_subsec[CF_ALGORITHM][1].set(CURRENTCONFIG.get(CF_ALGORITHM,self.txt_subsec[CF_ALGORITHM][1]))
         self.var_subsec[CF_ALGORITHM][2].set(CURRENTCONFIG.get(CF_ALGORITHM,self.txt_subsec[CF_ALGORITHM][2]))
-        #paralogs
-        self.var_subsec[CF_PARALOGS][0].set(CURRENTCONFIG.get(CF_PARALOGS,self.txt_subsec[CF_PARALOGS][0]))
-        #########TODO 02.12.13 ???
         self.var_subsec[CF_FASTAHEADER][0].set(CURRENTCONFIG.get(CF_FASTAHEADER,self.txt_subsec[CF_FASTAHEADER][0]))
         #self.var_subsec[CF_FASTAHEADER][1].set(CURRENTCONFIG.get(CF_FASTAHEADER,self.st_fasta_header_part))
 
