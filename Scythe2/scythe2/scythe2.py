@@ -19,6 +19,8 @@ from helpers.scythecore import AutoViviDict
 
 from helpers.fastahelper import FastaParser
 
+import threading
+import time
 #----/import------------------#
 
 logo = """
@@ -846,6 +848,32 @@ def main():
                   stopAfter=stopAfter, inDir=inDir, outDir=outDir, gapOpen=gapOpen, gapExtend=gapExtend)
 
 #----------------------------------------------------------------#
+
+class ThreadedScythet(threading.Thread):
+    def __init__(self, queue, argslist):
+        threading.Thread.__init__(self)
+        self.queue = queue
+        self.argslist = argslist
+        self.i = 0
+    def run(self):
+        for i in range(0,3):
+            print(i)
+            time.sleep(2)
+        self.queue.put("done")
+
+class ThreadedScythe(threading.Thread):
+    def __init__(self, queue, arglist):
+        threading.Thread.__init__(self)
+        self.queue = queue
+        self.arglist = arglist
+        self.i = 0
+     #   self.daemon = True
+    def run(self):
+        try:
+            runScythe(*self.arglist)
+            self.queue.put(1)
+        except Error as e:
+            print(e)
 
 if __name__ == "__main__":
     main()

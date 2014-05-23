@@ -24,6 +24,7 @@ import helpers.ensembl_ortho_mysql as ensembl_ortho_mysql
 import helpers.ensembl2grp as ensembl2grp
 import helpers.ensembl as ensembl
 
+import queue
 
 wd = os.path.join(os.path.dirname(__file__))
 
@@ -811,25 +812,63 @@ class ScytheWizard(tk.Tk):
         try:
             assert len(set(namesList))==len(namesList)
         except AssertionError as e:
-            tk.messagebox.showwarning("Error","Please make the first three letters of your fasta file names in {} unique.\nSorry for the inconvenience.".format(faDir))
-            sys.exit(1)
+            if reloadFields:
+                pass
+            elif len(namesList)==0:
+                tk.messagebox.showwarning("Error","Check your fasta directory ({}), it seems to be empty.".format(faDir))
+                sys.exit(1)
+            elif len(namesList)<0:
+                tk.messagebox.showwarning("Error","Please make the first three letters of your fasta file names in {} unique.\nSorry for the inconvenience.".format(faDir))
+                sys.exit(1)
         reloadFields = False
 
         #run scythe
         #order matters for argument list
-        if not reloadFields:
-            p = multiprocessing.Process(target=scythe.runScythe,args=[groups,delim,asID,namesList,cleanUp,stopAfter,faFileList,inDir,outDir,gapOpen, gapExtend,locDir,faDir])
-            SCYTHE_PROCESS = p
-            p.start()
-            print (p, p.is_alive())
+        if not reloadFields and len(set(namesList)) >0:
+            self.progbar = ttk.Progressbar(root, mode='indeterminate')
+            self.progbar.grid(column=0, row=5, sticky = "W")
+            res=tk.messagebox.showinfo("Be patient.", "Will be running Scythe. This could take some time.")
+            self.q = queue.Queue()
+            if res:
+                self.p = scythe.ThreadedScythe(self.q, [groups,delim,asID,namesList,cleanUp,stopAfter,faFileList,inDir,outDir,gapOpen, gapExtend,locDir,faDir])
+                self.p.start()
+                self.progbar.start()
+                SCYTHE_PROCESS = self.p
+                self.process_queue()
 
-    def cancelRun(self, process):
-        if process:
-            process.terminate()
-            print("('Cancel') -> Terminated by User.")
-            process = None
-        else:
-            print("No running process.")
+    def process_queue(self):
+        if not self.p.is_alive():
+            self.progbar.stop()
+            tk.messagebox.showinfo("Done.","Done.")
+        try:
+            msg = self.q.get(0)
+            self.progbar.stop()
+            tk.messagebox.showinfo("Process done.",msg)
+        except queue.Empty:
+            print(self.p, self.p.is_alive(), self.q)
+            self.parent.after(100, self.process_queue)
+
+    def runscythe(self, args):
+        p = multiprocessing.Process(target=scythe.runScythe,args=args)
+        SCYTHE_PROCESS = p
+        p.start()
+        root.update()
+        root.update_idletasks()
+
+    #todo remove cancel button
+    #def cancelRun(self, process):
+    #    if process:
+    #        #cant kill the thread, kill all
+    #        self.quit()
+    #        process = None
+    #    else:
+    #        print("No running process.")
+
+    def debug(self,n):
+        for i in range(0,n):
+            print(i)
+            print("\n")
+
 
     def initWizard(self):
         global SCYTHE_PROCESS
@@ -872,7 +911,7 @@ class ScytheWizard(tk.Tk):
 
         self.b_next = tk.Button(root, text="Next...", command = self.prepRun)
         self.b_quit = tk.Button(root, text="Quit", command = self.quit)
-        self.b_cancel = tk.Button(root, text = "Cancel", command = lambda: self.cancelRun(SCYTHE_PROCESS))
+#        self.b_cancel = tk.Button(root, text = "Cancel", command = lambda: self.cancelRun(SCYTHE_PROCESS))
         ######
 
         #Checkbuttons
@@ -904,7 +943,7 @@ class ScytheWizard(tk.Tk):
 
         self.b_next.grid(row=5, column=1, sticky="E")
         self.b_quit.grid(row=5, column=2, sticky="W")
-        self.b_cancel.grid(row=5, column=3, sticky="E")
+#        self.b_cancel.grid(row=5, column=3, sticky="E")
 
     def useLocal(self):
         global CURRENTCONFIG
