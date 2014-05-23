@@ -522,6 +522,13 @@ class ScytheMenu(tk.Frame):
         self.scythewizard.st_locDir.set(self.confighandler.currentconfig.get(CF_PATHS,'loc_directory') )
         self.scythewizard.st_grpFile.set(self.confighandler.currentconfig.get(CF_PATHS,'grp_file') )
         self.scythewizard.st_outDir.set(self.confighandler.currentconfig.get(CF_PATHS,'output_directory') )
+        #todo check ensembl/local
+        if self.confighandler.currentconfig.get(CF_MODE,CF_MODE_use_ensembl)=='yes':
+            self.scythewizard.cb_use_ensembl.select()
+        elif self.confighandler.currentconfig.get(CF_MODE,CF_MODE_use_local_files)=='yes':
+            self.scythewizard.cb_use_local.select()
+        self.scythewizard.cb_use_local.configure(state=tk.NORMAL)
+        self.scythewizard.cb_use_ensembl.configure(state=tk.NORMAL)
 
         self.onSetOptions()
 
@@ -789,7 +796,6 @@ class ScytheWizard(tk.Tk):
         if not locDir.endswith(os.sep):
             locDir+=os.sep
         fastaList = os.listdir(faDir)
-
         delim = CURRENTCONFIG.get(CF_FASTAHEADER,CF_FASTAHEADER_delimiter).strip('"')
         try:
             asID = int(CURRENTCONFIG.get(CF_FASTAHEADER,CF_FASTAHEADER_part))
@@ -802,8 +808,12 @@ class ScytheWizard(tk.Tk):
         faFileList = os.listdir(faDir)
         namesList = os.listdir(faDir)
         namesList = [n[0:3] for n in namesList]
-
-
+        try:
+            assert len(set(namesList))==len(namesList)
+        except AssertionError as e:
+            tk.messagebox.showwarning("Error","Please make the first three letters of your fasta file names in {} unique.\nSorry for the inconvenience.".format(faDir))
+            sys.exit(1)
+        reloadFields = False
 
         #run scythe
         #order matters for argument list
