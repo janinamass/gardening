@@ -1,0 +1,466 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>scythe2.helpers.gffFastaTools &mdash; Scythe 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Scythe 0.1 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Scythe 0.1 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for scythe2.helpers.gffFastaTools</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">re</span><span class="o">,</span> <span class="nn">string</span>
+<span class="c">#####################################</span>
+<span class="c"># last update 11/16/2012 by J. Mass #</span>
+<span class="c"># version = 0.03                   #</span>
+<span class="c">#####################################</span>
+
+
+
+<div class="viewcode-block" id="FastaHelper"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.FastaHelper">[docs]</a><span class="k">class</span> <span class="nc">FastaHelper</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="FastaHelper.remove_newlines"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.FastaHelper.remove_newlines">[docs]</a>    <span class="k">def</span> <span class="nf">remove_newlines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="s">&quot;&quot;</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="FastaHelper.insert_newlines"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.FastaHelper.insert_newlines">[docs]</a>    <span class="k">def</span> <span class="nf">insert_newlines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">,</span> <span class="n">every</span><span class="o">=</span><span class="mi">80</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">string</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">every</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">string</span><span class="p">),</span> <span class="n">every</span><span class="p">))</span>
+    </div>
+<div class="viewcode-block" id="FastaHelper.complement"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.FastaHelper.complement">[docs]</a>    <span class="k">def</span> <span class="nf">complement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">):</span>
+        <span class="n">tr</span> <span class="o">=</span> <span class="nb">str</span><span class="o">.</span><span class="n">maketrans</span><span class="p">(</span><span class="s">&#39;AGTCagtc&#39;</span><span class="p">,</span><span class="s">&#39;TCAGtcag&#39;</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">tr</span><span class="p">)</span>
+        <span class="k">return</span><span class="p">(</span><span class="n">res</span><span class="p">)</span></div>
+<div class="viewcode-block" id="FastaHelper.reverseComplement"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.FastaHelper.reverseComplement">[docs]</a>    <span class="k">def</span> <span class="nf">reverseComplement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">):</span>
+        <span class="n">tr</span> <span class="o">=</span> <span class="nb">str</span><span class="o">.</span><span class="n">maketrans</span><span class="p">(</span><span class="s">&#39;AGTCagtc&#39;</span><span class="p">,</span><span class="s">&#39;TCAGtcag&#39;</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">tr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">res</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</div></div>
+<div class="viewcode-block" id="FastaParser"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.FastaParser">[docs]</a><span class="k">class</span> <span class="nc">FastaParser</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>     
+<div class="viewcode-block" id="FastaParser.read_fasta"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.FastaParser.read_fasta">[docs]</a>    <span class="k">def</span> <span class="nf">read_fasta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fasta</span><span class="p">,</span> <span class="n">delim</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">asID</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;read from fasta fasta file &#39;fasta&#39; </span>
+<span class="sd">        and split sequence id at &#39;delim&#39; (if set)\n</span>
+<span class="sd">        example:\n</span>
+<span class="sd">        &gt;idpart1|idpart2\n</span>
+<span class="sd">        ATGTGA\n</span>
+<span class="sd">        and &#39;delim=&quot;|&quot;&#39; returns (&quot;idpart1&quot;, &quot;ATGTGA&quot;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+        <span class="n">fasta</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fasta</span><span class="p">,</span> <span class="s">&quot;r&quot;</span><span class="p">)</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">name</span> <span class="ow">or</span> <span class="n">fasta</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">seq</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">fasta</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span> <span class="ow">or</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&quot;&gt;&quot;</span><span class="p">):</span>
+                    <span class="k">break</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">seq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">joinedSeq</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="k">if</span> <span class="n">delim</span><span class="p">:</span>
+                <span class="c">#vprint(&quot;delim set to &quot;+delim)</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">delim</span><span class="p">)[</span><span class="n">asID</span><span class="p">]</span>
+            <span class="k">yield</span> <span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(),</span> <span class="n">joinedSeq</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span>    
+        <span class="n">fasta</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        
+            
+        </div></div>
+<div class="viewcode-block" id="SeqTranslator"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.SeqTranslator">[docs]</a><span class="k">class</span> <span class="nc">SeqTranslator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">RNAmap</span> <span class="o">=</span> <span class="p">{</span>
+           <span class="s">&quot;UUU&quot;</span><span class="p">:</span><span class="s">&quot;F&quot;</span><span class="p">,</span> <span class="s">&quot;UUC&quot;</span><span class="p">:</span><span class="s">&quot;F&quot;</span><span class="p">,</span> <span class="s">&quot;UUA&quot;</span><span class="p">:</span><span class="s">&quot;L&quot;</span><span class="p">,</span> <span class="s">&quot;UUG&quot;</span><span class="p">:</span><span class="s">&quot;L&quot;</span><span class="p">,</span>
+           <span class="s">&quot;UCU&quot;</span><span class="p">:</span><span class="s">&quot;S&quot;</span><span class="p">,</span> <span class="s">&quot;UCC&quot;</span><span class="p">:</span><span class="s">&quot;S&quot;</span><span class="p">,</span> <span class="s">&quot;UCA&quot;</span><span class="p">:</span><span class="s">&quot;S&quot;</span><span class="p">,</span> <span class="s">&quot;UCG&quot;</span><span class="p">:</span><span class="s">&quot;S&quot;</span><span class="p">,</span>
+           <span class="s">&quot;UAU&quot;</span><span class="p">:</span><span class="s">&quot;Y&quot;</span><span class="p">,</span> <span class="s">&quot;UAC&quot;</span><span class="p">:</span><span class="s">&quot;Y&quot;</span><span class="p">,</span> <span class="s">&quot;UAA&quot;</span><span class="p">:</span><span class="s">&quot;*&quot;</span><span class="p">,</span> <span class="s">&quot;UAG&quot;</span><span class="p">:</span><span class="s">&quot;*&quot;</span><span class="p">,</span>
+           <span class="s">&quot;UGU&quot;</span><span class="p">:</span><span class="s">&quot;C&quot;</span><span class="p">,</span> <span class="s">&quot;UGC&quot;</span><span class="p">:</span><span class="s">&quot;C&quot;</span><span class="p">,</span> <span class="s">&quot;UGA&quot;</span><span class="p">:</span><span class="s">&quot;*&quot;</span><span class="p">,</span> <span class="s">&quot;UGG&quot;</span><span class="p">:</span><span class="s">&quot;W&quot;</span><span class="p">,</span>
+           <span class="s">&quot;CUU&quot;</span><span class="p">:</span><span class="s">&quot;L&quot;</span><span class="p">,</span> <span class="s">&quot;CUC&quot;</span><span class="p">:</span><span class="s">&quot;L&quot;</span><span class="p">,</span> <span class="s">&quot;CUA&quot;</span><span class="p">:</span><span class="s">&quot;L&quot;</span><span class="p">,</span> <span class="s">&quot;CUG&quot;</span><span class="p">:</span><span class="s">&quot;L&quot;</span><span class="p">,</span>
+           <span class="s">&quot;CCU&quot;</span><span class="p">:</span><span class="s">&quot;P&quot;</span><span class="p">,</span> <span class="s">&quot;CCC&quot;</span><span class="p">:</span><span class="s">&quot;P&quot;</span><span class="p">,</span> <span class="s">&quot;CCA&quot;</span><span class="p">:</span><span class="s">&quot;P&quot;</span><span class="p">,</span> <span class="s">&quot;CCG&quot;</span><span class="p">:</span><span class="s">&quot;P&quot;</span><span class="p">,</span>
+           <span class="s">&quot;CAU&quot;</span><span class="p">:</span><span class="s">&quot;H&quot;</span><span class="p">,</span> <span class="s">&quot;CAC&quot;</span><span class="p">:</span><span class="s">&quot;H&quot;</span><span class="p">,</span> <span class="s">&quot;CAA&quot;</span><span class="p">:</span><span class="s">&quot;Q&quot;</span><span class="p">,</span> <span class="s">&quot;CAG&quot;</span><span class="p">:</span><span class="s">&quot;Q&quot;</span><span class="p">,</span>
+           <span class="s">&quot;CGU&quot;</span><span class="p">:</span><span class="s">&quot;R&quot;</span><span class="p">,</span> <span class="s">&quot;CGC&quot;</span><span class="p">:</span><span class="s">&quot;R&quot;</span><span class="p">,</span> <span class="s">&quot;CGA&quot;</span><span class="p">:</span><span class="s">&quot;R&quot;</span><span class="p">,</span> <span class="s">&quot;CGG&quot;</span><span class="p">:</span><span class="s">&quot;R&quot;</span><span class="p">,</span>
+           <span class="s">&quot;AUU&quot;</span><span class="p">:</span><span class="s">&quot;I&quot;</span><span class="p">,</span> <span class="s">&quot;AUC&quot;</span><span class="p">:</span><span class="s">&quot;I&quot;</span><span class="p">,</span> <span class="s">&quot;AUA&quot;</span><span class="p">:</span><span class="s">&quot;I&quot;</span><span class="p">,</span> <span class="s">&quot;AUG&quot;</span><span class="p">:</span><span class="s">&quot;M&quot;</span><span class="p">,</span>
+           <span class="s">&quot;ACU&quot;</span><span class="p">:</span><span class="s">&quot;T&quot;</span><span class="p">,</span> <span class="s">&quot;ACC&quot;</span><span class="p">:</span><span class="s">&quot;T&quot;</span><span class="p">,</span> <span class="s">&quot;ACA&quot;</span><span class="p">:</span><span class="s">&quot;T&quot;</span><span class="p">,</span> <span class="s">&quot;ACG&quot;</span><span class="p">:</span><span class="s">&quot;T&quot;</span><span class="p">,</span>
+           <span class="s">&quot;AAU&quot;</span><span class="p">:</span><span class="s">&quot;N&quot;</span><span class="p">,</span> <span class="s">&quot;AAC&quot;</span><span class="p">:</span><span class="s">&quot;N&quot;</span><span class="p">,</span> <span class="s">&quot;AAA&quot;</span><span class="p">:</span><span class="s">&quot;K&quot;</span><span class="p">,</span> <span class="s">&quot;AAG&quot;</span><span class="p">:</span><span class="s">&quot;K&quot;</span><span class="p">,</span>
+           <span class="s">&quot;AGU&quot;</span><span class="p">:</span><span class="s">&quot;S&quot;</span><span class="p">,</span> <span class="s">&quot;AGC&quot;</span><span class="p">:</span><span class="s">&quot;S&quot;</span><span class="p">,</span> <span class="s">&quot;AGA&quot;</span><span class="p">:</span><span class="s">&quot;R&quot;</span><span class="p">,</span> <span class="s">&quot;AGG&quot;</span><span class="p">:</span><span class="s">&quot;R&quot;</span><span class="p">,</span>
+           <span class="s">&quot;GUU&quot;</span><span class="p">:</span><span class="s">&quot;V&quot;</span><span class="p">,</span> <span class="s">&quot;GUC&quot;</span><span class="p">:</span><span class="s">&quot;V&quot;</span><span class="p">,</span> <span class="s">&quot;GUA&quot;</span><span class="p">:</span><span class="s">&quot;V&quot;</span><span class="p">,</span> <span class="s">&quot;GUG&quot;</span><span class="p">:</span><span class="s">&quot;V&quot;</span><span class="p">,</span>
+           <span class="s">&quot;GCU&quot;</span><span class="p">:</span><span class="s">&quot;A&quot;</span><span class="p">,</span> <span class="s">&quot;GCC&quot;</span><span class="p">:</span><span class="s">&quot;A&quot;</span><span class="p">,</span> <span class="s">&quot;GCA&quot;</span><span class="p">:</span><span class="s">&quot;A&quot;</span><span class="p">,</span> <span class="s">&quot;GCG&quot;</span><span class="p">:</span><span class="s">&quot;A&quot;</span><span class="p">,</span>
+           <span class="s">&quot;GAU&quot;</span><span class="p">:</span><span class="s">&quot;D&quot;</span><span class="p">,</span> <span class="s">&quot;GAC&quot;</span><span class="p">:</span><span class="s">&quot;D&quot;</span><span class="p">,</span> <span class="s">&quot;GAA&quot;</span><span class="p">:</span><span class="s">&quot;E&quot;</span><span class="p">,</span> <span class="s">&quot;GAG&quot;</span><span class="p">:</span><span class="s">&quot;E&quot;</span><span class="p">,</span>
+           <span class="s">&quot;GGU&quot;</span><span class="p">:</span><span class="s">&quot;G&quot;</span><span class="p">,</span> <span class="s">&quot;GGC&quot;</span><span class="p">:</span><span class="s">&quot;G&quot;</span><span class="p">,</span> <span class="s">&quot;GGA&quot;</span><span class="p">:</span><span class="s">&quot;G&quot;</span><span class="p">,</span> <span class="s">&quot;GGG&quot;</span><span class="p">:</span><span class="s">&quot;G&quot;</span>
+    <span class="p">}</span>
+    <span class="n">DNAmap</span> <span class="o">=</span> <span class="p">{</span>
+           <span class="s">&quot;TTT&quot;</span><span class="p">:</span><span class="s">&quot;F&quot;</span><span class="p">,</span> <span class="s">&quot;TTC&quot;</span><span class="p">:</span><span class="s">&quot;F&quot;</span><span class="p">,</span> <span class="s">&quot;TTA&quot;</span><span class="p">:</span><span class="s">&quot;L&quot;</span><span class="p">,</span> <span class="s">&quot;TTG&quot;</span><span class="p">:</span><span class="s">&quot;L&quot;</span><span class="p">,</span>
+           <span class="s">&quot;TCT&quot;</span><span class="p">:</span><span class="s">&quot;S&quot;</span><span class="p">,</span> <span class="s">&quot;TCC&quot;</span><span class="p">:</span><span class="s">&quot;S&quot;</span><span class="p">,</span> <span class="s">&quot;TCA&quot;</span><span class="p">:</span><span class="s">&quot;S&quot;</span><span class="p">,</span> <span class="s">&quot;TCG&quot;</span><span class="p">:</span><span class="s">&quot;S&quot;</span><span class="p">,</span>
+           <span class="s">&quot;TAT&quot;</span><span class="p">:</span><span class="s">&quot;Y&quot;</span><span class="p">,</span> <span class="s">&quot;TAC&quot;</span><span class="p">:</span><span class="s">&quot;Y&quot;</span><span class="p">,</span> <span class="s">&quot;TAA&quot;</span><span class="p">:</span><span class="s">&quot;*&quot;</span><span class="p">,</span> <span class="s">&quot;TAG&quot;</span><span class="p">:</span><span class="s">&quot;*&quot;</span><span class="p">,</span>
+           <span class="s">&quot;TGT&quot;</span><span class="p">:</span><span class="s">&quot;C&quot;</span><span class="p">,</span> <span class="s">&quot;TGC&quot;</span><span class="p">:</span><span class="s">&quot;C&quot;</span><span class="p">,</span> <span class="s">&quot;TGA&quot;</span><span class="p">:</span><span class="s">&quot;*&quot;</span><span class="p">,</span> <span class="s">&quot;TGG&quot;</span><span class="p">:</span><span class="s">&quot;W&quot;</span><span class="p">,</span>
+           <span class="s">&quot;CTT&quot;</span><span class="p">:</span><span class="s">&quot;L&quot;</span><span class="p">,</span> <span class="s">&quot;CTC&quot;</span><span class="p">:</span><span class="s">&quot;L&quot;</span><span class="p">,</span> <span class="s">&quot;CTA&quot;</span><span class="p">:</span><span class="s">&quot;L&quot;</span><span class="p">,</span> <span class="s">&quot;CTG&quot;</span><span class="p">:</span><span class="s">&quot;L&quot;</span><span class="p">,</span>
+           <span class="s">&quot;CCT&quot;</span><span class="p">:</span><span class="s">&quot;P&quot;</span><span class="p">,</span> <span class="s">&quot;CCC&quot;</span><span class="p">:</span><span class="s">&quot;P&quot;</span><span class="p">,</span> <span class="s">&quot;CCA&quot;</span><span class="p">:</span><span class="s">&quot;P&quot;</span><span class="p">,</span> <span class="s">&quot;CCG&quot;</span><span class="p">:</span><span class="s">&quot;P&quot;</span><span class="p">,</span>
+           <span class="s">&quot;CAT&quot;</span><span class="p">:</span><span class="s">&quot;H&quot;</span><span class="p">,</span> <span class="s">&quot;CAC&quot;</span><span class="p">:</span><span class="s">&quot;H&quot;</span><span class="p">,</span> <span class="s">&quot;CAA&quot;</span><span class="p">:</span><span class="s">&quot;Q&quot;</span><span class="p">,</span> <span class="s">&quot;CAG&quot;</span><span class="p">:</span><span class="s">&quot;Q&quot;</span><span class="p">,</span>
+           <span class="s">&quot;CGT&quot;</span><span class="p">:</span><span class="s">&quot;R&quot;</span><span class="p">,</span> <span class="s">&quot;CGC&quot;</span><span class="p">:</span><span class="s">&quot;R&quot;</span><span class="p">,</span> <span class="s">&quot;CGA&quot;</span><span class="p">:</span><span class="s">&quot;R&quot;</span><span class="p">,</span> <span class="s">&quot;CGG&quot;</span><span class="p">:</span><span class="s">&quot;R&quot;</span><span class="p">,</span>
+           <span class="s">&quot;ATT&quot;</span><span class="p">:</span><span class="s">&quot;I&quot;</span><span class="p">,</span> <span class="s">&quot;ATC&quot;</span><span class="p">:</span><span class="s">&quot;I&quot;</span><span class="p">,</span> <span class="s">&quot;ATA&quot;</span><span class="p">:</span><span class="s">&quot;I&quot;</span><span class="p">,</span> <span class="s">&quot;ATG&quot;</span><span class="p">:</span><span class="s">&quot;M&quot;</span><span class="p">,</span>
+           <span class="s">&quot;ACT&quot;</span><span class="p">:</span><span class="s">&quot;T&quot;</span><span class="p">,</span> <span class="s">&quot;ACC&quot;</span><span class="p">:</span><span class="s">&quot;T&quot;</span><span class="p">,</span> <span class="s">&quot;ACA&quot;</span><span class="p">:</span><span class="s">&quot;T&quot;</span><span class="p">,</span> <span class="s">&quot;ACG&quot;</span><span class="p">:</span><span class="s">&quot;T&quot;</span><span class="p">,</span>
+           <span class="s">&quot;AAT&quot;</span><span class="p">:</span><span class="s">&quot;N&quot;</span><span class="p">,</span> <span class="s">&quot;AAC&quot;</span><span class="p">:</span><span class="s">&quot;N&quot;</span><span class="p">,</span> <span class="s">&quot;AAA&quot;</span><span class="p">:</span><span class="s">&quot;K&quot;</span><span class="p">,</span> <span class="s">&quot;AAG&quot;</span><span class="p">:</span><span class="s">&quot;K&quot;</span><span class="p">,</span>
+           <span class="s">&quot;AGT&quot;</span><span class="p">:</span><span class="s">&quot;S&quot;</span><span class="p">,</span> <span class="s">&quot;AGC&quot;</span><span class="p">:</span><span class="s">&quot;S&quot;</span><span class="p">,</span> <span class="s">&quot;AGA&quot;</span><span class="p">:</span><span class="s">&quot;R&quot;</span><span class="p">,</span> <span class="s">&quot;AGG&quot;</span><span class="p">:</span><span class="s">&quot;R&quot;</span><span class="p">,</span>
+           <span class="s">&quot;GTT&quot;</span><span class="p">:</span><span class="s">&quot;V&quot;</span><span class="p">,</span> <span class="s">&quot;GTC&quot;</span><span class="p">:</span><span class="s">&quot;V&quot;</span><span class="p">,</span> <span class="s">&quot;GTA&quot;</span><span class="p">:</span><span class="s">&quot;V&quot;</span><span class="p">,</span> <span class="s">&quot;GTG&quot;</span><span class="p">:</span><span class="s">&quot;V&quot;</span><span class="p">,</span>
+           <span class="s">&quot;GCT&quot;</span><span class="p">:</span><span class="s">&quot;A&quot;</span><span class="p">,</span> <span class="s">&quot;GCC&quot;</span><span class="p">:</span><span class="s">&quot;A&quot;</span><span class="p">,</span> <span class="s">&quot;GCA&quot;</span><span class="p">:</span><span class="s">&quot;A&quot;</span><span class="p">,</span> <span class="s">&quot;GCG&quot;</span><span class="p">:</span><span class="s">&quot;A&quot;</span><span class="p">,</span>
+           <span class="s">&quot;GAT&quot;</span><span class="p">:</span><span class="s">&quot;D&quot;</span><span class="p">,</span> <span class="s">&quot;GAC&quot;</span><span class="p">:</span><span class="s">&quot;D&quot;</span><span class="p">,</span> <span class="s">&quot;GAA&quot;</span><span class="p">:</span><span class="s">&quot;E&quot;</span><span class="p">,</span> <span class="s">&quot;GAG&quot;</span><span class="p">:</span><span class="s">&quot;E&quot;</span><span class="p">,</span>
+           <span class="s">&quot;GGT&quot;</span><span class="p">:</span><span class="s">&quot;G&quot;</span><span class="p">,</span> <span class="s">&quot;GGC&quot;</span><span class="p">:</span><span class="s">&quot;G&quot;</span><span class="p">,</span> <span class="s">&quot;GGA&quot;</span><span class="p">:</span><span class="s">&quot;G&quot;</span><span class="p">,</span> <span class="s">&quot;GGG&quot;</span><span class="p">:</span><span class="s">&quot;G&quot;</span>
+    <span class="p">}</span>
+<div class="viewcode-block" id="SeqTranslator.triplets"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.SeqTranslator.triplets">[docs]</a>    <span class="k">def</span> <span class="nf">triplets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">,</span> <span class="n">frameshift</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="c">#chop string into 3 char slices </span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">string</span><span class="p">)</span><span class="o">/</span><span class="mi">3</span><span class="p">)):</span>
+            <span class="c">#print(string[i*3+frameshift:i*3+3+frameshift])</span>
+            <span class="k">yield</span> <span class="n">string</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="mi">3</span><span class="o">+</span><span class="n">frameshift</span><span class="p">:</span><span class="n">i</span><span class="o">*</span><span class="mi">3</span><span class="o">+</span><span class="mi">3</span><span class="o">+</span><span class="n">frameshift</span><span class="p">]</span></div>
+<div class="viewcode-block" id="SeqTranslator.triplets1"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.SeqTranslator.triplets1">[docs]</a>    <span class="k">def</span> <span class="nf">triplets1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">,</span> <span class="n">frameshift</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">frameshift</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">frameshift</span><span class="o">=</span><span class="mi">0</span>
+        <span class="c">#chop string into 3 char slices </span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">string</span><span class="p">)</span><span class="o">/</span><span class="mi">3</span><span class="p">)):</span>
+            <span class="c">#print(string[i*3+frameshift:i*3+3+frameshift])</span>
+            <span class="k">if</span> <span class="n">frameshift</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">string</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="mi">3</span><span class="o">+</span><span class="n">frameshift</span><span class="p">:</span><span class="n">i</span><span class="o">*</span><span class="mi">3</span><span class="o">+</span><span class="mi">3</span><span class="o">+</span><span class="n">frameshift</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">frameshift</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">string</span><span class="p">[</span><span class="mi">1</span><span class="o">+</span> <span class="n">i</span><span class="o">*</span><span class="mi">3</span><span class="o">+</span><span class="n">frameshift</span><span class="p">:</span><span class="mi">1</span><span class="o">+</span> <span class="n">i</span><span class="o">*</span><span class="mi">3</span><span class="o">+</span><span class="mi">3</span><span class="o">+</span><span class="n">frameshift</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">frameshift</span> <span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">string</span><span class="p">[</span><span class="mi">2</span><span class="o">+</span> <span class="n">i</span><span class="o">*</span><span class="mi">3</span><span class="o">+</span><span class="n">frameshift</span><span class="p">:</span><span class="mi">2</span><span class="o">+</span> <span class="n">i</span><span class="o">*</span><span class="mi">3</span><span class="o">+</span><span class="mi">3</span><span class="o">+</span><span class="n">frameshift</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">??&quot;</span><span class="p">)</span></div>
+<div class="viewcode-block" id="SeqTranslator.dna2prot"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.SeqTranslator.dna2prot">[docs]</a>    <span class="k">def</span> <span class="nf">dna2prot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">,</span> <span class="n">frameshift</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">triplets</span><span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="n">frameshift</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">res</span><span class="o">+=</span><span class="bp">self</span><span class="o">.</span><span class="n">DNAmap</span><span class="p">[</span><span class="n">a</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="s">&quot;But don&#39;t panic.&quot;</span><span class="p">)</span>
+                <span class="n">res</span><span class="o">+=</span><span class="s">&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">res</span>
+
+</div></div>
+<div class="viewcode-block" id="LargeFastaParser"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.LargeFastaParser">[docs]</a><span class="k">class</span> <span class="nc">LargeFastaParser</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="LargeFastaParser.prepare_fasta"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.LargeFastaParser.prepare_fasta">[docs]</a>    <span class="k">def</span> <span class="nf">prepare_fasta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fasta</span><span class="p">):</span>
+        <span class="n">fasta</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fasta</span><span class="p">,</span> <span class="s">&quot;r&quot;</span><span class="p">)</span>
+        <span class="n">fasta</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">headerIndex</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">headerIndexNum</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="n">fasta</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+        <span class="n">ind</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">while</span> <span class="n">l</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&quot;&gt;&quot;</span><span class="p">):</span>
+                <span class="n">ind</span> <span class="o">+=</span><span class="mi">1</span>
+                <span class="n">pos</span> <span class="o">=</span> <span class="n">fasta</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span>
+                <span class="n">l</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">)</span>
+                <span class="n">l</span> <span class="o">=</span> <span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">headerIndex</span><span class="p">[</span><span class="n">l</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()[</span><span class="mi">1</span><span class="p">:]]</span> <span class="o">=</span> <span class="n">pos</span>
+                <span class="n">headerIndexNum</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="n">fasta</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">fasta</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span>
+        <span class="n">ind</span><span class="o">+=</span><span class="mi">1</span>
+        <span class="n">headerIndex</span><span class="p">[</span><span class="s">&quot;EOF&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pos</span>
+        <span class="n">headerIndexNum</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+        <span class="n">fasta</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">headerIndex</span>
+    </div>
+<div class="viewcode-block" id="LargeFastaParser.cacheSequence"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.LargeFastaParser.cacheSequence">[docs]</a>    <span class="k">def</span> <span class="nf">cacheSequence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fasta</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
+        <span class="n">fasta</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fasta</span><span class="p">,</span> <span class="s">&quot;r&quot;</span><span class="p">)</span>
+        <span class="n">fasta</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">fasta</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">tmp</span>
+        <span class="k">while</span> <span class="p">(</span><span class="ow">not</span> <span class="n">tmp</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&quot;&gt;&quot;</span><span class="p">)):</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">fasta</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">res</span><span class="o">+</span><span class="n">tmp</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">tmp</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="s">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">fasta</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">res</span>
+    </div>
+<div class="viewcode-block" id="LargeFastaParser.getSequenceByCoordinatesOnLandmark"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.LargeFastaParser.getSequenceByCoordinatesOnLandmark">[docs]</a>    <span class="k">def</span> <span class="nf">getSequenceByCoordinatesOnLandmark</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">landmarkSeq</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">strand</span><span class="p">):</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">start</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">end</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">strand</span> <span class="o">==</span> <span class="s">&quot;+&quot;</span> <span class="ow">or</span> <span class="n">strand</span> <span class="o">==</span> <span class="s">&quot;.&quot;</span><span class="p">):</span>
+            <span class="k">return</span><span class="p">(</span><span class="n">landmarkSeq</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">strand</span> <span class="o">==</span> <span class="p">(</span><span class="s">&quot;-&quot;</span><span class="p">):</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">landmarkSeq</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span>
+            <span class="n">tr</span> <span class="o">=</span> <span class="nb">str</span><span class="o">.</span><span class="n">maketrans</span><span class="p">(</span><span class="s">&#39;AGTCagtc&#39;</span><span class="p">,</span><span class="s">&#39;TCAGtcag&#39;</span><span class="p">)</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">tr</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">res</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">strand</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot;WARNING: strand was of unknown orientation</span><span class="se">\n</span><span class="s"> Will return as if it was &#39;+&#39;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">landmarkSeq</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span>
+        
+        <span class="k">return</span> <span class="n">landmarkSeq</span><span class="p">[</span><span class="n">start</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="n">end</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</div></div>
+<div class="viewcode-block" id="GFFParser"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.GFFParser">[docs]</a><span class="k">class</span> <span class="nc">GFFParser</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">_ids_name</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">_mrna_exons</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">_exons_mrna</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="GFFParser.ids_name"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.GFFParser.ids_name">[docs]</a>    <span class="k">def</span> <span class="nf">ids_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ids_name</span>
+    </div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="GFFParser.mrna_exons"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.GFFParser.mrna_exons">[docs]</a>    <span class="k">def</span> <span class="nf">mrna_exons</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mrna_exons</span>
+    </div>
+<div class="viewcode-block" id="GFFParser.parse"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.GFFParser.parse">[docs]</a>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gff</span><span class="p">):</span>
+        <span class="n">gff</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">gff</span><span class="p">,</span><span class="s">&#39;r&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">gff</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&quot;#&quot;</span><span class="p">):</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">l</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+                <span class="n">l</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span><span class="p">)</span>
+                <span class="n">tmp_seqid</span><span class="p">,</span> <span class="n">tmp_source</span><span class="p">,</span> <span class="n">tmp_type</span><span class="p">,</span> <span class="n">tmp_start</span><span class="p">,</span> <span class="n">tmp_end</span><span class="p">,</span> <span class="n">tmp_score</span><span class="p">,</span> <span class="n">tmp_strand</span><span class="p">,</span> <span class="n">tmp_phase</span><span class="p">,</span> <span class="n">tmp_attributes</span> <span class="o">=</span> <span class="n">l</span>
+                <span class="n">gffobj</span> <span class="o">=</span> <span class="n">gffObject</span><span class="p">(</span><span class="n">seqid</span><span class="o">=</span><span class="n">tmp_seqid</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">tmp_source</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">tmp_type</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">tmp_start</span><span class="p">),</span> <span class="n">end</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">tmp_end</span><span class="p">),</span> <span class="n">score</span><span class="o">=</span><span class="n">tmp_score</span><span class="p">,</span> <span class="n">strand</span> <span class="o">=</span> <span class="n">tmp_strand</span><span class="p">,</span> <span class="n">phase</span> <span class="o">=</span> <span class="n">tmp_phase</span><span class="p">,</span> <span class="n">attributes</span> <span class="o">=</span>  <span class="n">tmp_attributes</span><span class="p">)</span>
+                <span class="k">yield</span><span class="p">(</span><span class="n">gffobj</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="GFFParser.parentsDct"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.GFFParser.parentsDct">[docs]</a>    <span class="k">def</span> <span class="nf">parentsDct</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gff</span><span class="p">):</span>
+        <span class="n">dct</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">roots</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">mrna</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">gff</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="s">&quot;Parent&quot;</span> <span class="ow">in</span> <span class="n">a</span><span class="o">.</span><span class="n">attrib_dct</span><span class="p">:</span>
+                <span class="n">roots</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">attrib_dct</span><span class="p">[</span><span class="s">&quot;ID&quot;</span><span class="p">])</span>
+                <span class="n">dct</span><span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">attrib_dct</span><span class="p">[</span><span class="s">&quot;ID&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">attrib_dct</span><span class="p">[</span><span class="s">&quot;ID&quot;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&quot;mRNA&quot;</span><span class="p">:</span>
+                    <span class="n">mrna</span><span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">attrib_dct</span><span class="p">[</span><span class="s">&quot;ID&quot;</span><span class="p">]]</span><span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">attrib_dct</span><span class="p">[</span><span class="s">&quot;Name&quot;</span><span class="p">]</span>
+                    <span class="n">mrna</span><span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">attrib_dct</span><span class="p">[</span><span class="s">&quot;Name&quot;</span><span class="p">]]</span><span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">attrib_dct</span><span class="p">[</span><span class="s">&quot;Name&quot;</span><span class="p">]</span>
+                    <span class="c">#print(a.attrib_dct[&quot;ID&quot;], mrna[a.attrib_dct[&quot;ID&quot;]])</span>
+                <span class="n">dct</span><span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">attrib_dct</span><span class="p">[</span><span class="s">&quot;ID&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">attrib_dct</span><span class="p">[</span><span class="s">&quot;Parent&quot;</span><span class="p">]</span><span class="c">#todo mult</span>
+        <span class="c">#collapse</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">dct</span><span class="p">:</span>
+            <span class="k">while</span> <span class="p">(</span><span class="n">dct</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">roots</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">dct</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="ow">in</span> <span class="n">mrna</span><span class="p">:</span>
+                    <span class="n">dct</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">mrna</span><span class="p">[</span><span class="n">dct</span><span class="p">[</span><span class="n">k</span><span class="p">]]</span>
+                    <span class="k">break</span>
+                <span class="n">dct</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">dct</span><span class="p">[</span><span class="n">dct</span><span class="p">[</span><span class="n">k</span><span class="p">]]</span>
+        <span class="k">return</span> <span class="n">dct</span><span class="p">,</span> <span class="n">mrna</span>
+</div></div>
+<div class="viewcode-block" id="gffObject"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.gffObject">[docs]</a><span class="k">class</span> <span class="nc">gffObject</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    &quot;seqid&quot; (gff column 1) landmark for coordinate system</span>
+<span class="sd">    &quot;source&quot; (gff column 2) source db/program etc</span>
+<span class="sd">    &quot;type&quot; (gff column 3) term from the Sequence Ontology</span>
+<span class="sd">    &quot;start&quot;(gff column 4) relative to the landmark seqid</span>
+<span class="sd">    &quot;end&quot; (gff column 5) 1-based integer coordinates</span>
+<span class="sd">    &quot;score&quot; (gff column 6) float</span>
+<span class="sd">    &quot;strand&quot; (gff column 7) +/i/./? for positive/negative/none/unknown strand (relative to the landmark)</span>
+<span class="sd">    &quot;phase&quot; (gff column 8) 0/1/2 for &quot;CDS&quot; features, start rel. to reading frame </span>
+<span class="sd">    &quot;attributes&quot; (gff column 9)  list of feature attributes </span>
+<span class="sd">    in the format tag=value.</span>
+<span class="sd">    Multiple tag=value pairs are separated by semicolons.</span>
+<span class="sd">    ID, Name, Alias, Parent, Target, Gap, Derives_from, Note, </span>
+<span class="sd">    Dbxref, Ontology_term, Is_circular</span>
+<span class="sd">    Parent: groups exons into transcripts, transcripts into genes etc.</span>
+<span class="sd">        A feature may have multiple parents.  </span>
+<span class="sd">    Target: Indicates the target of a nucleotide-to-nucleotide </span>
+<span class="sd">        or protein-to-nucleotide alignment. </span>
+<span class="sd">        The format of the value is &quot;target_id start end [strand]&quot;, </span>
+<span class="sd">        where strand is optional and may be &quot;+&quot; or &quot;-&quot;. </span>
+<span class="sd">    Gap: The alignment of the feature to the target if the two </span>
+<span class="sd">        are not collinear (e.g. contain gaps). </span>
+<span class="sd">        The alignment format is taken from the CIGAR format described</span>
+<span class="sd">        in the Exonerate documentation. </span>
+<span class="sd">        (http://cvsweb.sanger.ac.uk/cgi-bin/cvsweb.cgi/exonerate?cvsroot=Ensembl). (&quot;THE GAP ATTRIBUTE&quot;) </span>
+<span class="sd">    Parent, the Alias, Note, DBxref and Ontology_term attributes can have multiple values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seqid</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">score</span><span class="p">,</span> <span class="n">strand</span><span class="p">,</span> <span class="n">phase</span><span class="p">,</span> <span class="n">attributes</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_seqid</span> <span class="o">=</span> <span class="n">seqid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_source</span> <span class="o">=</span> <span class="n">source</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="nb">type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_start</span> <span class="o">=</span> <span class="n">start</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end</span> <span class="o">=</span> <span class="n">end</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_score</span> <span class="o">=</span> <span class="n">score</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_strand</span> <span class="o">=</span> <span class="n">strand</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_phase</span> <span class="o">=</span> <span class="n">phase</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span> <span class="o">=</span> <span class="n">attributes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_attrib_dct</span> <span class="o">=</span> <span class="p">{}</span>
+        
+        <span class="n">pattern</span>  <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&quot;&quot;&quot;(\w+)=([\w:.,]+)&quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">tmp</span><span class="p">:</span>
+            <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="p">)</span>
+            <span class="c">#todo ...</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_attrib_dct</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">=</span><span class="n">val</span>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="gffObject.seqid"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.gffObject.seqid">[docs]</a>    <span class="k">def</span> <span class="nf">seqid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seqid</span></div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="gffObject.source"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.gffObject.source">[docs]</a>    <span class="k">def</span> <span class="nf">source</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source</span></div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="gffObject.type"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.gffObject.type">[docs]</a>    <span class="k">def</span> <span class="nf">type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type</span></div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="gffObject.start"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.gffObject.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start</span></div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="gffObject.end"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.gffObject.end">[docs]</a>    <span class="k">def</span> <span class="nf">end</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end</span></div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="gffObject.score"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.gffObject.score">[docs]</a>    <span class="k">def</span> <span class="nf">score</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_score</span></div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="gffObject.strand"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.gffObject.strand">[docs]</a>    <span class="k">def</span> <span class="nf">strand</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strand</span></div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="gffObject.phase"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.gffObject.phase">[docs]</a>    <span class="k">def</span> <span class="nf">phase</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_phase</span></div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="gffObject.attributes"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.gffObject.attributes">[docs]</a>    <span class="k">def</span> <span class="nf">attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span></div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="gffObject.attrib_dct"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.gffObject.attrib_dct">[docs]</a>    <span class="k">def</span> <span class="nf">attrib_dct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attrib_dct</span>
+    <span class="c">#todo...</span></div>
+<div class="viewcode-block" id="gffObject.toGFF3line"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.gffObject.toGFF3line">[docs]</a>    <span class="k">def</span> <span class="nf">toGFF3line</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+<div class="viewcode-block" id="gffObject.getParents"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.gffObject.getParents">[docs]</a>    <span class="k">def</span> <span class="nf">getParents</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+    
+<span class="c">#---------------------------------------------------------#</span></div></div>
+<div class="viewcode-block" id="PhylipCompatibilizer"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.PhylipCompatibilizer">[docs]</a><span class="k">class</span> <span class="nc">PhylipCompatibilizer</span><span class="p">:</span> 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">baseAlphabet</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_baseAlphabet</span>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="PhylipCompatibilizer.knownIDs"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.PhylipCompatibilizer.knownIDs">[docs]</a>    <span class="k">def</span> <span class="nf">knownIDs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_knownIDs</span></div>
+    <span class="nd">@baseAlphabet.setter</span>
+<div class="viewcode-block" id="PhylipCompatibilizer.baseAlphabet"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.PhylipCompatibilizer.baseAlphabet">[docs]</a>    <span class="k">def</span> <span class="nf">baseAlphabet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_knownIDs</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="c">#Base62  should be plenty for shortening identifiers</span></div>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">baseAlphabet</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">digits</span> <span class="o">+</span> <span class="n">string</span><span class="o">.</span><span class="n">ascii_letters</span><span class="p">,</span> <span class="n">seed</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="c">#todo: seed from number</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_baseAlphabet</span> <span class="o">=</span> <span class="n">baseAlphabet</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_baseDict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">c</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_baseAlphabet</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_knownIDs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        
+<div class="viewcode-block" id="PhylipCompatibilizer.decode"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.PhylipCompatibilizer.decode">[docs]</a>    <span class="k">def</span> <span class="nf">decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">string</span><span class="p">):</span>
+        <span class="n">revBase</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_baseDict</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">revBase</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">string</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="k">print</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+            <span class="n">res</span> <span class="o">+=</span> <span class="p">(</span><span class="n">length</span> <span class="o">**</span> <span class="n">i</span><span class="p">)</span> <span class="o">*</span> <span class="n">revBase</span><span class="p">[</span><span class="n">c</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">res</span>
+</div>
+<div class="viewcode-block" id="PhylipCompatibilizer.encode"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.PhylipCompatibilizer.encode">[docs]</a>    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">integer</span><span class="p">):</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_baseAlphabet</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">integer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_knownIDs</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot;not globally unique!&quot;</span><span class="p">)</span>
+            <span class="n">integer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_knownIDs</span><span class="o">+</span><span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_knownIDs</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">integer</span><span class="p">)</span>
+        <span class="k">while</span> <span class="n">integer</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="n">integer</span> <span class="o">%</span> <span class="n">length</span><span class="p">]</span> <span class="o">+</span> <span class="n">res</span>
+            <span class="n">integer</span> <span class="o">//=</span> <span class="n">length</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_globalTF</span><span class="o">==</span><span class="bp">True</span> <span class="ow">and</span> <span class="n">res</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_knownIDs</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot;not globally unique!&quot;</span><span class="p">)</span>
+            <span class="n">res</span><span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encode</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_knownIDs</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">res</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">6</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot;!!! Length &gt; 6 !!!&quot;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">res</span>
+
+
+</div></div>
+<div class="viewcode-block" id="BlastParser"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.BlastParser">[docs]</a><span class="k">class</span> <span class="nc">BlastParser</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read .blast file. Yield dictionary for each line for convenience.</span>
+<span class="sd">The keys are &#39;query&#39;,&#39;subject&#39;,&#39;identity&#39;,&#39;length&#39;,&#39;mismatches&#39;,&#39;gapopen&#39;,&#39;qstart&#39;,&#39;qend&#39;,</span>
+<span class="sd">&#39;sstart&#39;,&#39;send&#39;,&#39;e&#39;,&#39;bitscore.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="BlastParser.readBlast"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.gffFastaTools.BlastParser.readBlast">[docs]</a>    <span class="k">def</span> <span class="nf">readBlast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blastfile</span><span class="p">,</span> <span class="n">format</span> <span class="o">=</span> <span class="s">&quot;m8&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">format</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&quot;m8&quot;</span><span class="p">,</span> <span class="s">&quot;8&quot;</span><span class="p">,</span> <span class="s">&quot;outfmt6&quot;</span><span class="p">,</span><span class="s">&quot;6&quot;</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Sorry, can only deal with tabular format (m8, outfmt6)</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">blastfile</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ln</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="n">ln</span> <span class="o">=</span> <span class="n">ln</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+                <span class="n">r</span><span class="p">[</span><span class="s">&quot;query&quot;</span><span class="p">],</span><span class="n">r</span><span class="p">[</span><span class="s">&quot;subject&quot;</span><span class="p">],</span><span class="n">r</span><span class="p">[</span><span class="s">&quot;identity&quot;</span><span class="p">],</span><span class="n">r</span><span class="p">[</span><span class="s">&quot;length&quot;</span><span class="p">],</span><span class="n">r</span><span class="p">[</span><span class="s">&quot;mismatches&quot;</span><span class="p">],</span><span class="n">r</span><span class="p">[</span><span class="s">&quot;gapopen&quot;</span><span class="p">],</span><span class="n">r</span><span class="p">[</span><span class="s">&#39;qstart&#39;</span><span class="p">],</span><span class="n">r</span><span class="p">[</span><span class="s">&#39;qend&#39;</span><span class="p">],</span><span class="n">r</span><span class="p">[</span><span class="s">&#39;sstart&#39;</span><span class="p">],</span><span class="n">r</span><span class="p">[</span><span class="s">&#39;send&#39;</span><span class="p">],</span><span class="n">r</span><span class="p">[</span><span class="s">&#39;e&#39;</span><span class="p">],</span><span class="n">r</span><span class="p">[</span><span class="s">&#39;bitscore&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ln</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span><span class="p">)</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">r</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Scythe 0.1 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Janina Mass.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

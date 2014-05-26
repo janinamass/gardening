@@ -1,0 +1,346 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>scythe2.gui.dialogs &mdash; Scythe 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Scythe 0.1 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Scythe 0.1 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for scythe2.gui.dialogs</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">tkinter</span> <span class="kn">as</span> <span class="nn">tk</span>
+<span class="kn">from</span> <span class="nn">tkinter</span> <span class="kn">import</span> <span class="n">filedialog</span>
+<span class="kn">import</span> <span class="nn">scythe2.convert.scythe_loc_gff</span>
+<span class="c">#import Scythe_ensembl2loc</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">string</span>
+<div class="viewcode-block" id="ScytheConvertDialogGrp"><a class="viewcode-back" href="../../../Modules.html#scythe2.gui.dialogs.ScytheConvertDialogGrp">[docs]</a><span class="k">class</span> <span class="nc">ScytheConvertDialogGrp</span><span class="p">():</span>
+    <span class="n">root</span><span class="o">=</span><span class="bp">None</span>
+    <span class="n">int_tsv</span><span class="o">=</span><span class="mi">0</span>
+    <span class="n">int_proteinortho</span><span class="o">=</span><span class="mi">1</span>
+    <span class="n">int_orthomcl</span> <span class="o">=</span><span class="mi">2</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Toplevel</span><span class="p">()</span>
+        <span class="n">root</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&quot;Convert files output to .grp file&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">=</span><span class="n">root</span>
+        <span class="c">#convert whole folder</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lab_dir</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span><span class="n">text</span><span class="o">=</span><span class="s">&quot;directory&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">st_dir</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">StringVar</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">st_dir</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ent_dir</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Entry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
+                                     <span class="n">textvariable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">st_dir</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">)</span>
+
+        <span class="c">#convert one file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lab_file</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span><span class="n">text</span><span class="o">=</span><span class="s">&quot;gff/tsv file&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">st_file</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">StringVar</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">st_file</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ent_file</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Entry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
+                                     <span class="n">textvariable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">st_file</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">)</span>
+
+
+        <span class="c">#Buttons</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_dir</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span><span class="n">text</span><span class="o">=</span><span class="s">&quot;open...&quot;</span><span class="p">,</span><span class="n">command</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">askDir</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">)</span><span class="c">#self.askopenfilename)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_file</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span><span class="n">text</span><span class="o">=</span><span class="s">&quot;open...&quot;</span><span class="p">,</span><span class="n">command</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">askFile</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">)</span><span class="c">#self.askopenfilename)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_ok</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span><span class="n">text</span><span class="o">=</span><span class="s">&quot;OK&quot;</span><span class="p">,</span><span class="n">command</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">onOK</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">)</span><span class="c">#self.askopenfilename)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_cancel</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span><span class="n">text</span><span class="o">=</span><span class="s">&quot;Cancel&quot;</span><span class="p">,</span><span class="n">command</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">onCancel</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">)</span><span class="c">#self.askopenfilename)</span>
+        <span class="c">#Checkbuttons</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cb_use_tsv</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Checkbutton</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s">&#39;.tsv (eg ENSEMBL)&#39;</span><span class="p">,</span><span class="n">variable</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">int_tsv</span><span class="p">,</span>
+                                         <span class="n">command</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">useEnsembl</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cb_use_proteinortho</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Checkbutton</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s">&#39;proteinortho output&#39;</span><span class="p">,</span><span class="n">variable</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">int_proteinortho</span><span class="p">,</span>
+                                         <span class="n">command</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">useProteinortho</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cb_use_orthomcl</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Checkbutton</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s">&#39;orthomcl output &#39;</span><span class="p">,</span><span class="n">variable</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">int_orthomcl</span><span class="p">,</span>
+                                         <span class="n">command</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">useOrthomcl</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lab_dir</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ent_dir</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_dir</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lab_file</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ent_file</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_file</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_ok</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">sticky</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">E</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">75</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_cancel</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">E</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cb_use_tsv</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cb_use_proteinortho</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cb_use_orthomcl</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<div class="viewcode-block" id="ScytheConvertDialogGrp.useEnsembl"><a class="viewcode-back" href="../../../Modules.html#scythe2.gui.dialogs.ScytheConvertDialogGrp.useEnsembl">[docs]</a>    <span class="k">def</span> <span class="nf">useEnsembl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+<div class="viewcode-block" id="ScytheConvertDialogGrp.useProteinortho"><a class="viewcode-back" href="../../../Modules.html#scythe2.gui.dialogs.ScytheConvertDialogGrp.useProteinortho">[docs]</a>    <span class="k">def</span> <span class="nf">useProteinortho</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+<div class="viewcode-block" id="ScytheConvertDialogGrp.useOrthomcl"><a class="viewcode-back" href="../../../Modules.html#scythe2.gui.dialogs.ScytheConvertDialogGrp.useOrthomcl">[docs]</a>    <span class="k">def</span> <span class="nf">useOrthomcl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+<div class="viewcode-block" id="ScytheConvertDialogGrp.callScythe_proteinOrtho2grp"><a class="viewcode-back" href="../../../Modules.html#scythe2.gui.dialogs.ScytheConvertDialogGrp.callScythe_proteinOrtho2grp">[docs]</a>    <span class="k">def</span> <span class="nf">callScythe_proteinOrtho2grp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">infile</span><span class="p">,</span> <span class="n">locfile</span><span class="p">,</span> <span class="n">outfile</span><span class="p">):</span>
+
+        <span class="k">pass</span>
+        <span class="c">#read_proteinortho2grp(infile, locfile, outfile)</span></div>
+<div class="viewcode-block" id="ScytheConvertDialogGrp.callScythe_ensembl2grp"><a class="viewcode-back" href="../../../Modules.html#scythe2.gui.dialogs.ScytheConvertDialogGrp.callScythe_ensembl2grp">[docs]</a>    <span class="k">def</span> <span class="nf">callScythe_ensembl2grp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">infile</span><span class="p">,</span> <span class="n">locfile</span><span class="p">,</span> <span class="n">outfile</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="ScytheConvertDialogGrp.askDir"><a class="viewcode-back" href="../../../Modules.html#scythe2.gui.dialogs.ScytheConvertDialogGrp.askDir">[docs]</a>    <span class="k">def</span> <span class="nf">askDir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmp</span><span class="o">=</span> <span class="n">filedialog</span><span class="o">.</span><span class="n">askdirectory</span><span class="p">()</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ent_dir</span><span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">st_dir</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="ScytheConvertDialogGrp.askFile"><a class="viewcode-back" href="../../../Modules.html#scythe2.gui.dialogs.ScytheConvertDialogGrp.askFile">[docs]</a>    <span class="k">def</span> <span class="nf">askFile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">formats</span> <span class="o">=</span> <span class="p">[(</span><span class="s">&#39;GFF&#39;</span><span class="p">,</span><span class="s">&#39;*.gff&#39;</span><span class="p">),(</span><span class="s">&#39;GFF&#39;</span><span class="p">,</span><span class="s">&#39;*.gff3&#39;</span><span class="p">),(</span><span class="s">&#39;tab separated&#39;</span><span class="p">,</span><span class="s">&#39;*.tsv&#39;</span><span class="p">)]</span>
+        <span class="n">tmp</span><span class="o">=</span> <span class="n">filedialog</span><span class="o">.</span><span class="n">askopenfilename</span><span class="p">(</span><span class="n">filetypes</span><span class="o">=</span><span class="n">formats</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ent_file</span><span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">st_file</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="ScytheConvertDialogGrp.onOK"><a class="viewcode-back" href="../../../Modules.html#scythe2.gui.dialogs.ScytheConvertDialogGrp.onOK">[docs]</a>    <span class="k">def</span> <span class="nf">onOK</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+        <span class="c">#dir</span>
+        <span class="c">#if  (self.st_dir !=&quot;&quot;):</span>
+        <span class="c">#    if self.st_dir.get():</span>
+        <span class="c">#        self.convertFolder(self.st_dir.get())</span>
+        <span class="c">#    if self.st_file.get():</span>
+        <span class="c">#        self.convertSingleFile(self.st_file.get())</span>
+        <span class="c">#or file</span>
+</div>
+<div class="viewcode-block" id="ScytheConvertDialogGrp.onCancel"><a class="viewcode-back" href="../../../Modules.html#scythe2.gui.dialogs.ScytheConvertDialogGrp.onCancel">[docs]</a>    <span class="k">def</span> <span class="nf">onCancel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+
+</div></div>
+<div class="viewcode-block" id="ScytheConvertDialogLoc"><a class="viewcode-back" href="../../../Modules.html#scythe2.gui.dialogs.ScytheConvertDialogLoc">[docs]</a><span class="k">class</span> <span class="nc">ScytheConvertDialogLoc</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Toplevel</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&quot;Convert gff/tab-separated files to .loc files&quot;</span><span class="p">)</span>
+
+        <span class="c">#convert whole folder</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lab_dir</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span><span class="n">text</span><span class="o">=</span><span class="s">&quot;gff/tsv directory&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">st_dir</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">StringVar</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">st_dir</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ent_dir</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Entry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
+                                     <span class="n">textvariable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">st_dir</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">)</span>
+
+        <span class="c">#convert one file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lab_file</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span><span class="n">text</span><span class="o">=</span><span class="s">&quot;gff/tsv file&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">st_file</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">StringVar</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">st_file</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ent_file</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Entry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
+                                     <span class="n">textvariable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">st_file</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">)</span>
+
+
+        <span class="c">#Buttons</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_dir</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span><span class="n">text</span><span class="o">=</span><span class="s">&quot;open...&quot;</span><span class="p">,</span><span class="n">command</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">askDir</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">)</span><span class="c">#self.askopenfilename)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_file</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span><span class="n">text</span><span class="o">=</span><span class="s">&quot;open...&quot;</span><span class="p">,</span><span class="n">command</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">askFile</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">)</span><span class="c">#self.askopenfilename)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_ok</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span><span class="n">text</span><span class="o">=</span><span class="s">&quot;OK&quot;</span><span class="p">,</span><span class="n">command</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">onOK</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">)</span><span class="c">#self.askopenfilename)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_cancel</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span><span class="n">text</span><span class="o">=</span><span class="s">&quot;Cancel&quot;</span><span class="p">,</span><span class="n">command</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">onCancel</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">)</span><span class="c">#self.askopenfilename)</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">lab_dir</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ent_dir</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_dir</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lab_file</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ent_file</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_file</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_ok</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">sticky</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">E</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">75</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_cancel</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">E</span><span class="p">)</span>
+
+        <span class="c">#self.b_convertOrtho.grid(row=3,column=3)</span>
+
+<div class="viewcode-block" id="ScytheConvertDialogLoc.onOK"><a class="viewcode-back" href="../../../Modules.html#scythe2.gui.dialogs.ScytheConvertDialogLoc.onOK">[docs]</a>    <span class="k">def</span> <span class="nf">onOK</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c">#dir</span>
+        <span class="k">if</span>  <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">st_dir</span> <span class="o">!=</span><span class="s">&quot;&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">st_dir</span><span class="o">.</span><span class="n">get</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">convertFolder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">st_dir</span><span class="o">.</span><span class="n">get</span><span class="p">())</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">st_file</span><span class="o">.</span><span class="n">get</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">convertSingleFile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">st_file</span><span class="o">.</span><span class="n">get</span><span class="p">())</span>
+        <span class="c">#or file</span>
+</div>
+<div class="viewcode-block" id="ScytheConvertDialogLoc.onCancel"><a class="viewcode-back" href="../../../Modules.html#scythe2.gui.dialogs.ScytheConvertDialogLoc.onCancel">[docs]</a>    <span class="k">def</span> <span class="nf">onCancel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="ScytheConvertDialogLoc.askDir"><a class="viewcode-back" href="../../../Modules.html#scythe2.gui.dialogs.ScytheConvertDialogLoc.askDir">[docs]</a>    <span class="k">def</span> <span class="nf">askDir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmp</span><span class="o">=</span> <span class="n">filedialog</span><span class="o">.</span><span class="n">askdirectory</span><span class="p">()</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ent_dir</span><span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">st_dir</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="ScytheConvertDialogLoc.askFile"><a class="viewcode-back" href="../../../Modules.html#scythe2.gui.dialogs.ScytheConvertDialogLoc.askFile">[docs]</a>    <span class="k">def</span> <span class="nf">askFile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">formats</span> <span class="o">=</span> <span class="p">[(</span><span class="s">&#39;GFF&#39;</span><span class="p">,</span><span class="s">&#39;*.gff&#39;</span><span class="p">),(</span><span class="s">&#39;GFF&#39;</span><span class="p">,</span><span class="s">&#39;*.gff3&#39;</span><span class="p">),(</span><span class="s">&#39;tab separated&#39;</span><span class="p">,</span><span class="s">&#39;*.tsv&#39;</span><span class="p">)]</span>
+        <span class="n">tmp</span><span class="o">=</span> <span class="n">filedialog</span><span class="o">.</span><span class="n">askopenfilename</span><span class="p">(</span><span class="n">filetypes</span><span class="o">=</span><span class="n">formats</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ent_file</span><span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">st_file</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ScytheConvertDialogLoc.callConvertGff"><a class="viewcode-back" href="../../../Modules.html#scythe2.gui.dialogs.ScytheConvertDialogLoc.callConvertGff">[docs]</a>    <span class="k">def</span> <span class="nf">callConvertGff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="nb">file</span><span class="p">):</span>
+        <span class="n">Scythe_gff2loc</span><span class="o">.</span><span class="n">read_gff2loc</span><span class="p">(</span><span class="nb">file</span><span class="p">,</span> <span class="nb">file</span><span class="o">+</span><span class="s">&quot;.loc&quot;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="ScytheConvertDialogLoc.callConvertTsv"><a class="viewcode-back" href="../../../Modules.html#scythe2.gui.dialogs.ScytheConvertDialogLoc.callConvertTsv">[docs]</a>    <span class="k">def</span> <span class="nf">callConvertTsv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="nb">file</span><span class="p">,</span> <span class="n">outfile</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">outfile</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">outfile</span> <span class="o">=</span>  <span class="nb">file</span><span class="o">+</span><span class="s">&quot;.loc&quot;</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;callConvertTsv&quot;</span><span class="p">,</span><span class="nb">file</span><span class="p">)</span>
+        <span class="n">Scythe_ensembl2loc</span><span class="o">.</span><span class="n">readEnsemblLoc</span><span class="p">(</span><span class="nb">file</span><span class="p">,</span> <span class="n">outfile</span><span class="p">)</span></div>
+<div class="viewcode-block" id="ScytheConvertDialogLoc.mkdir"><a class="viewcode-back" href="../../../Modules.html#scythe2.gui.dialogs.ScytheConvertDialogLoc.mkdir">[docs]</a>    <span class="k">def</span> <span class="nf">mkdir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">path</span><span class="p">):</span>
+
+
+        <span class="n">rand</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">ascii_uppercase</span> <span class="o">+</span> <span class="n">string</span><span class="o">.</span><span class="n">digits</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+        <span class="c">#os.urandom(2).decode(&#39;utf-8&#39;)</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">rand</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">path</span><span class="o">+</span><span class="n">rand</span><span class="p">)</span>
+            <span class="k">return</span><span class="p">(</span><span class="n">path</span><span class="o">+</span><span class="n">rand</span><span class="p">)</span>
+        <span class="k">return</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
+<div class="viewcode-block" id="ScytheConvertDialogLoc.concatFiles"><a class="viewcode-back" href="../../../Modules.html#scythe2.gui.dialogs.ScytheConvertDialogLoc.concatFiles">[docs]</a>    <span class="k">def</span> <span class="nf">concatFiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">listoffiles</span><span class="p">,</span><span class="n">outputfilename</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span><span class="s">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">listoffiles</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">open</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="s">&#39;r&#39;</span><span class="p">):</span>
+                <span class="n">res</span><span class="o">+=</span><span class="n">l</span>
+        <span class="n">outhandle</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">outputfilename</span><span class="p">,</span><span class="s">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">outhandle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">res</span><span class="p">)</span></div>
+<div class="viewcode-block" id="ScytheConvertDialogLoc.convertFolder"><a class="viewcode-back" href="../../../Modules.html#scythe2.gui.dialogs.ScytheConvertDialogLoc.convertFolder">[docs]</a>    <span class="k">def</span> <span class="nf">convertFolder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">os</span>
+        <span class="n">outfolder</span> <span class="o">=</span> <span class="n">folder</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">outfolder</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;loc&quot;</span><span class="p">)</span>
+        <span class="n">outfolder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outfolder</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">outfolder</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">outfolder</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">outfolder</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;convertFolder&quot;</span><span class="p">)</span>
+
+        <span class="n">gfffiles</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">tsvfiles</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">folder</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&quot;.gff&quot;</span><span class="p">):</span>
+                <span class="k">print</span> <span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                <span class="n">gfffiles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">f</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&quot;.gff3&quot;</span><span class="p">):</span>
+                <span class="k">print</span> <span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                <span class="n">gfffiles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">f</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&quot;.tsv&quot;</span><span class="p">):</span>
+                <span class="k">print</span> <span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                <span class="n">tsvfiles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">tsvfiles</span><span class="p">,</span> <span class="n">gfffiles</span><span class="p">)</span>
+        <span class="c">#tsvfiles=[t for t in tsvfiles if t is not None]</span>
+        <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gfffiles</span><span class="p">:</span>
+            <span class="c">#outfile=outfolder+os.sep+t+&quot;.loc&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">callConvertGff</span><span class="p">(</span><span class="n">folder</span><span class="o">+</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="o">+</span><span class="n">g</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tsvfiles</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot;tsvfiles&quot;</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">t</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="c">#outfile=outfolder+os.sep+t+&quot;.loc&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">callConvertTsv</span><span class="p">(</span><span class="n">folder</span><span class="o">+</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="o">+</span><span class="n">t</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="c">#mkdir</span>
+        <span class="n">locpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">folder</span><span class="o">+</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="o">+</span><span class="s">&quot;loc&quot;</span><span class="o">+</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">)</span>
+        <span class="n">locfiles</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">folder</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&quot;.loc&quot;</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">folder</span><span class="o">+</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="o">+</span><span class="n">f</span><span class="p">,</span> <span class="n">locpath</span><span class="o">+</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="o">+</span><span class="n">f</span><span class="p">)</span>
+                <span class="n">locfiles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">locpath</span><span class="o">+</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="o">+</span><span class="n">f</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">concatFiles</span><span class="p">(</span><span class="n">locfiles</span><span class="p">,</span> <span class="n">folder</span><span class="o">+</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="o">+</span><span class="s">&quot;all.loc&quot;</span><span class="p">)</span></div>
+<div class="viewcode-block" id="ScytheConvertDialogLoc.convertSingleFile"><a class="viewcode-back" href="../../../Modules.html#scythe2.gui.dialogs.ScytheConvertDialogLoc.convertSingleFile">[docs]</a>    <span class="k">def</span> <span class="nf">convertSingleFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;convertFile&quot;</span><span class="p">)</span>
+        <span class="kn">import</span> <span class="nn">os</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="c">#gfffiles = []</span>
+        <span class="c">#tsvfiles = []</span>
+        <span class="c">#for f in os.listdir(folder):</span>
+        <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&quot;.gff&quot;</span><span class="p">):</span>
+            <span class="k">print</span> <span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">callConvertGff</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                <span class="c">#gfffiles.append(f)</span>
+        <span class="k">elif</span> <span class="n">f</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&quot;.gff3&quot;</span><span class="p">):</span>
+            <span class="k">print</span> <span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">callConvertGff</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="c">#    gfffiles.append(f)</span>
+        <span class="k">elif</span> <span class="n">f</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&quot;.tsv&quot;</span><span class="p">):</span>
+            <span class="k">print</span> <span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">callConvertTsv</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+            <span class="c">#    tsvfiles.append(f)</span>
+        <span class="c">#print(tsvfiles, gfffiles)</span>
+        <span class="c">#for f in locfiles:</span>
+        <span class="c">#    os.rename(folder+os.sep+f, locpath+os.sep+f)</span>
+</pre></div></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Scythe 0.1 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Janina Mass.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

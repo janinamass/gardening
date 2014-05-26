@@ -1,0 +1,358 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>scythe2.helpers.mergeSubsets &mdash; Scythe 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Scythe 0.1 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Scythe 0.1 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for scythe2.helpers.mergeSubsets</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/python3</span>
+<span class="kn">import</span> <span class="nn">re</span><span class="o">,</span><span class="nn">sys</span><span class="o">,</span> <span class="nn">getopt</span>
+
+<span class="c">###################</span>
+<span class="c"># 01/03/2014 [JM] #</span>
+<span class="c">###################</span>
+
+<div class="viewcode-block" id="usage"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.mergeSubsets.usage">[docs]</a><span class="k">def</span> <span class="nf">usage</span><span class="p">():</span>
+    <span class="k">print</span> <span class="p">(</span><span class="s">&quot;&quot;&quot;</span>
+<span class="s">    #####################################################</span>
+<span class="s">    #  rmSubSetsFromGrp.py -g groups.grp -o new.grp -r  #</span>
+<span class="s">    #####################################################</span>
+<span class="s">   </span>
+<span class="s">    options:</span>
+<span class="s">    -g, --grp=FILE.grp     </span>
+<span class="s">    -o, --output=OUTFILE.grp output file [default: FILE.allspec.grp]</span>
+<span class="s">    [-r, --rename discard old orthogroup ids and start numbering from 0]    </span>
+<span class="s">    -h, --help         prints this    </span>
+<span class="s">    [-n, --numspec=N    min number of species ] </span>
+<span class="s">    ------------</span>
+<span class="s">    .grp format: GroupID</span><span class="se">\t</span><span class="s">geneIDiSp1</span><span class="se">\t</span><span class="s">geneIDjSp2</span><span class="se">\t</span><span class="s">...geneIDkSpn</span>
+<span class="s">    &quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Orthogroup"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.mergeSubsets.Orthogroup">[docs]</a><span class="k">class</span> <span class="nc">Orthogroup</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_isSubset</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_list</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_id</span> <span class="o">=</span> <span class="nb">list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ignore</span> <span class="o">=</span> <span class="bp">False</span>
+<div class="viewcode-block" id="Orthogroup.expand"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.mergeSubsets.Orthogroup.expand">[docs]</a>    <span class="k">def</span> <span class="nf">expand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">tmpset</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">tmplist</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">dct</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">purge</span><span class="o">=</span> <span class="bp">False</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list</span><span class="p">:</span>
+            <span class="n">tmplist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span> <span class="ow">in</span> <span class="n">dct</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">dct</span><span class="p">[</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">6</span><span class="p">]]:</span>
+                    <span class="n">purge</span><span class="o">=</span><span class="bp">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dct</span><span class="p">[</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">6</span><span class="p">]]</span><span class="o">=</span><span class="n">i</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">j</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span> <span class="ow">in</span> <span class="n">dct</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">j</span> <span class="o">!=</span> <span class="n">dct</span><span class="p">[</span><span class="n">j</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">6</span><span class="p">]]:</span>
+                    <span class="n">purge</span><span class="o">=</span><span class="bp">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dct</span><span class="p">[</span><span class="n">j</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">6</span><span class="p">]]</span><span class="o">=</span><span class="n">j</span>
+            <span class="n">tmplist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+        <span class="n">tmpset</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">tmplist</span><span class="p">)</span>
+        <span class="n">newlist</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">tmpset</span><span class="p">)</span>
+        <span class="n">newid</span><span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_id</span><span class="p">)</span><span class="o">+</span><span class="s">&quot;_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">_id</span><span class="p">)</span>
+        
+        <span class="n">initlist</span><span class="o">=</span><span class="p">[</span><span class="n">newid</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">newlist</span><span class="p">:</span>
+            <span class="n">initlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">new</span> <span class="o">=</span> <span class="n">Orthogroup</span><span class="p">(</span><span class="n">initlist</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">purge</span><span class="p">:</span>
+            <span class="n">new</span><span class="o">.</span><span class="n">_isSubset</span><span class="o">=</span><span class="bp">True</span>
+            <span class="n">new</span><span class="o">.</span><span class="n">_ignore</span><span class="o">=</span><span class="bp">True</span>
+        <span class="k">return</span><span class="p">(</span><span class="n">new</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Orthogroup.toString"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.mergeSubsets.Orthogroup.toString">[docs]</a>    <span class="k">def</span> <span class="nf">toString</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_list</span><span class="p">)</span>
+        <span class="k">return</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    
+
+
+ </div></div>
+<div class="viewcode-block" id="mergeSubsets"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.mergeSubsets.mergeSubsets">[docs]</a><span class="k">def</span> <span class="nf">mergeSubsets</span><span class="p">(</span><span class="n">grp</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">rename</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="n">write</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">if</span> <span class="n">outfile</span><span class="o">==</span><span class="bp">None</span><span class="p">:</span>
+        <span class="n">write</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">knownGenes</span><span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">kglist</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">knownOrthogroups</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">godict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">proc</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">grp</span><span class="p">,</span><span class="s">&#39;r&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">g</span><span class="p">:</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span><span class="p">)</span>
+            <span class="c">#print(tmp)</span>
+            <span class="n">newOrtho</span><span class="o">=</span> <span class="n">Orthogroup</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tmp</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>                
+                <span class="k">if</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">knownGenes</span><span class="p">:</span>
+                    <span class="n">tmplist</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">godict</span><span class="p">[</span><span class="n">t</span><span class="p">]:</span>
+                        <span class="n">new</span> <span class="o">=</span> <span class="n">newOrtho</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+                        <span class="c">#print(new.toString())</span>
+                        <span class="n">new</span><span class="o">.</span><span class="n">_isSubset</span><span class="o">=</span><span class="bp">False</span>
+                        <span class="n">o</span><span class="o">.</span><span class="n">_isSubset</span> <span class="o">=</span> <span class="bp">True</span>
+                        <span class="n">newOrtho</span><span class="o">.</span><span class="n">_isSubset</span> <span class="o">=</span> <span class="bp">True</span>
+                        <span class="n">tmplist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">tmplist</span><span class="p">:</span>
+                        <span class="n">godict</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">knownGenes</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+                    <span class="c">#print(newOrtho.toString(), newOrtho._ignore)</span>
+                    <span class="n">godict</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">newOrtho</span><span class="p">]</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">grp</span><span class="p">,</span><span class="s">&#39;r&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="n">processed</span> <span class="o">=</span><span class="p">[]</span>
+    <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">g</span><span class="p">:</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tmp</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            
+            <span class="n">nmm</span> <span class="o">=</span> <span class="p">[</span><span class="n">l</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">godict</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="k">if</span>  <span class="n">l</span><span class="o">.</span><span class="n">_isSubset</span> <span class="o">!=</span><span class="bp">True</span> <span class="ow">and</span> <span class="n">l</span><span class="o">.</span><span class="n">_ignore</span><span class="o">==</span><span class="bp">False</span><span class="p">]</span>
+            <span class="c">#nmm = [l for l in godict[t] if  l._isSubset ==False and l._ignore==False]</span>
+            
+            <span class="n">out</span><span class="o">=</span><span class="bp">None</span>
+            <span class="c">#print(nmm)</span>
+            <span class="k">if</span> <span class="n">nmm</span> <span class="o">!=</span><span class="p">[]:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">nmm</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">proc</span><span class="p">:</span>
+                    <span class="n">processed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">_id</span><span class="o">+</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span><span class="o">+</span><span class="n">out</span><span class="o">.</span><span class="n">toString</span><span class="p">())</span>
+                  
+                <span class="n">proc</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">_id</span><span class="p">)</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">write</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">write</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">o</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span><span class="s">&#39;w&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        
+        <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        
+        <span class="n">cnt</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">ok</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">redundant</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">isOK</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">processed</span><span class="p">:</span>
+            <span class="n">isOK</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tmp</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+                <span class="k">if</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+                    <span class="n">isOK</span> <span class="o">=</span> <span class="bp">False</span>
+                <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">isOK</span><span class="p">:</span>
+                <span class="n">ok</span><span class="o">+=</span><span class="mi">1</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">rename</span><span class="p">:</span>
+                    <span class="n">o</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">rename</span><span class="p">:</span>
+                    <span class="n">o</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">cnt</span><span class="p">)</span><span class="o">+</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span><span class="o">+</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]))</span>
+                <span class="n">o</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+                <span class="n">cnt</span><span class="o">+=</span><span class="mi">1</span>
+                <span class="c">#for m in p.split(&quot;\t&quot;)[1:]:</span>
+                <span class="c">#print(m)</span>
+                    <span class="c">#kglist.append(m)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">redundant</span><span class="o">+=</span><span class="mi">1</span>
+        <span class="n">o</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="c">#===========================================================================</span>
+    <span class="c"># o = open(outfile+&quot;_&quot;,&#39;w&#39;)</span>
+    <span class="c"># print(&quot;bla&quot;)</span>
+    <span class="c"># for k in kglist:</span>
+    <span class="c">#     o.write(k)</span>
+    <span class="c">#     o.write(&quot;\n&quot;)</span>
+    <span class="c"># o.close()</span>
+    <span class="c">#===========================================================================</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">processed</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="filterGroups"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.mergeSubsets.filterGroups">[docs]</a><span class="k">def</span> <span class="nf">filterGroups</span><span class="p">(</span><span class="n">grp</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">numspec</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">rename</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="n">write</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">if</span> <span class="n">outfile</span><span class="o">==</span><span class="bp">None</span><span class="p">:</span>
+        <span class="n">write</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">grp</span><span class="p">,</span><span class="s">&#39;r&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="n">usage</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="n">numspec</span><span class="p">:</span>
+        <span class="nb">max</span> <span class="o">=</span> <span class="n">numspec</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">numspec</span><span class="p">:</span>
+        <span class="nb">max</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">g</span><span class="p">:</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:])</span>
+            <span class="k">if</span> <span class="n">tmp</span> <span class="o">&gt;</span> <span class="nb">max</span><span class="p">:</span>
+                <span class="nb">max</span> <span class="o">=</span> <span class="n">tmp</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">numspec</span><span class="o">=</span><span class="nb">max</span>
+    
+    <span class="k">if</span> <span class="n">write</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">grp</span><span class="p">,</span><span class="s">&#39;r&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="n">usage</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span><span class="s">&#39;w&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="n">usage</span><span class="p">()</span>
+         
+        <span class="n">cnt</span><span class="o">=</span><span class="mi">0</span>
+        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">g</span><span class="p">:</span>
+            <span class="n">ln</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ln</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:])</span>
+            <span class="k">if</span> <span class="n">tmp</span> <span class="o">==</span> <span class="n">numspec</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">rename</span><span class="p">:</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">cnt</span><span class="p">)</span><span class="o">+</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span><span class="o">+</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]))</span>
+                    <span class="n">cnt</span><span class="o">+=</span><span class="mi">1</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">numspec</span><span class="p">)</span></div>
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../Modules.html#scythe2.helpers.mergeSubsets.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">outNoSubsets</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">rename</span><span class="o">=</span><span class="bp">False</span>
+    <span class="n">numspec</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="c">###################################</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">opts</span><span class="p">,</span> <span class="n">args</span> <span class="o">=</span> <span class="n">getopt</span><span class="o">.</span><span class="n">gnu_getopt</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="s">&quot;g:n:o:hr&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s">&quot;grp=&quot;</span><span class="p">,</span><span class="s">&quot;numspec=&quot;</span><span class="p">,</span><span class="s">&quot;output=&quot;</span><span class="p">,</span> <span class="s">&quot;help&quot;</span><span class="p">,</span><span class="s">&quot;rename&quot;</span><span class="p">])</span>
+    <span class="k">except</span> <span class="n">getopt</span><span class="o">.</span><span class="n">GetoptError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="k">print</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
+        <span class="n">usage</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">o</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">opts</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">o</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&quot;-g&quot;</span><span class="p">,</span> <span class="s">&quot;--grp&quot;</span><span class="p">):</span>
+            <span class="n">grp</span><span class="o">=</span> <span class="n">a</span>
+        <span class="k">elif</span> <span class="n">o</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&quot;-h&quot;</span><span class="p">,</span> <span class="s">&quot;--help&quot;</span><span class="p">):</span>
+            <span class="n">usage</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">o</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&quot;-n&quot;</span><span class="p">,</span> <span class="s">&quot;--numspec&quot;</span><span class="p">):</span>
+            <span class="n">numspec</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">o</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&quot;-o&quot;</span><span class="p">,</span> <span class="s">&quot;--output&quot;</span><span class="p">):</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">a</span>
+            <span class="n">tmp</span><span class="o">=</span><span class="n">a</span>    
+        <span class="k">elif</span> <span class="n">o</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&quot;-r&quot;</span><span class="p">,</span> <span class="s">&quot;--rename&quot;</span><span class="p">):</span>
+            <span class="n">rename</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">False</span><span class="p">,</span> <span class="s">&quot;unhandled option&quot;</span>
+    <span class="c">########################################</span>
+    <span class="k">if</span> <span class="n">grp</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">usage</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">tmp</span><span class="o">=</span><span class="s">&quot;tmp.&quot;</span>
+        <span class="k">if</span> <span class="n">grp</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&quot;.grp&quot;</span><span class="p">):</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">grp</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">+</span><span class="s">&quot;shared_by_all.grp&quot;</span>
+    <span class="n">outNoSubsets</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">+</span><span class="s">&quot;full.grp&quot;</span>
+    <span class="c">########################################</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;# Output: &quot;</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;# Output: &quot;</span><span class="p">,</span> <span class="n">outNoSubsets</span><span class="p">)</span>
+   
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">numspec</span><span class="p">:</span>
+        <span class="n">numspec</span><span class="o">=</span> <span class="n">filterGroups</span><span class="p">(</span><span class="n">grp</span><span class="p">,</span><span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">rename</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">numspec</span><span class="p">)</span>
+    <span class="n">mergeSubsets</span><span class="p">(</span><span class="n">grp</span><span class="p">,</span><span class="n">outNoSubsets</span><span class="p">,</span> <span class="n">rename</span><span class="p">)</span>
+    <span class="n">filterGroups</span><span class="p">(</span><span class="n">outNoSubsets</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">numspec</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+   
+
+    </div>
+<span class="k">if</span> <span class="n">__name__</span><span class="o">==</span><span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Scythe 0.1 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Janina Mass.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
