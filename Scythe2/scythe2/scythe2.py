@@ -516,6 +516,9 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
 
 def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, inDir, outDir, gapOpen, gapExtend, locDir=None, faDir=None):
     print(delim,"rsDELIMITER", asID)
+##todo: what if it was ""?
+#    if delim == None:
+#        delim = " "
     stopAfter=int(stopAfter)
     specsList = []
     grpMapList = []
@@ -862,18 +865,19 @@ class ThreadedScythet(threading.Thread):
         self.queue.put("done")
 
 class ThreadedScythe(threading.Thread):
-    def __init__(self, queue, arglist):
+    def __init__(self, queue, argdct):
         threading.Thread.__init__(self)
         self.queue = queue
-        self.arglist = arglist
+        self.argdct = argdct
         self.i = 0
-     #   self.daemon = True
+
     def run(self):
         try:
-            runScythe(*self.arglist)
+            runScythe(**self.argdct)
             self.queue.put(1)
-        except Error as e:
+        except Exception as e:
             print(e)
+            sys.exit(1)
 
 if __name__ == "__main__":
     main()

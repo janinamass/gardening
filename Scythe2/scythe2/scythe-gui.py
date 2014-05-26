@@ -824,13 +824,29 @@ class ScytheWizard(tk.Tk):
 
         #run scythe
         #order matters for argument list
-        if not reloadFields and len(set(namesList)) >0:
+        if (not reloadFields or useLocal=="yes") and len(set(namesList)) >0:
             self.progbar = ttk.Progressbar(root, mode='indeterminate')
             self.progbar.grid(column=0, row=5, sticky = "W")
             res=tk.messagebox.showinfo("Be patient.", "Will be running Scythe. This could take some time.")
             self.q = queue.Queue()
             if res:
-                self.p = scythe.ThreadedScythe(self.q, [groups,delim,asID,namesList,cleanUp,stopAfter,faFileList,inDir,outDir,gapOpen, gapExtend,locDir,faDir])
+                argsdct = {
+                        "groups":groups,
+                        "delim":delim,
+                        "asID":asID,
+                        "faFileList":faFileList,
+                        "namesList":namesList,
+                        "cleanUp":cleanUp,
+                        "stopAfter":stopAfter,
+                        "inDir":inDir,
+                        "outDir":outDir,
+                        "gapOpen":gapOpen,
+                        "gapExtend":gapExtend,
+                        "locDir":locDir,
+                        "faDir":faDir
+                        }
+###
+                self.p = scythe.ThreadedScythe(self.q, argsdct)
                 self.p.start()
                 self.progbar.start()
                 SCYTHE_PROCESS = self.p
@@ -850,12 +866,12 @@ class ScytheWizard(tk.Tk):
             print(self.p, self.p.is_alive(), self.q)
             self.parent.after(100, self.process_queue)
 
-    def runscythe(self, args):
-        p = multiprocessing.Process(target=scythe.runScythe,args=args)
-        SCYTHE_PROCESS = p
-        p.start()
-        root.update()
-        root.update_idletasks()
+    #def runscythe(self, kwargs):
+     #   p = multiprocessing.Process(target=scythe.runScythe,kwargs=kwargs)
+     #   SCYTHE_PROCESS = p
+     #   p.start()
+     #   root.update()
+     #   root.update_idletasks()
 
     #todo remove cancel button
     #def cancelRun(self, process):
