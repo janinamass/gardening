@@ -820,7 +820,7 @@ class ScytheWizard(tk.Tk):
             elif len(namesList)<0:
                 tk.messagebox.showwarning("Error","Please make the first three letters of your fasta file names in {} unique.\nSorry for the inconvenience.".format(faDir))
                 sys.exit(1)
-        reloadFields = False
+        #reloadFields = False
 
         #run scythe
         #order matters for argument list
@@ -843,7 +843,9 @@ class ScytheWizard(tk.Tk):
         try:
             msg = self.q.get(0)
             self.progbar.stop()
-            tk.messagebox.showinfo("Process done.",msg)
+            #tk.messagebox.showinfo("Process done.",msg)
+            print("ok")
+            sys.exit(0)
         except queue.Empty:
             print(self.p, self.p.is_alive(), self.q)
             self.parent.after(100, self.process_queue)
