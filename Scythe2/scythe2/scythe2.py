@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+## todo: command line interface broken
+
 import imp
 import sys
 import subprocess
@@ -37,7 +39,7 @@ def usage():
     # scythe.py v0.1                     #
     ######################################
   usage:
-     scythe.py -i DIR -g .grpFILE --cleanup
+     scythe.py -i DIR -G .grpFILE --cleanup
 
   usage with configuration file:
      scythe.py --config configuration.scy
@@ -515,7 +517,7 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
             yield(algo(avd, seqDct, singles, allSpec, defaultForms),str(g))
 
 def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, inDir, outDir, gapOpen, gapExtend, locDir=None, faDir=None):
-    print(delim,"rsDELIMITER", asID)
+    print(delim,"rsDELIMITER", asID, locDir, faDir,inDir)
 ##todo: what if it was ""?
 #    if delim == None:
 #        delim = " "
@@ -634,24 +636,28 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
     ##########################################################
 
 def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, inDir, outDir, gapOpen, gapExtend, locDir=None, faDir=None):
-    print(delim,"rsDELIMITER", asID)
+
+    print(delim,"rsDELIMITER", asID, locDir, faDir,inDir)
+#    print(delim,"rsDELIMITER", asID)
     stopAfter=int(stopAfter)
     specsList = []
     grpMapList = []
-    if not locDir.endswith(os.sep):
-        locDir=locDir+os.sep
-    if not faDir.endswith(os.sep):
-        faDir=faDir+os.sep
+    if locDir:
+        if not locDir.endswith(os.sep):
+            locDir=locDir+os.sep
+    if faDir:
+        if not faDir.endswith(os.sep):
+            faDir=faDir+os.sep
     if locDir:
         locFileList = os.listdir(locDir)
         print("locdir set", locFileList)
     else:
-        locFileList = os.listdir(inDir+"/loc/")
+        locFileList = os.listdir(inDir+os.sep+"loc")
     if groups:
         if locDir:
             locfl = [locDir+x for x in locFileList]
         else:
-            locfl = [inDir+"/loc/"+x for x in locFileList]
+            locfl = [inDir+os.sep+"loc"+os.sep+x for x in locFileList]
         dct = GrpParser().groupDct(groups, locf=locfl)
         #print(dct)
     else:
@@ -664,13 +670,20 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
         if locDir:
             locFileList = os.listdir(locDir)
         else:
-            locFileList = os.listdir(inDir+"/loc/")
+            locFileList = os.listdir(inDir+os.sep+"loc"+os.sep)
+        locFileListtmp = locFileList
         pf = ".".join(f.split(".")[:-1])
         print("PF",pf)
         pf = pf.split("_")[0]
         print("PF2",pf)
         print("LOC",locFileList)
         locFileList = [x for x in locFileList if x.startswith(pf)]
+
+        if len(locFileList) < len(faFileList):
+            """less stringend matching"""
+            print("match again", locFileListtmp, locFileList, pf, pf[0:3])
+
+            locFileList = [x for x in locFileListtmp if x.startswith(pf[0:3])]
         print("lfl",locFileList)
         #try:
         #    locFileList[0] == ""
@@ -679,10 +692,12 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
         #    exit(2)
         n = n.strip()
         if locDir:
+            print("LCOFILElist", locFileList)
             specsList.append(ScytheSpec(name = n, format = "loc", source = locDir+locFileList[0], fasta = faDir+f))
 
         else:
-            specsList.append(ScytheSpec(name = n, format = "loc", source = inDir+"/loc/"+locFileList[0], fasta = inDir+"/fa/"+f))
+            print(n, inDir+os.sep+"loc"+os.sep+locFileList[0], inDir+os.sep+"fa"+os.sep+f)
+            specsList.append(ScytheSpec(name = n, format = "loc", source = inDir+os.sep+"loc"+os.sep+locFileList[0], fasta = inDir+os.sep+"fa"+os.sep+f))
         for a in specsList:
             pass
             #annoy("#\t",a.name,a.fasta)
