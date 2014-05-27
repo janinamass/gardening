@@ -565,15 +565,11 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
 
 
 
-#faFileList??
 
 def runScytheX(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, inDir, outDir, gapOpen, gapExtend, locDir=None, faDir=None):
     print(delim,"rsDELIMITER", asID, locDir, faDir,inDir, faFileList)
 
 
-##todo: what if it was ""?
-#    if delim == None:
-#        delim = " "
     stopAfter=int(stopAfter)
     specsList = []
     grpMapList = []
@@ -582,7 +578,6 @@ def runScytheX(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, i
     faDir = faDir+os.sep
     if locDir:
         locFileList = os.listdir(locDir)
-        print("locdir set", locFileList)
     else:
         locFileList = os.listdir(inDir+"/loc/")
     if groups:
@@ -591,7 +586,6 @@ def runScytheX(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, i
         else:
             locfl = [inDir+"/loc/"+x for x in locFileList]
         dct = GrpParser().groupDct(groups, locf=locfl)
-        #print(dct)
     else:
         usage()
 ######################################################################
@@ -599,7 +593,6 @@ def runScytheX(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, i
     frame.mkAllDirs()
     frame.mkLogFiles()
 
-    grp = ScytheGroup("tmpgrp", grpMapList)
     grp = ScytheGroup("tmpgrp", grpMapList)
     frame = ScytheFrame(path=outDir)
     frame.mkAllDirs()
@@ -610,27 +603,16 @@ def runScytheX(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, i
     outfiles = {}
     outfilesGroups = {}
     cnt = 0
-   # locFileList = os.listdir(inDir+"/loc/")
     for n,f in zip(namesList,faFileList):
         print(namesList, faFileList,"match")
         """Find matching .loc and .fa files"""
-        #locFileList = os.listdir(inDir+"/loc/")
         if locDir:
             locFileList = os.listdir(locDir)
         else:
             locFileList = os.listdir(inDir+"/loc/")
         pf = ".".join(f.split(".")[:-1])
-        #print("PF",pf)
         pf = pf.split("_")[0]
-        #print("PF2",pf)
-        #print("LOC",locFileList)
         locFileList = [x for x in locFileList if x.startswith(pf)]
-        #print("lfl",locFileList)
-        #try:
-        #    locFileList[0] == ""
-        #except IndexError as ke:
-        #    print("Something is wrong. File names don't match, please try renaming.",ke)
-        #    exit(2)
         n = n.strip()
         if locDir:
             specsList.append(ScytheSpec(name = n, format = "loc", source = locDir+locFileList[0], fasta = faDir+f))
@@ -701,7 +683,6 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
             faDir=faDir+os.sep
     if locDir:
         locFileList = os.listdir(locDir)
-        print("locdir set", locFileList)
     else:
         locFileList = os.listdir(inDir+os.sep+"loc")
     if groups:
@@ -710,14 +691,13 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
         else:
             locfl = [inDir+os.sep+"loc"+os.sep+x for x in locFileList]
         dct = GrpParser().groupDct(groups, locf=locfl)
-        #print(dct)
+
     else:
         usage()
    # locFileList = os.listdir(inDir+"/loc/")
     for n,f in zip(namesList,faFileList):
         print(namesList, faFileList,"match")
         """Find matching .loc and .fa files"""
-        #locFileList = os.listdir(inDir+"/loc/")
         if locDir:
             locFileList = os.listdir(locDir)
         else:
@@ -736,11 +716,7 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
 
             locFileList = [x for x in locFileListtmp if x.startswith(pf[0:3])]
         print("lfl",locFileList)
-        #try:
-        #    locFileList[0] == ""
-        #except IndexError as ke:
-        #    print("Something is wrong. File names don't match, please try renaming.",ke)
-        #    exit(2)
+
         n = n.strip()
         if locDir:
             print("LCOFILElist", locFileList)
@@ -749,9 +725,6 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
         else:
             print(n, inDir+os.sep+"loc"+os.sep+locFileList[0], inDir+os.sep+"fa"+os.sep+f)
             specsList.append(ScytheSpec(name = n, format = "loc", source = inDir+os.sep+"loc"+os.sep+locFileList[0], fasta = inDir+os.sep+"fa"+os.sep+f))
-        for a in specsList:
-            pass
-            #annoy("#\t",a.name,a.fasta)
         if locDir:
             grpMapList.append(ScytheGroupMap(name=n, locfile=locDir+locFileList[0], dct=dct, separator=delim, asID=asID))
         else:
@@ -930,7 +903,6 @@ class ThreadedScythe(threading.Thread):
         threading.Thread.__init__(self)
         self.queue = queue
         self.argdct = argdct
-        self.i = 0
 
     def run(self):
         try:
