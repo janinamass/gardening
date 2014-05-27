@@ -18,6 +18,8 @@ Contents:
 
    Tutorial
 
+   Trouble
+
    Format
 
    Converters 
