@@ -36,10 +36,6 @@ except tk.TclError as e:
     print(e)
     root.iconbitmap(None)
 
-global LOGSTR
-#todo ?
-LOGSTR = ""
-
 global SCYTHE_PROCESS
 SCYTHE_PROCESS = None
 
@@ -47,7 +43,7 @@ global CURRENTCONFIG
 CURRENTCONFIG = configparser.ConfigParser()
 BACKUPCONFIG = configparser.ConfigParser()
 ######################################
-###      fun with config files    ####
+###       config files            ####
 ############ labels ##################
 CF_MODE = "Mode"
 CF_MODE_use_ensembl = "use_ensembl"
@@ -295,8 +291,6 @@ class ScytheConfigEditor():
                 print(r)
         ######################################
         self.st_submat = tk.StringVar()
-        #self.st_outpref = tk.StringVar()
-        #self.st_spliteach = tk.StringVar()
         self.st_fasta_header_delimiter = tk.StringVar()
         self.st_fasta_header_part = tk.StringVar()
 
@@ -304,26 +298,18 @@ class ScytheConfigEditor():
         self.sc_config_numthreads.grid(row=0, column=1, sticky=tk.E)
         en_config_gapopen=tk.Entry(fr_penalties, textvariable=self.var_subsec[CF_PENALTIES][0])
         en_config_gapextend=tk.Entry(fr_penalties,textvariable=self.var_subsec[CF_PENALTIES][1] )
-        #self.en_config_spliteach=tk.Entry(fr_run,textvariable=self.st_spliteach,width=6 )
         self.en_config_fasta_header_delimiter= tk.Entry(fr_fastaheader,textvariable=self.st_fasta_header_delimiter,width=6 )
         self.en_config_fasta_header_part= tk.Entry(fr_fastaheader,textvariable=self.st_fasta_header_part ,width=6 )
 
 
         self.om_config_submat=tk.OptionMenu(fr_penalties, self.st_submat, *["EBLOSUM62","EDNAFULL"])
         self.om_config_submat.grid(row=2,column=1 )
-        #self.en_config_outpref=tk.Entry(fr_output, width=6, textvariable=self.st_outpref)
         en_config_gapopen.grid(row=0, column=1)
         en_config_gapextend.grid(row=1, column=1)
-        #en_config_submat.grid(row=2, column=1)
-        #self.en_config_outpref.grid(row=1, column=1)
-        #self.en_config_spliteach.grid(row=2,column=1)
 
         self.en_config_fasta_header_delimiter.grid(row=0, column=1)
         self.en_config_fasta_header_part.grid(row=1,column=1)
-        #nb.add(fr_mode, text=CF_MODE)
-        #nb.add(fr_paths, text=CF_PATHS)
         nb.add(fr_penalties, text=CF_PENALTIES)
-        #nb.add(fr_output, text=CF_OUTPUT)
         nb.add(fr_cleanup, text=CF_CLEANUP)
         nb.add(fr_run, text=CF_RUN)
         nb.add(fr_algorithm, text=CF_ALGORITHM)
@@ -334,10 +320,11 @@ class ScytheConfigEditor():
         b_config_apply.grid(row=1, column=0, sticky=tk.E,padx=50)
         b_config_ok.grid(row=1, column=0, sticky=tk.E)
         self.setFieldsFromConfig()
+
     def onSetConfigApply(self):
         print("configapply")
         self.setConfigFromFields()
-        #Infobox().todo()
+
     def onSetConfigOK(self,event):
         print("configapply")
         self.setConfigFromFields()
@@ -345,8 +332,8 @@ class ScytheConfigEditor():
     def onSetConfigCancel(self):
         self.confighandler.restoreConf()
         print("RESTORED-->CURRENTCONF set")
-        #self.restoreOldConfig()
         print("Config CANCEL")
+
     def setConfigFromFields(self):
         tempconf = configparser.ConfigParser()
         self.confighandler.backupConfTo(tempconf)
@@ -364,26 +351,15 @@ class ScytheConfigEditor():
         tempconf.set(CF_CLEANUP, CF_CLEANUP_clean_up_directories, self.var_subsec[CF_CLEANUP][0].get())
         #Fasta header
         tempconf.set(CF_FASTAHEADER, CF_FASTAHEADER_delimiter, self.var_subsec[CF_FASTAHEADER][0].get())
-        print("blabla",self.var_subsec[CF_FASTAHEADER][0].get())
         tempconf.set(CF_FASTAHEADER, CF_FASTAHEADER_part, self.var_subsec[CF_FASTAHEADER][1].get())
-        print("III",self.var_subsec[CF_FASTAHEADER][0].get())
         tempconf.set(CF_FASTAHEADER, CF_FASTAHEADER_part,self.st_fasta_header_part.get())
         tempconf.set(CF_FASTAHEADER, CF_FASTAHEADER_delimiter,self.st_fasta_header_delimiter.get())
 
         self.confighandler.setCurrentConf(tempconf)
-        print(CURRENTCONFIG)
-        for t in  tempconf.options(CF_PENALTIES):
-            print(t)
-            print(tempconf.get(CF_PENALTIES,t))
-        for t in  tempconf.options(CF_ALGORITHM):
-            print(t)
-            print(tempconf.get(CF_ALGORITHM,t))
+
     def setFieldsFromConfig(self):
         #penalties
-        print(self.txt_subsec[CF_PENALTIES][0])
-        print(CURRENTCONFIG.get(CF_PENALTIES,self.txt_subsec[CF_PENALTIES][0]))
         self.var_subsec[CF_PENALTIES][0].set(CURRENTCONFIG.get(CF_PENALTIES,self.txt_subsec[CF_PENALTIES][0]))
-        print(CURRENTCONFIG.get(CF_PENALTIES,self.txt_subsec[CF_PENALTIES][1]))
         self.var_subsec[CF_PENALTIES][1].set(CURRENTCONFIG.get(CF_PENALTIES,self.txt_subsec[CF_PENALTIES][1]))
         self.st_submat.set(CURRENTCONFIG.get(CF_PENALTIES, CF_PENALTIES_substitution_matrix))
         #output
@@ -396,29 +372,20 @@ class ScytheConfigEditor():
         self.var_subsec[CF_ALGORITHM][0].set(CURRENTCONFIG.get(CF_ALGORITHM,self.txt_subsec[CF_ALGORITHM][0]))
         self.var_subsec[CF_ALGORITHM][1].set(CURRENTCONFIG.get(CF_ALGORITHM,self.txt_subsec[CF_ALGORITHM][1]))
         self.var_subsec[CF_ALGORITHM][2].set(CURRENTCONFIG.get(CF_ALGORITHM,self.txt_subsec[CF_ALGORITHM][2]))
-        self.var_subsec[CF_FASTAHEADER][0].set(CURRENTCONFIG.get(CF_FASTAHEADER,self.txt_subsec[CF_FASTAHEADER][0]))
-        #self.var_subsec[CF_FASTAHEADER][1].set(CURRENTCONFIG.get(CF_FASTAHEADER,self.st_fasta_header_part))
 
-        print(self.txt_subsec[CF_FASTAHEADER][0])
-        print(CURRENTCONFIG.get(CF_FASTAHEADER,self.txt_subsec[CF_FASTAHEADER][0]))
         self.var_subsec[CF_FASTAHEADER][0].set(CURRENTCONFIG.get(CF_FASTAHEADER,self.txt_subsec[CF_FASTAHEADER][0]))
-        print(CURRENTCONFIG.get(CF_FASTAHEADER,self.txt_subsec[CF_FASTAHEADER][1]))
+        self.var_subsec[CF_FASTAHEADER][0].set(CURRENTCONFIG.get(CF_FASTAHEADER,self.txt_subsec[CF_FASTAHEADER][0]))
         self.var_subsec[CF_FASTAHEADER][1].set(CURRENTCONFIG.get(CF_FASTAHEADER,self.txt_subsec[CF_FASTAHEADER][1]))
         self.st_fasta_header_part.set(CURRENTCONFIG.get(CF_FASTAHEADER, CF_FASTAHEADER_part))
         self.st_fasta_header_delimiter.set(CURRENTCONFIG.get(CF_FASTAHEADER, CF_FASTAHEADER_delimiter))
 
-# !todo useful?
 def logged(f):
-    global LOGSTR
     def wrapped(*args, **kargs):
-        global LOGSTR
         print ("%s called..." % f.__name__)
         try:
-            LOGSTR=LOGSTR+f.__name__+str(args)+str(kargs)
             return f(*args, **kargs)
         finally:
             print ("..Done.")
-            print(LOGSTR)
     return wrapped
 
 class Infobox():
@@ -442,14 +409,12 @@ class Infobox():
     def showConfig(self):
         global CURRENTCONFIG
         tmp = ConfigHandler()
-        #print(CURRENTCONFIG)
         tmp.currentconfig=CURRENTCONFIG
         message = ""
         for section in tmp.currentconfig.sections():
             message += "["+section +"]\n"
             for option in tmp.currentconfig.options(section):
                 message += " "+ option+ "="+ tmp.currentconfig.get(section, option)+"\n"
-        #messagebox.showinfo(title="Config", message = "" )
         top = tk.Toplevel(root)
         top.title("Configuration")
         txt = tk.Text(top)
@@ -483,13 +448,6 @@ class ScytheMenu(tk.Frame):
         #fileMenu.add_command(label="Convert files...", command=self.onConvertFiles)
         fileMenu.add_command(label="Load configuration...", command=self.onLoadConfig)
         fileMenu.add_command(label="Save configuration...", command=self.onSaveConfig)
-
-#todo: separate converters for each file type
-        #convertMenu = tk.Menu(fileMenu)
-        #convertMenu.add_command(label="convert orthology information to .grp", command=self.onConvertToGrp)
-        #convertMenu.add_command(label="convert loci/transcript information to .loc", command=self.onConvertToLoc)
-        #fileMenu.add_cascade(label='Convert files...', menu=convertMenu, underline=0)
-
         fileMenu.add_command(label="Exit", command=self.onExit)
 
         optionsMenu = tk.Menu(menubar)
@@ -502,7 +460,7 @@ class ScytheMenu(tk.Frame):
         menubar.add_cascade(label="File", menu=fileMenu)
         menubar.add_cascade(label="Options", menu=optionsMenu)
         menubar.add_cascade(label="Help", menu=helpMenu)
-        #self.onNewRun()
+
 #todo: converters!
     #def onConvertToGrp(self):
     #    ScytheConvertDialogGrp()
@@ -518,11 +476,17 @@ class ScytheMenu(tk.Frame):
     def loadConfigArg(self,arg):
         cfg = self.confighandler.currentconfig.read(arg)
         global CURRENTCONFIG
+
+
+
+
+
+
         CURRENTCONFIG=self.confighandler.currentconfig
-        self.scythewizard.st_fastaDir.set(self.confighandler.currentconfig.get(CF_PATHS,'fasta_directory') )
-        self.scythewizard.st_locDir.set(self.confighandler.currentconfig.get(CF_PATHS,'loc_directory') )
-        self.scythewizard.st_grpFile.set(self.confighandler.currentconfig.get(CF_PATHS,'grp_file') )
-        self.scythewizard.st_outDir.set(self.confighandler.currentconfig.get(CF_PATHS,'output_directory') )
+        self.scythewizard.st_fastaDir.set(self.confighandler.currentconfig.get(CF_PATHS,CF_PATHS_fasta_directory) )
+        self.scythewizard.st_locDir.set(self.confighandler.currentconfig.get(CF_PATHS,CF_PATHS_loc_directory) )
+        self.scythewizard.st_grpFile.set(self.confighandler.currentconfig.get(CF_PATHS,CF_PATHS_grp_file) )
+        self.scythewizard.st_outDir.set(self.confighandler.currentconfig.get(CF_PATHS,CF_PATHS_output_directory) )
         #todo check ensembl/local
         if self.confighandler.currentconfig.get(CF_MODE,CF_MODE_use_ensembl)=='yes':
             self.scythewizard.cb_use_ensembl.select()
@@ -540,10 +504,10 @@ class ScytheMenu(tk.Frame):
         global CURRENTCONFIG
         CURRENTCONFIG=self.confighandler.currentconfig
         if self.confighandler.currentconfig.get(CF_MODE,CF_MODE_use_local_files)=='yes':
-            self.scythewizard.st_fastaDir.set(self.confighandler.currentconfig.get(CF_PATHS,'fasta_directory') )
-            self.scythewizard.st_locDir.set(self.confighandler.currentconfig.get(CF_PATHS,'loc_directory') )
-            self.scythewizard.st_grpFile.set(self.confighandler.currentconfig.get(CF_PATHS,'grp_file') )
-            self.scythewizard.st_outDir.set(self.confighandler.currentconfig.get(CF_PATHS,'output_directory') )
+            self.scythewizard.st_fastaDir.set(self.confighandler.currentconfig.get(CF_PATHS,CF_PATHS_fasta_directory) )
+            self.scythewizard.st_locDir.set(self.confighandler.currentconfig.get(CF_PATHS,CF_PATHS_loc_directory) )
+            self.scythewizard.st_grpFile.set(self.confighandler.currentconfig.get(CF_PATHS,CF_PATHS_grp_file) )
+            self.scythewizard.st_outDir.set(self.confighandler.currentconfig.get(CF_PATHS,CF_PATHS_output_directory) )
             self.scythewizard.cb_use_local.select()
             self.scythewizard.cb_use_local.configure(state=tk.NORMAL)
             self.scythewizard.cb_use_ensembl.configure(state=tk.DISABLED)
@@ -552,7 +516,7 @@ class ScytheMenu(tk.Frame):
             self.scythewizard.ent_grpFile.configure(state=tk.NORMAL)
             self.scythewizard.ent_outDir.configure(state=tk.NORMAL)
         elif self.confighandler.currentconfig.get(CF_MODE,CF_MODE_use_ensembl)=='yes':
-            self.scythewizard.st_outDir.set(self.confighandler.currentconfig.get(CF_PATHS,'output_directory') )
+            self.scythewizard.st_outDir.set(self.confighandler.currentconfig.get(CF_PATHS,CF_PATHS_output_directory) )
             self.scythewizard.cb_use_ensembl.select()
             self.scythewizard.cb_use_ensembl.configure(state=tk.NORMAL)
             self.scythewizard.cb_use_local.configure(state=tk.DISABLED)
@@ -820,10 +784,8 @@ class ScytheWizard(tk.Tk):
             elif len(namesList)<0:
                 tk.messagebox.showwarning("Error","Please make the first three letters of your fasta file names in {} unique.\nSorry for the inconvenience.".format(faDir))
                 sys.exit(1)
-        #reloadFields = False
 
         #run scythe
-        #order matters for argument list
         if (not reloadFields or useLocal=="yes") and len(set(namesList)) >0:
             self.progbar = ttk.Progressbar(root, mode='indeterminate')
             self.progbar.grid(column=0, row=5, sticky = "W")
@@ -865,22 +827,6 @@ class ScytheWizard(tk.Tk):
         except queue.Empty:
             print(self.p, self.p.is_alive(), self.q)
             self.parent.after(100, self.process_queue)
-
-    #def runscythe(self, kwargs):
-     #   p = multiprocessing.Process(target=scythe.runScythe,kwargs=kwargs)
-     #   SCYTHE_PROCESS = p
-     #   p.start()
-     #   root.update()
-     #   root.update_idletasks()
-
-    #todo remove cancel button
-    #def cancelRun(self, process):
-    #    if process:
-    #        #cant kill the thread, kill all
-    #        self.quit()
-    #        process = None
-    #    else:
-    #        print("No running process.")
 
     def debug(self,n):
         for i in range(0,n):
@@ -929,7 +875,6 @@ class ScytheWizard(tk.Tk):
 
         self.b_next = tk.Button(root, text="Next...", command = self.prepRun)
         self.b_quit = tk.Button(root, text="Quit", command = self.quit)
-#        self.b_cancel = tk.Button(root, text = "Cancel", command = lambda: self.cancelRun(SCYTHE_PROCESS))
         ######
 
         #Checkbuttons
@@ -961,7 +906,6 @@ class ScytheWizard(tk.Tk):
 
         self.b_next.grid(row=5, column=1, sticky="E")
         self.b_quit.grid(row=5, column=2, sticky="W")
-#        self.b_cancel.grid(row=5, column=3, sticky="E")
 
     def useLocal(self):
         global CURRENTCONFIG
@@ -1003,8 +947,8 @@ class ScytheWizard(tk.Tk):
         if self.ent_locDir.get()=="":
             if os.path.isdir(os.path.split(tmp)[0]+os.sep+"loc"):
                 self.st_locDir.set(os.path.split(tmp)[0]+os.sep+"loc")
-                CURRENTCONFIG.set(CF_PATHS, "loc_directory", os.path.split(tmp)[0]+os.sep+"loc")
-        CURRENTCONFIG.set(CF_PATHS, "fasta_directory",tmp)
+                CURRENTCONFIG.set(CF_PATHS, CF_PATHS_loc_directory, os.path.split(tmp)[0]+os.sep+"loc")
+        CURRENTCONFIG.set(CF_PATHS, CF_PATHS_fasta_directory,tmp)
         return tmp
 
     def askLocDir(self):
@@ -1015,15 +959,15 @@ class ScytheWizard(tk.Tk):
         if self.ent_locDir.get()=="":
             if os.path.isdir(os.path.split(tmp)[0]+os.sep+"fa"):
                 self.st_locDir.set(os.path.split(tmp)[0]+os.sep+"fa")
-                CURRENTCONFIG.set(CF_PATHS, "fasta_directory",os.path.split(tmp)[0]+os.sep+"fa")
-        CURRENTCONFIG.set(CF_PATHS, "loc_directory",tmp)
+                CURRENTCONFIG.set(CF_PATHS, CF_PATHS_fasta_directory,os.path.split(tmp)[0]+os.sep+"fa")
+        CURRENTCONFIG.set(CF_PATHS, CF_PATHS_loc_directory,tmp)
         return filedialog.tmp()
 
     def askGrpFile(self):
         tmp= filedialog.askopenfilename()
         self.ent_grpFile.config(state=tk.NORMAL)
         self.st_grpFile.set(tmp)
-        CURRENTCONFIG.set(CF_PATHS, "grp_file",tmp)
+        CURRENTCONFIG.set(CF_PATHS, CF_PATHS_grp_file,tmp)
         return tmp
 
     def askOutDir(self):
