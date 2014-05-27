@@ -966,8 +966,8 @@ class ScytheWizard(tk.Tk):
     def useLocal(self):
         global CURRENTCONFIG
         if self.int_local.get() ==1:
-            CURRENTCONFIG.set(CF_MODE, "use_local_files", "yes")
-            CURRENTCONFIG.set(CF_MODE, "use_ensembl_api", "no")
+            CURRENTCONFIG.set(CF_MODE, CF_MODE_use_local_files, "yes")
+            CURRENTCONFIG.set(CF_MODE, CF_MODE_use_ensembl, "no")
             self.ent_fastaDir.config(state=tk.NORMAL)
             self.ent_locDir.config(state=tk.NORMAL)
             self.ent_grpFile.config(state=tk.NORMAL)
@@ -981,8 +981,8 @@ class ScytheWizard(tk.Tk):
             self.cb_use_ensembl.config(state=tk.DISABLED)
 
         else:
-            CURRENTCONFIG.set("Mode", "use_local_files", "no")
-            CURRENTCONFIG.set("Mode", "use_ensembl_api", "no")
+            CURRENTCONFIG.set(CF_MODE, CF_MODE_use_local_files, "no")
+            CURRENTCONFIG.set(CF_MODE, CF_MODE_use_ensembl, "no")
 
             self.ent_fastaDir.config(state=tk.DISABLED)
             self.ent_locDir.config(state=tk.DISABLED)
