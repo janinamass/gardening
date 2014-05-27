@@ -918,57 +918,12 @@ def main():
             usage()
 
 
-
-
-     #groups
-#    #faDir = config.get(CF_PATHS,CF_PATHS_fasta_directory)
-#    #inDir = faDir
-#    #outDir = config.get(CF_PATHS,CF_PATHS_output_directory)
-#    locDir = config.get(CF_PATHS,CF_PATHS_loc_directory)
-#    delim = config.get(CF_FASTAHEADER,CF_FASTAHEADER_delimiter)
-#    asID = int(config.get(CF_FASTAHEADER,CF_FASTAHEADER_part))
-#    stopAfter = False
-#    gapOpen= config.get(CF_PENALTIES,CF_PENALTIES_gap_open_cost)
-#    gapExtend =config.get(CF_PENALTIES,CF_PENALTIES_gap_extend_cost)
-#    faFileList = os.listdir(faDir)
-#    namesList = os.listdir(faDir)
-#    namesList = [n[0:3] for n in namesList]
-#
-#    runScythe(groups=groups, delim=delim.strip('"'),
-#              asID=asID, faFileList=faFileList,
-#              namesList=namesList, cleanUp=cleanUp,
-#              stopAfter=stopAfter, inDir=inDir, outDir=outDir,
-#              gapOpen=gapOpen, gapExtend=gapExtend,
-#              locDir=locDir,faDir=faDir)
-
-
-
-
-
-
-
-
-
-
-
         runScythe(groups=groups, delim=delim,
                   asID=asID, faFileList=faFileList,
                   namesList=namesList, cleanUp=cleanUp,
                   stopAfter=stopAfter, inDir=faDir, outDir=outDir, gapOpen=gapOpen, gapExtend=gapExtend, locDir = locDir, faDir=faDir)
 
 #----------------------------------------------------------------#
-
-#class ThreadedScythet(threading.Thread):
-#    def __init__(self, queue, argslist):
-#        threading.Thread.__init__(self)
-#        self.queue = queue
-#        self.argslist = argslist
-#        self.i = 0
-#    def run(self):
-#        for i in range(0,3):
-#            print(i)
-#            time.sleep(2)
-#        self.queue.put("done")
 
 class ThreadedScythe(threading.Thread):
     def __init__(self, queue, argdct):
