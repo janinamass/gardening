@@ -437,16 +437,16 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
     allSpec = set()
     seqDct = {}
     pattern  = re.compile(r"""(.*)\s+([a-zA-Z0-9_.]*)\s+[a-zA-Z0-9_.]*\s+\((.*)\)""")
-    outfile = ""
-    singleGrp = {}
+    outfile = None
+    #singleGrp = {}
     #!ToDo check types etc
     sp = {}
     defaultForms = set()
     for l in listofspecies:
         sp[l.name] = l
+        print(l)
         for i in l._defForm:
             defaultForms.add(i)
-    debug_stop = 0
     print(group, "d", group._names)
     for g in group.groups:
         if stopAfter and g > stopAfter:
@@ -462,9 +462,15 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
             for locus in spa:
                 if len(spa)==1:
                     singles.add(locus)
+                    sp[s].sequences[locus].isSingle=True
+                    print(sp[s].sequences[locus])
                 try:
                     out.write(sp[s].sequences[locus].toFasta())
                     seqDct[sp[s].sequences[locus].name]=sp[s].sequences[locus]
+                    if sp[s].sequences[locus].name in sp[s]._defForm:
+                        print("DEBUG",sp[s],  sp[s].sequences[locus].name, sp[s].sequences[locus].isReference, sp[s].sequences[locus])
+                        sp[s].sequences[locus].isReference = True
+
                 except KeyError as ke:
                     print ("Are all gene models in your fasta files? - KeyError for ",ke)
             out.close()
@@ -583,9 +589,9 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
     for g in grpMapList:
         g.free()
     for sp in specsList:
-        sp.fillDefForm()
         sp.fillLociCDS()
         sp.fillSequences(sep = delim, asID=asID)
+        sp.fillDefForm()
 
     grp = ScytheGroup("tmpgrp", grpMapList)
     frame = ScytheFrame(path=outDir)
