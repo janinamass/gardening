@@ -433,51 +433,50 @@ def adddyn(listoftuples, pairwisedist, actualdict, allkeys, sequencesdct):
 
 def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
     print("makeFasta")
-    singles = set()
+    singles = {}
+    skip = {}
     allSpec = set()
     seqDct = {}
     pattern  = re.compile(r"""(.*)\s+([a-zA-Z0-9_.]*)\s+[a-zA-Z0-9_.]*\s+\((.*)\)""")
     outfile = None
-    #singleGrp = {}
-    #!ToDo check types etc
     sp = {}
-    defaultForms = set()
     for l in listofspecies:
         sp[l.name] = l
-        print(l)
-        for i in l._defForm:
-            defaultForms.add(i)
-    print(group, "d", group._names)
     for g in group.groups:
         if stopAfter and g > stopAfter:
             break
         spl = list(group.groups[g])
         allSpec = set(spl)
         print(g)
+        singles[g] = set()
+#collect single model species for this group so it could be skipped if all species are in this set
         for s in spl:
-            #print("FAT, "+frame._fat)
             outfile = frame._fat+".".join([str(g),s,"fa"])
             out = open(outfile, "w")
             spa = group.groups[g][s]
+            if len(spa)==1:
+                singles[g].add(s)
+                print("DEBUGR", s,g,spa)
             for locus in spa:
-                if len(spa)==1:
-                    singles.add(locus)
-                    sp[s].sequences[locus].isSingle=True
+                    print("DEBURG", locus,spa)
                     print(sp[s].sequences[locus])
-                try:
-                    out.write(sp[s].sequences[locus].toFasta())
-                    seqDct[sp[s].sequences[locus].name]=sp[s].sequences[locus]
-                    if sp[s].sequences[locus].name in sp[s]._defForm:
-                        print("DEBUG",sp[s],  sp[s].sequences[locus].name, sp[s].sequences[locus].isReference, sp[s].sequences[locus])
-                        sp[s].sequences[locus].isReference = True
-
-                except KeyError as ke:
-                    print ("Are all gene models in your fasta files? - KeyError for ",ke)
+                    try:
+                        out.write(sp[s].sequences[locus].toFasta())
+                        seqDct[sp[s].sequences[locus].name]=sp[s].sequences[locus]
+                    except KeyError as ke:
+                        print ("Are all gene models in your fasta files? - KeyError for ",ke)
             out.close()
+        if len(singles[g]) == len(spl):
+            print("SKIP THIS")
+            skip[g] = True
+        else:
+            skip[g] = False
     test = ""
     deb=0
     for g in group.groups:
         print(g)
+        if skip[g]:
+            continue
         avd = None
         avd = AutoViviDict()
         if stopAfter and g> stopAfter:
