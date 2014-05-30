@@ -495,7 +495,6 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
                 try:
                     print("CALLING NEEDLE")
                     task = frame.callNeedleAll(fileA, fileB, outfile = outfile,stdout=True, gapOpen=gapOpen, gapExtend=gapExtend)
-                    print("TASK CALLED")
                     fulldata = task.stdout.read()
                     print(fulldata)
                     assert task.wait() == 0
@@ -523,7 +522,7 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
             yield(algo_globsum(avd, seqDct, defaultForms),str(g))
 
         else:
-            yield(ah.sl_ref(scoringDct = avd, sequenceDct = seqDct, defaultForms = defaultForms), str(g))#, allSpec, defaultForms),str(g))
+            yield(ah.sl_ref(scoringDct = avd, sequenceDct = seqDct), str(g))#, allSpec, defaultForms),str(g))
 
 
 def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, inDir, outDir, gapOpen, gapExtend, locDir=None, faDir=None):

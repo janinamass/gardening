@@ -4,9 +4,7 @@ class AlgoHandler(object):
 
     def getSingleGMS(self, sequenceDct):
         """Return list of species that only have one gene model"""
-        res = []
-        for s in sequenceDct:
-            print(s,sequenceDct[s])
+        res = [s.species for s in sequenceDct.values() if s.isSingle]
         return(res)
 
     def initCollProc(self, scoringDct, sequenceDct):
@@ -14,39 +12,36 @@ class AlgoHandler(object):
         "speciesID -> [gmIDs]"
         species2id = {}
 
-        #sequences:
+        #species:
         processed = set()
         unprocessed = set()
 
-        #species:
+        #seq:
         coll = set()
         uncoll = set()
 
         for fkey in scoringDct:
-            uncoll.add(fkey) #not yet collected
-            unprocessed.add(sequenceDct[fkey].species) #species on to do list
-            append_add(species2id, sequenceDct[fkey].species, fkey)
-
+            uncoll.add(fkey)
+            unprocessed.add(sequenceDct[fkey].species)
+            append_add(species2id, sequenceDct[fkey].species, fkey, unique = True)
             for skey in scoringDct[fkey]:
                 uncoll.add(skey)
                 unprocessed.add(sequenceDct[skey].species)
                 append_add(species2id, sequenceDct[skey].species, skey, unique=True)
-
         return(processed, unprocessed, coll, uncoll, species2id)
 
-    def getMaxSeed(self, scoringDct, sequenceDct, defaultForms, uncoll):
-        print("dummy")
+    def getMaxSeed(self, scoringDct, sequenceDct, uncoll):
         """Find the best scoring pair. In case of a tie, prefer default models. """
         globMax = -1
-        globMaxIds = ""
-        globMaxSps = ""
+        globMaxIds = None
+        globMaxSps = None
         if scoringDct =={}:
-            #print("scoringDct empty")
+            print("scoringDct empty")
+            raise Warning("ScoringDct empty")
             return(None,None)
-
+        defaultForms = [s.name for s in sequenceDct.values() if s.isReference]
         for u in uncoll: #uncollected species
             tmpspec = sequenceDct[u].species
-
             if scoringDct[u]:
                 skl=list(scoringDct[u].keys())
                 scorel=list(scoringDct[u].values())
@@ -55,22 +50,17 @@ class AlgoHandler(object):
                     globMax = tmpMax
                     globMaxIds = (skl[scorel.index(tmpMax)], u)
                     tieList = [n for (n, e) in enumerate(scorel) if e == tmpMax]
-                    #print(u,"tmpmax: ", [(n,e) for (n, e) in enumerate(scorel) if e == tmpMax],tieList)
                     if len(tieList) >1:
                         pass
-                        #print("tmpMax ties", [(n,e,skl[n],u ) for (n, e) in enumerate(scorel) if e == tmpMax])
                     #favoring defaults:
                     fav = [(skl[n],u)  for n in tieList if (skl[n] in defaultForms and u in defaultForms)]
                     fav1 = [(skl[n],u)  for n in tieList if (skl[n] in defaultForms or u in defaultForms)]
                     if fav:
-                        #print("fav ", fav)
                         globMaxSps = (sequenceDct[fav[0][0]].species, sequenceDct[fav[0][1]].species)
                         globMaxIds = (fav[0][0],fav[0][1])
                     elif fav1:
-                        #print("fav1", fav1)
                         fav1tmp = fav1[0] #tuple
                         globMaxSps = (sequenceDct[fav1tmp[0]].species, sequenceDct[fav1tmp[1]].species)
-                       #################what about globmaxids??
                         globMaxIds =  (fav1tmp[0], fav1tmp[1])
                     else:
                         globMaxSps = (sequenceDct[globMaxIds[0]].species, sequenceDct[u].species)
@@ -78,67 +68,71 @@ class AlgoHandler(object):
 
                 else:
                     pass
-        print("glmi", globMaxIds)
+            else:
+                sys.stderr.write(scoringDct, u)
+                raise Exception("Sth wrong with ScoringDct")
         return(globMaxIds, globMaxSps)
 
-    def sl_ref(self, scoringDct = {}, sequenceDct = {}, defaultForms = []):
+    def sl_ref(self, scoringDct = {}, sequenceDct = {}, referenceAlgo = True):
         """Reference algorithm"""
         print("debug", "sl_ref")
         if not scoringDct:
             raise EmptyScoringDctException("sth wrong during sl_ref")
         if not sequenceDct:
             raise EmptyScoringDctException("sth wrong during sl_ref")
-        #check species for single gene models
         singleGMSpec = self.getSingleGMS(sequenceDct)
         processed, unprocessed, coll, uncoll, species2id  = self.initCollProc(scoringDct, sequenceDct)
+        if referenceAlgo :
         ### add single GM ###
-        for sgms in singleGMSpec:
-            print("debug", sgms, species2id[sgms])
-            coll.add(sgms)
-            uncoll.remove(sgms)
-            processed.add(species2id[sgms])
-            unprocessed.remove(species2id[sgms])
+            for sgms in singleGMSpec:
+                assert len(species2id[sgms]) == 1
+                processed.add(sgms)
+                unprocessed.remove(sgms)
+                coll.add(species2id[sgms][0])
+                uncoll.remove(species2id[sgms][0])
         #####################
 
         while(unprocessed):
-            print(unprocessed, "UP")
             if not coll:
-                max_seqid,max_specid = self.getMaxSeed(scoringDct = scoringDct, sequenceDct= sequenceDct, defaultForms = defaultForms, uncoll = uncoll)
+                max_seqid,max_specid = self.getMaxSeed(scoringDct = scoringDct, sequenceDct= sequenceDct, uncoll = uncoll)
                 for j,k in  zip(max_seqid,max_specid):
-                    print(j,coll, uncoll)
                     coll.add(j)
                     uncoll.remove(j)
-                    print(k,processed, unprocessed)
                     processed.add(k)
                     unprocessed.remove(k)
             for c in coll:
                 cmax = -1
-                cmaxid = ""
-                cmaxsp = ""
-                for up in unprocessed:
-                    for uc in species2id[up]:
+                print("cmax",cmax)
+                cmaxid = None
+                cmaxsp = None
+                for up in unprocessed:#spec
+                    for uc in species2id[up]:#seq
+                        print(uc,"UUUUUUCCCCCC", species2id, up, sequenceDct[uc])
                         if uc in scoringDct: # is in distance dict
                             try:
                                 tmp = int(scoringDct[uc][c])
                             except TypeError as e:
                                 tmp = -1
-                            #todo break tie
-                            if (tmp >cmax or (tmp == cmax and uc in defaultForms)) :
+                                raise Warning("tmp -1")
+                            if (tmp >cmax or (tmp == cmax and sequenceDct[uc].isReference)) :
                                 # tie resolved
                                 cmax = int(scoringDct[uc][c])
                                 cmaxid = uc
                                 cmaxsp = up
                                 cmax=tmp
-                        elif c in scoringDct: #if?
+                                print("cmax",cmax)
+                        elif c in scoringDct:
                             try:
                                 tmp = int(scoringDct[c][uc])
                             except TypeError as e:
                                     tmp = -1
-                            if (tmp >cmax or (tmp == cmax and uc in defaultForms)):
+                                    raise Warning("TMP -1")
+                            if (tmp >cmax or (tmp == cmax and sequenceDct[uc].isReference)):
                                 cmax = int(avd[c][uc])
                                 cmaxid = uc
                                 cmaxsp = up
                                 cmax=tmp
+                                print("Cmax",cmax)
 
             uncoll.remove(cmaxid)
             unprocessed.remove(cmaxsp)
@@ -193,8 +187,6 @@ class AlgoHandler(object):
 #
 
 
-
-
 def append_add(dct, key, val, unique = False):
     """Append new (unique) value to the list of 'key'.
     If 'key' does not exist, create new list.
@@ -232,15 +224,15 @@ def append_add(dct, key, val, unique = False):
 
 
 
-    def sl_glob(scoringDct = {}):
+    def sl_glob(scoringDct = {},sequenceDct = {}):
         print("debug", "sl_glob")
         if not scoringDct:
             raise EmptyScoringDctException("sth wrong during sl_glob")
         if not sequenceDct:
             raise EmptyScoringDctException("sth wrong during sl_glob")
+        self.sl_ref(scoringDct = scoringDct, sequenceDct = sequenceDct, referenceAlgo=True)
 
-
-    def mx_sum(scoringDct = {}):
+    def mx_sum(scoringDct = {},sequenceDct = {}):
         print("debug", "mx_sum")
         if not scoringDct:
             raise EmptyScoringDctException("sth wrong during mx_sum")
@@ -356,16 +348,17 @@ class EmptySequenceDctException(Exception):
 #    return(seqDct, first, species2id)
     def findGlobalMax(self, scoringDct, sequenceDct,  all, coll, uncoll, defaultForms):
         """Find the best scoring pair. In case of a tie, prefer default models. """
+        print("\n\nFGM\n\n")
         globMax = -1
         globMaxIds = ""
         globMaxSps = ""
         if scoringDct =={}:
-            #print("scoringDct empty")
+            raise Exception("No Scores")
             return(None,None)
 
-        for u in uncoll: #uncollected species
+        for u in uncoll: #uncollected seq
             tmpspec = sequenceDct[u].species
-
+            print(scoringDct,"SCOOOO")
             if scoringDct[u]:
                 skl=list(scoringDct[u].keys())
                 scorel=list(scoringDct[u].values())
@@ -382,14 +375,12 @@ class EmptySequenceDctException(Exception):
                     fav = [(skl[n],u)  for n in tieList if (skl[n] in defaultForms and u in defaultForms)]
                     fav1 = [(skl[n],u)  for n in tieList if (skl[n] in defaultForms or u in defaultForms)]
                     if fav:
-                        #print("fav ", fav)
                         globMaxSps = (sequenceDct[fav[0][0]].species, sequenceDct[fav[0][1]].species)
                         globMaxIds = (fav[0][0],fav[0][1])
                     elif fav1:
                         #print("fav1", fav1)
                         fav1tmp = fav1[0] #tuple
                         globMaxSps = (sequenceDct[fav1tmp[0]].species, sequenceDct[fav1tmp[1]].species)
-                       #################what about globmaxids??
                         globMaxIds =  (fav1tmp[0], fav1tmp[1])
                     else:
                         globMaxSps = (sequenceDct[globMaxIds[0]].species, sequenceDct[u].species)
