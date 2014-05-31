@@ -84,7 +84,8 @@ class AlgoHandler(object):
         processed, unprocessed, coll, uncoll, species2id  = self.initCollProc(scoringDct, sequenceDct)
         if referenceAlgo :
         ### add single GM ###
-            for sgms in singleGMSpec:
+            for sgms in set(singleGMSpec):
+                print("ASSERT",species2id[sgms],sgms)
                 assert len(species2id[sgms]) == 1
                 processed.add(sgms)
                 unprocessed.remove(sgms)
@@ -113,7 +114,7 @@ class AlgoHandler(object):
                                 tmp = int(scoringDct[uc][c])
                             except TypeError as e:
                                 tmp = -1
-                                raise Warning("tmp -1")
+                                #raise Warning("tmp -1")
                             if (tmp >cmax or (tmp == cmax and sequenceDct[uc].isReference)) :
                                 # tie resolved
                                 cmax = int(scoringDct[uc][c])
@@ -126,7 +127,7 @@ class AlgoHandler(object):
                                 tmp = int(scoringDct[c][uc])
                             except TypeError as e:
                                     tmp = -1
-                                    raise Warning("TMP -1")
+                                 #   raise Warning("TMP -1")
                             if (tmp >cmax or (tmp == cmax and sequenceDct[uc].isReference)):
                                 cmax = int(avd[c][uc])
                                 cmaxid = uc
