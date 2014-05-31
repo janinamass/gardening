@@ -124,13 +124,13 @@ def parseConfig(pathconfig):
         GLOBSUM = True
     if config.get(CF_ALGORITHM,CF_ALGORITHM_use_default)!="yes":
 ##TODO
-        REFERENCE = False
+        SL_REF = False
     else:
-        REFERENCE = True
-    if sum([GLOBMAX, GLOBSUM, REFERENCE])>1:
+        SL_REF = True
+    if sum([GLOBMAX, GLOBSUM, SL_REF])>1:
         sys.stderr.write("Problem with you config file. Please select one algorithm.\n")
         sys.exit(1)
-    elif sum([GLOBMAX, GLOBSUM, REFERENCE])<1:
+    elif sum([GLOBMAX, GLOBSUM, SL_REF])<1:
         sys.stderr.write('Problem with you config file. Please select one algorithm ( ...  = "yes").\n')
         sys.exit(1)
     else:
@@ -141,7 +141,6 @@ def parseConfig(pathconfig):
     else:
         cleanUp = True
 
-   ####TODO delimiter, asID from Config file ###
     groups= config.get(CF_PATHS,CF_PATHS_grp_file)
     namesList = None
     faDir = config.get(CF_PATHS,CF_PATHS_fasta_directory)
@@ -149,7 +148,6 @@ def parseConfig(pathconfig):
     outDir = config.get(CF_PATHS,CF_PATHS_output_directory)
     locDir = config.get(CF_PATHS,CF_PATHS_loc_directory)
     fastaList = os.listdir(faDir)
-    #gffList = None
     delim = config.get(CF_FASTAHEADER,CF_FASTAHEADER_delimiter)
     asID = int(config.get(CF_FASTAHEADER,CF_FASTAHEADER_part))
     stopAfter = False
@@ -436,13 +434,14 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
     singles = {}
     skip = {}
     allSpec = set()
-    seqDct = {}
+#    seqDct = {}
     pattern  = re.compile(r"""(.*)\s+([a-zA-Z0-9_.]*)\s+[a-zA-Z0-9_.]*\s+\((.*)\)""")
     outfile = None
     sp = {}
     for l in listofspecies:
         sp[l.name] = l
     for g in group.groups:
+        seqDct = {}
         if stopAfter and g > stopAfter:
             break
         spl = list(group.groups[g])
@@ -471,58 +470,63 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
             skip[g] = True
         else:
             skip[g] = False
-    test = ""
-    deb=0
-    for g in group.groups:
+#    test = ""
+#    deb=0
+#    for g in group.groups:
         print(g)
         if skip[g]:
-            continue
-        avd = None
-        avd = AutoViviDict()
-        if stopAfter and g> stopAfter:
-            break
-        frame.writeLog("debug","#-- Processing group"+str(g)+"--#")
-        #print("#-- Processing group"+str(g)+"--#")
-        spl = list(group.groups[g])
-        ah = AlgoHandler()
-        for i in range(0,len(spl)-1):
-            for j in range(i+1,len(spl)):
-                outfile = frame._fat+".".join([str(g),spl[i],"fa"])
-                fileA = outfile
-                outfile = frame._fat+".".join([str(g),spl[j],"fa"])
-                fileB = outfile
-                outfile=frame._sr+".".join([str(g),spl[i],spl[i+1],"needle"])
-                try:
-                    print("CALLING NEEDLE")
-                    task = frame.callNeedleAll(fileA, fileB, outfile = outfile,stdout=True, gapOpen=gapOpen, gapExtend=gapExtend)
-                    fulldata = task.stdout.read()
-                    print(fulldata)
-                    assert task.wait() == 0
-                    task.stdout.close()
-                except AssertionError as ae:
-                    print(ae)
-                    data="#"
-                    print("WARNING:", fileA, fileB,"excluded")
-                    frame.writeLog("error","WARNING:"+fileA+" "+fileB+" excluded, AssertionError")
-                    yield((None,None))
-
-                data  =  fulldata.decode("utf-8")
-                for l in data.split("\n"):
-                    if l.startswith("#"):
-                        break
-                    else:
-                        tmp = pattern.findall(l)
-                        if tmp:
-                            #print(tmp)
-                            res = tmp[0]
-                            score = int(float(res[2])*10)
-                            avd[res[0]][res[1]]=score
-                            avd[res[1]][res[0]]=score
-        if GLOBSUM:
-            yield(algo_globsum(avd, seqDct, defaultForms),str(g))
-
+            frame.writeLog("debug","#-- Skipping group "+str(g)+"--#")
+#equenceDct, coll, species2id
+            #print(singles[g], seqDct[singles[g]].sequence)
+            yield((seqDct,set([x.name for x in seqDct.values()]),"SKIP"),str(g))
+#todo write fasta here
         else:
-            yield(ah.sl_ref(scoringDct = avd, sequenceDct = seqDct), str(g))#, allSpec, defaultForms),str(g))
+            avd = None
+            avd = AutoViviDict()
+            if stopAfter and g> stopAfter:
+                break
+            frame.writeLog("debug","#-- Processing group "+str(g)+"--#")
+            #print("#-- Processing group"+str(g)+"--#")
+            spl = list(group.groups[g])
+            ah = AlgoHandler()
+            for i in range(0,len(spl)-1):
+                for j in range(i+1,len(spl)):
+                    outfile = frame._fat+".".join([str(g),spl[i],"fa"])
+                    fileA = outfile
+                    outfile = frame._fat+".".join([str(g),spl[j],"fa"])
+                    fileB = outfile
+                    outfile=frame._sr+".".join([str(g),spl[i],spl[i+1],"needle"])
+                    try:
+                        print("CALLING NEEDLE")
+                        task = frame.callNeedleAll(fileA, fileB, outfile = outfile,stdout=True, gapOpen=gapOpen, gapExtend=gapExtend)
+                        fulldata = task.stdout.read()
+                        print(fulldata)
+                        assert task.wait() == 0
+                        task.stdout.close()
+                    except AssertionError as ae:
+                        print(ae)
+                        data="#"
+                        print("WARNING:", fileA, fileB,"excluded")
+                        frame.writeLog("error","WARNING:"+fileA+" "+fileB+" excluded, AssertionError")
+                        yield((None,None))
+
+                    data  =  fulldata.decode("utf-8")
+                    for l in data.split("\n"):
+                        if l.startswith("#"):
+                            break
+                        else:
+                            tmp = pattern.findall(l)
+                            if tmp:
+                                #print(tmp)
+                                res = tmp[0]
+                                score = int(float(res[2])*10)
+                                avd[res[0]][res[1]]=score
+                                avd[res[1]][res[0]]=score
+            if GLOBSUM:
+                yield(algo_globsum(avd, seqDct, defaultForms),str(g))
+
+            else:
+                yield(ah.sl_ref(scoringDct = avd, sequenceDct = seqDct), str(g))#, allSpec, defaultForms),str(g))
 
 
 def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, inDir, outDir, gapOpen, gapExtend, locDir=None, faDir=None):
@@ -601,15 +605,26 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
     for s in specsList:
         outfile = frame._srfa+".".join([s.name,"fa"])
         outfiles[s.name] = open(outfile, 'a')
+        outfile = frame._srfa+".".join([s.name,"skipped.fa"])
+        outfiles[s.name+".skipped"] = open(outfile, 'a')
+
     for r,R in makeFasta(specsList, grp, frame, stopAfter, gapOpen,gapExtend):
         #########
         if r is None:
-            print ("skip")
+            sys.stderr.write("Failed to process group {}\n".format(str(R)))
             continue
         else:
+            print("\n",r[1],"r1\n")
+            print("\n",r[0],"r0\n")
+#todo elegance...
+            if r[2] == "SKIP":
+                    outfileGroup = frame._srofa+".".join([R,"skipped","fa"])
+                    outfilesGroups[R] = open(outfileGroup, 'a')
+            #        outfiles[s.name+".skipped"].write(r[0][ok].toFasta())
             #############
-            outfileGroup = frame._srofa+".".join([R,"fa"])
-            outfilesGroups[R] = open(outfileGroup, 'a')
+            else:
+                outfileGroup = frame._srofa+".".join([R,"fa"])
+                outfilesGroups[R] = open(outfileGroup, 'a')
             for s in specsList:
                 tmp = r[1]
                 ok  = [x for x in tmp if x in s.cds]
@@ -619,6 +634,7 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
                     outfilesGroups[R].write(r[0][ok].toFasta())
             cnt+=1
             outfilesGroups[R].close()
+#todo write skipped groups too
     if cleanUp:
         frame.cleanUp()
 
