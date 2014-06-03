@@ -25,6 +25,7 @@ from algo.algomod import EmptyScoringDctException,EmptySequenceDctException
 import threading
 import time
 import queue
+from multiprocessing import Process, Queue, BoundedSemaphore
 #----/import------------------#
 
 logo = """
@@ -370,7 +371,7 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  
         if stopAfter and g > stopAfter:
             break
         if startAt and g < startAt:
-            print("continue", g)
+            #print("continue", g)
             continue
         spl = list(group.groups[g])
         allSpec = set(spl)
@@ -416,7 +417,7 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  
                     fileB = outfile
                     outfile=frame._sr+".".join([str(g),spl[i],spl[i+1],"needle"])
                     try:
-                        print("CALLING NEEDLE ",g)
+                        print("CALLING NEEDLE ",g, spl[i],spl[i+1])
                         task = frame.callNeedleAll(fileA, fileB, outfile = outfile,stdout=True, gapOpen=gapOpen, gapExtend=gapExtend)
                         fulldata = task.stdout.read()
                         #print(fulldata)
@@ -446,7 +447,7 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  
             else:
                 #yield(ah.sl_ref(scoringDct = avd, sequenceDct = seqDct), str(g))
                 queue.put((ah.sl_ref(scoringDct = avd, sequenceDct = seqDct), str(g)))
-class MakeFastaThread(threading.Thread):
+class MakeFastaThread(Process):
     def __init__(self,listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,startAt, queue):
         super(MakeFastaThread, self).__init__()
         self.listofspecies = listofspecies
@@ -460,6 +461,7 @@ class MakeFastaThread(threading.Thread):
         self.queue = queue
     def run(self):
         print("DEBUG, RUUN")
+        global SEMAPHORE
         SEMAPHORE.acquire()
         try:
             makeFasta(listofspecies = self.listofspecies, group = self.group, frame = self.frame,
@@ -474,7 +476,7 @@ class MakeFastaThread(threading.Thread):
 def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, inDir, outDir, gapOpen, gapExtend, locDir=None, faDir=None, numThreads=None, startAt =0):
     global SEMAPHORE
     print("NUMTHREADS", numThreads)
-    SEMAPHORE=threading.BoundedSemaphore(numThreads)
+    SEMAPHORE=BoundedSemaphore(numThreads)
     print(delim, asID, locDir, faDir,inDir)
     stopAfter=int(stopAfter)
     specsList = []
@@ -568,25 +570,39 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
     print("debug", startAt,stopAfter, numGrps, numPerThread, numThreads, "NT" )
     qList = []
     tList = []
-    for i in range(0, numThreads):
-        qList.append(queue.Queue())
-        print(i)
-        tList.append(MakeFastaThread(listofspecies = specsList, group = grp, frame = frame, stopAfter=stopAfter,gapOpen =  gapOpen,gapExtend = gapExtend, task="needleall", startAt = startAt+i*numPerThread-1, queue = qList[i]))
-    for t in tList:
-        t.run()
+    oneq = Queue()
+    global SEMAPHORE
 
-    for k in qList:
+    for i in range(0, numThreads):#, len(grp.groups)-1):
+        #gr = [g for g in grp.groups if g == i]
+        #print(gr)
+        #print(grp)
+        #sys.exit(1)
+        #SEMAPHORE.acquire(blocking = True)
+        #qList.append(queue.Queue())
+        print(i,  startAt+i*numPerThread, "<- start", startAt+(i+1)*numPerThread, "stop")
+        tList.append(MakeFastaThread(listofspecies = specsList, group = grp, frame = frame, stopAfter=(i+1)*max(grp.groups)/4,gapOpen =  gapOpen,gapExtend = gapExtend, task="needleall", startAt =(i*max(grp.groups)/4), queue = oneq))
+    for t in tList:
+        t.start()
+        print("trun")
         while True:
-            print("true")
             try:
-                tmp = k.get(True, 15)
+                tmp = oneq.get(True,20)
+                print("get")
+        #for k in qList:
+        #    while True:
+        #        print("true")
+        #        try:
+        #            tmp = k.get(True, 15)
                 R = tmp[1]
+                print("QQ R", R)
                 r = tmp[0]
                 print(r, "r\n")
-    #for r,R in MakeFastaThread(listofspecies = specsList, group = grp, frame = frame, stopAfter=stopAfter,gapOpen =  gapOpen,gapExtend = gapExtend, task="needleall", startAt = startAt+i*numPerThread).run():
-        #########
+#for r,R in MakeFastaThread(listofspecies = specsList, group = grp, frame = frame, stopAfter=stopAfter,gapOpen =  gapOpen,gapExtend = gapExtend, task="needleall", startAt = startAt+i*numPerThread).run():
+#########
                 if r is None:
                     sys.stderr.write("Failed to process group {}\n".format(str(R)))
+                    print("errrr")
                     continue
                 else:
                     if r[2] == "SKIP":
@@ -608,10 +624,11 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
                     cnt+=1
                     outfilesGroups[R].close()
             except queue.Empty:
+                print("EMPTY")
                 break
 ###########################################
-    #for t in tList:
-    #    t.join()
+    for t in tList:
+        t.join()
 
     if cleanUp:
         frame.cleanUp()
