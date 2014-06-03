@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-## todo: command line interface broken
 
 import imp
 import sys
@@ -123,7 +122,6 @@ def parseConfig(pathconfig):
     else:
         GLOBSUM = True
     if config.get(CF_ALGORITHM,CF_ALGORITHM_use_default)!="yes":
-##TODO
         SL_REF = False
     else:
         SL_REF = True
@@ -164,80 +162,7 @@ def parseConfig(pathconfig):
               gapOpen=gapOpen, gapExtend=gapExtend,
               locDir=locDir,faDir=faDir)
 
-
 #----/parse configuration----#
-
-
-
-#
-#def append_add(dct, key, val, unique = False):
-#    """Append new (unique) value to the list of 'key'.
-#    If 'key' does not exist, create new list.
-#    """
-#    if key in dct:
-#        if unique:
-#            if val in dct[key]:
-#                pass
-#            else:
-#                dct[key].append(val)
-#        else:
-#            dct[key].append(val)
-#    else:
-#        dct[key] = [val]
-#
-#def initCollProc(avd, seqDct):
-#    """Initialize sets of species. """
-#    species2id = {}
-#    unprocessed = set()
-#    processed =set()
-#    coll = set()
-#    uncoll = set()
-#    """Set of species that have already been processed"""
-#    for fkey in avd.keys():
-#        uncoll.add(fkey) #not yet collected
-#        unprocessed.add(seqDct[fkey].species) #species on to do list
-#        append_add(species2id, seqDct[fkey].species, fkey)
-#        for skey in avd[fkey].keys():
-#            uncoll.add(skey)
-#            unprocessed.add(seqDct[skey].species)
-#            append_add(species2id, seqDct[skey].species, skey, unique=True)
-#    return(processed, unprocessed, coll, uncoll, species2id)
-
-#def checkSingle(avd, seqDct, singles, all):
-#    species2id = {}
-#    unprocessed = set()
-#    processed =set()
-#    coll = set()
-#    uncoll = set()
-#    for fkey in avd.keys():
-#        tmpspec = seqDct[fkey].species
-#        uncoll.add(fkey)
-#        unprocessed.add(tmpspec)
-#        append_add(species2id, tmpspec, fkey)
-#        for skey in avd[fkey].keys():
-#            tmpspec = seqDct[skey].species
-#            uncoll.add(skey)
-#            unprocessed.add(tmpspec)
-#            append_add(species2id, tmpspec, skey, unique=True)
-#    # adding to coll, uncoll, proc, unproc
-#    for fkey in avd.keys():
-#        # fkey key for first dimension
-#        tmpspec = seqDct[fkey].species
-#        if fkey in singles and tmpspec in unprocessed:
-#            uncoll.remove(fkey)
-#            coll.add(fkey)
-#        # if fkey in singles and tmpspec not in processed:
-#            unprocessed.remove(tmpspec)
-#            processed.add(tmpspec)
-#        skl=list(avd[fkey].keys())
-#
-#        for o in [x for x in skl if x in singles and seqDct[x].species in unprocessed]:
-#            unprocessed.remove(seqDct[o].species)
-#            processed.add(seqDct[o].species)
-#            uncoll.remove(o)
-#            coll.add(o)
-#    return(processed, unprocessed, coll, uncoll, species2id)
-#
 
 def getPairwiseAsTuples(avd):
     firstdim = avd.keys()
@@ -430,11 +355,9 @@ def adddyn(listoftuples, pairwisedist, actualdict, allkeys, sequencesdct):
 #    return(seqDct, coll, species2id)
 
 def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
-    print("makeFasta")
     singles = {}
     skip = {}
     allSpec = set()
-#    seqDct = {}
     pattern  = re.compile(r"""(.*)\s+([a-zA-Z0-9_.]*)\s+[a-zA-Z0-9_.]*\s+\((.*)\)""")
     outfile = None
     sp = {}
@@ -446,7 +369,6 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
             break
         spl = list(group.groups[g])
         allSpec = set(spl)
-        print(g)
         singles[g] = set()
 #collect single model species for this group so it could be skipped if all species are in this set
         for s in spl:
@@ -455,10 +377,7 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
             spa = group.groups[g][s]
             if len(spa)==1:
                 singles[g].add(s)
-                print("DEBUGR", s,g,spa)
             for locus in spa:
-                    print("DEBURG", locus,spa)
-                    print(sp[s].sequences[locus])
                     try:
                         out.write(sp[s].sequences[locus].toFasta())
                         seqDct[sp[s].sequences[locus].name]=sp[s].sequences[locus]
@@ -466,27 +385,20 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
                         print ("Are all gene models in your fasta files? - KeyError for ",ke)
             out.close()
         if len(singles[g]) == len(spl):
-            print("SKIP THIS")
+            print("SKIP ",g)
             skip[g] = True
         else:
             skip[g] = False
-#    test = ""
-#    deb=0
-#    for g in group.groups:
-        print(g)
+        #SKIP
         if skip[g]:
             frame.writeLog("debug","#-- Skipping group "+str(g)+"--#")
-#equenceDct, coll, species2id
-            #print(singles[g], seqDct[singles[g]].sequence)
             yield((seqDct,set([x.name for x in seqDct.values()]),"SKIP"),str(g))
-#todo write fasta here
         else:
             avd = None
             avd = AutoViviDict()
-            if stopAfter and g> stopAfter:
+            if stopAfter and g > stopAfter:
                 break
             frame.writeLog("debug","#-- Processing group "+str(g)+"--#")
-            #print("#-- Processing group"+str(g)+"--#")
             spl = list(group.groups[g])
             ah = AlgoHandler()
             for i in range(0,len(spl)-1):
@@ -497,16 +409,16 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
                     fileB = outfile
                     outfile=frame._sr+".".join([str(g),spl[i],spl[i+1],"needle"])
                     try:
-                        print("CALLING NEEDLE")
+                        print("CALLING NEEDLE ",g)
                         task = frame.callNeedleAll(fileA, fileB, outfile = outfile,stdout=True, gapOpen=gapOpen, gapExtend=gapExtend)
                         fulldata = task.stdout.read()
-                        print(fulldata)
+                        #print(fulldata)
                         assert task.wait() == 0
                         task.stdout.close()
                     except AssertionError as ae:
-                        print(ae)
+                        sys.stderr.write(ae)
                         data="#"
-                        print("WARNING:", fileA, fileB,"excluded")
+                        sys.stderr.write("WARNING:", fileA, fileB,"excluded")
                         frame.writeLog("error","WARNING:"+fileA+" "+fileB+" excluded, AssertionError")
                         yield((None,None))
 
@@ -517,7 +429,6 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
                         else:
                             tmp = pattern.findall(l)
                             if tmp:
-                                #print(tmp)
                                 res = tmp[0]
                                 score = int(float(res[2])*10)
                                 avd[res[0]][res[1]]=score
@@ -526,7 +437,7 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
                 yield(algo_globsum(avd, seqDct, defaultForms),str(g))
 
             else:
-                yield(ah.sl_ref(scoringDct = avd, sequenceDct = seqDct), str(g))#, allSpec, defaultForms),str(g))
+                yield(ah.sl_ref(scoringDct = avd, sequenceDct = seqDct), str(g))
 
 
 def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, inDir, outDir, gapOpen, gapExtend, locDir=None, faDir=None):
@@ -553,7 +464,6 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
 
     else:
         usage()
-   # locFileList = os.listdir(inDir+"/loc/")
     for n,f in zip(namesList,faFileList):
         print(namesList, faFileList,"match")
         """Find matching .loc and .fa files"""
@@ -563,33 +473,28 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
             locFileList = os.listdir(inDir+os.sep+"loc"+os.sep)
         locFileListtmp = locFileList
         pf = ".".join(f.split(".")[:-1])
-        print("PF",pf)
         pf = pf.split("_")[0]
-        print("PF2",pf)
-        print("LOC",locFileList)
         locFileList = [x for x in locFileList if x.startswith(pf)]
 
         if len(locFileList) < len(faFileList):
             """less stringend matching"""
             print("match again", locFileListtmp, locFileList, pf, pf[0:3])
-
             locFileList = [x for x in locFileListtmp if x.startswith(pf[0:3])]
-        print("lfl",locFileList)
 
         n = n.strip()
         if locDir:
-            print("LCOFILElist", locFileList)
             specsList.append(ScytheSpec(name = n, format = "loc", source = locDir+locFileList[0], fasta = faDir+f))
 
         else:
-            print(n, inDir+os.sep+"loc"+os.sep+locFileList[0], inDir+os.sep+"fa"+os.sep+f)
             specsList.append(ScytheSpec(name = n, format = "loc", source = inDir+os.sep+"loc"+os.sep+locFileList[0], fasta = inDir+os.sep+"fa"+os.sep+f))
         if locDir:
             grpMapList.append(ScytheGroupMap(name=n, locfile=locDir+locFileList[0], dct=dct, separator=delim, asID=asID))
         else:
-            grpMapList.append(ScytheGroupMap(name=n, locfile =inDir+"/loc/"+locFileList[0], dct=dct, separator=delim, asID=asID))
+            grpMapList.append(ScytheGroupMap(name=n, locfile =inDir+os.sep+"loc"+os.sep+locFileList[0], dct=dct, separator=delim, asID=asID))
+
     for g in grpMapList:
         g.free()
+
     for sp in specsList:
         sp.fillLociCDS()
         sp.fillSequences(sep = delim, asID=asID)
@@ -614,14 +519,9 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
             sys.stderr.write("Failed to process group {}\n".format(str(R)))
             continue
         else:
-            print("\n",r[1],"r1\n")
-            print("\n",r[0],"r0\n")
-#todo elegance...
             if r[2] == "SKIP":
                     outfileGroup = frame._srofa+".".join([R,"skipped","fa"])
                     outfilesGroups[R] = open(outfileGroup, 'a')
-            #       outfiles[s.name+".skipped"].write(r[0][ok].toFasta())
-            #############
             else:
                 outfileGroup = frame._srofa+".".join([R,"fa"])
                 outfilesGroups[R] = open(outfileGroup, 'a')
@@ -637,7 +537,6 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
                     outfilesGroups[R].write(r[0][ok].toFasta())
             cnt+=1
             outfilesGroups[R].close()
-#todo write skipped groups too
     if cleanUp:
         frame.cleanUp()
 
