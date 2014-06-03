@@ -620,7 +620,7 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
             if r[2] == "SKIP":
                     outfileGroup = frame._srofa+".".join([R,"skipped","fa"])
                     outfilesGroups[R] = open(outfileGroup, 'a')
-            #        outfiles[s.name+".skipped"].write(r[0][ok].toFasta())
+            #       outfiles[s.name+".skipped"].write(r[0][ok].toFasta())
             #############
             else:
                 outfileGroup = frame._srofa+".".join([R,"fa"])
@@ -630,7 +630,10 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
                 ok  = [x for x in tmp if x in s.cds]
                 if ok:
                     ok = ok[0]
-                    outfiles[s.name].write(r[0][ok].toFasta())
+                    if not r[2] =="SKIP":
+                        outfiles[s.name].write(r[0][ok].toFasta())
+                    else:
+                        outfiles[s.name+".skipped"].write(r[0][ok].toFasta())
                     outfilesGroups[R].write(r[0][ok].toFasta())
             cnt+=1
             outfilesGroups[R].close()
