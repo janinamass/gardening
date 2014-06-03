@@ -24,6 +24,7 @@ from algo.algomod import EmptyScoringDctException,EmptySequenceDctException
 
 import threading
 import time
+import queue
 #----/import------------------#
 
 logo = """
@@ -154,13 +155,13 @@ def parseConfig(pathconfig):
     faFileList = os.listdir(faDir)
     namesList = os.listdir(faDir)
     namesList = [n[0:3] for n in namesList]
-
+#TODO fix numThreads
     runScythe(groups=groups, delim=delim.strip('"'),
               asID=asID, faFileList=faFileList,
               namesList=namesList, cleanUp=cleanUp,
               stopAfter=stopAfter, inDir=inDir, outDir=outDir,
               gapOpen=gapOpen, gapExtend=gapExtend,
-              locDir=locDir,faDir=faDir)
+              locDir=locDir,faDir=faDir, numThreads = None)
 
 #----/parse configuration----#
 
@@ -354,7 +355,8 @@ def adddyn(listoftuples, pairwisedist, actualdict, allkeys, sequencesdct):
 #    #            +"\n# trash: "+uncoll+"\n# collected: "+coll)
 #    return(seqDct, coll, species2id)
 
-def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
+def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  startAt = None, queue = None):
+    print("DEBUg makeFasta")
     singles = {}
     skip = {}
     allSpec = set()
@@ -367,11 +369,15 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
         seqDct = {}
         if stopAfter and g > stopAfter:
             break
+        if startAt and g < startAt:
+            print("continue", g)
+            continue
         spl = list(group.groups[g])
         allSpec = set(spl)
         singles[g] = set()
 #collect single model species for this group so it could be skipped if all species are in this set
         for s in spl:
+#tmp files
             outfile = frame._fat+".".join([str(g),s,"fa"])
             out = open(outfile, "w")
             spa = group.groups[g][s]
@@ -392,7 +398,8 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
         #SKIP
         if skip[g]:
             frame.writeLog("debug","#-- Skipping group "+str(g)+"--#")
-            yield((seqDct,set([x.name for x in seqDct.values()]),"SKIP"),str(g))
+            #yield((seqDct,set([x.name for x in seqDct.values()]),"SKIP"),str(g))
+            queue.put(((seqDct,set([x.name for x in seqDct.values()]),"SKIP"),str(g)))
         else:
             avd = None
             avd = AutoViviDict()
@@ -420,8 +427,8 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
                         data="#"
                         sys.stderr.write("WARNING:", fileA, fileB,"excluded")
                         frame.writeLog("error","WARNING:"+fileA+" "+fileB+" excluded, AssertionError")
-                        yield((None,None))
-
+                        #yield((None,None))
+                        queue.put((None,None))
                     data  =  fulldata.decode("utf-8")
                     for l in data.split("\n"):
                         if l.startswith("#"):
@@ -434,13 +441,40 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend):
                                 avd[res[0]][res[1]]=score
                                 avd[res[1]][res[0]]=score
             if GLOBSUM:
-                yield(algo_globsum(avd, seqDct, defaultForms),str(g))
-
+                #yield(algo_globsum(avd, seqDct, defaultForms),str(g))
+                queue.put((algo_globsum(avd, seqDct, defaultForms),str(g)))
             else:
-                yield(ah.sl_ref(scoringDct = avd, sequenceDct = seqDct), str(g))
+                #yield(ah.sl_ref(scoringDct = avd, sequenceDct = seqDct), str(g))
+                queue.put((ah.sl_ref(scoringDct = avd, sequenceDct = seqDct), str(g)))
+class MakeFastaThread(threading.Thread):
+    def __init__(self,listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,startAt, queue):
+        super(MakeFastaThread, self).__init__()
+        self.listofspecies = listofspecies
+        self.group = group
+        self.frame = frame
+        self.stopAfter = stopAfter
+        self.gapOpen = gapOpen
+        self.gapExtend = gapExtend
+        self.task = task
+        self.startAt = startAt
+        self.queue = queue
+    def run(self):
+        print("DEBUG, RUUN")
+        SEMAPHORE.acquire()
+        try:
+            makeFasta(listofspecies = self.listofspecies, group = self.group, frame = self.frame,
+                    stopAfter = self.stopAfter,  gapOpen = self.gapOpen,  gapExtend = self.gapExtend,
+                    task = self.task, startAt =self.startAt, queue = self.queue)
+        except Exception as e:
+            sys.stderr.write(e)
+            sys.exit(1)
+        print("semaphore release")
+        SEMAPHORE.release()
 
-
-def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, inDir, outDir, gapOpen, gapExtend, locDir=None, faDir=None):
+def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, inDir, outDir, gapOpen, gapExtend, locDir=None, faDir=None, numThreads=None, startAt =0):
+    global SEMAPHORE
+    print("NUMTHREADS", numThreads)
+    SEMAPHORE=threading.BoundedSemaphore(numThreads)
     print(delim, asID, locDir, faDir,inDir)
     stopAfter=int(stopAfter)
     specsList = []
@@ -506,37 +540,79 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
 
     outfiles = {}
     outfilesGroups = {}
+###june
+    outDctSp = {}#key output filename, value scytheSeq
+    outDctOg = {}#same but for orthogroup
+###
     cnt = 0
     for s in specsList:
+#### species output ####
+
         outfile = frame._srfa+".".join([s.name,"fa"])
         outfiles[s.name] = open(outfile, 'a')
         outfile = frame._srfa+".".join([s.name,"skipped.fa"])
         outfiles[s.name+".skipped"] = open(outfile, 'a')
+######################################### parallel
+    if stopAfter:
+        maxNumGrp = stopAfter
+    else:
+        print(grp, len(grp.groups))
+        maxNumGrp = len(grp.groups)
+    if startAt:
+        minNumGrp = startAt
+    else:
+        minNumGrp = 0
+    numGrps = maxNumGrp - minNumGrp
+#todo keep track of what has already started
+    numPerThread = round((float(numGrps)/float(numThreads))+0.5)
+    print("debug", startAt,stopAfter, numGrps, numPerThread, numThreads, "NT" )
+    qList = []
+    tList = []
+    for i in range(0, numThreads):
+        qList.append(queue.Queue())
+        print(i)
+        tList.append(MakeFastaThread(listofspecies = specsList, group = grp, frame = frame, stopAfter=stopAfter,gapOpen =  gapOpen,gapExtend = gapExtend, task="needleall", startAt = startAt+i*numPerThread-1, queue = qList[i]))
+    for t in tList:
+        t.run()
 
-    for r,R in makeFasta(specsList, grp, frame, stopAfter, gapOpen,gapExtend):
+    for k in qList:
+        while True:
+            print("true")
+            try:
+                tmp = k.get(True, 15)
+                R = tmp[1]
+                r = tmp[0]
+                print(r, "r\n")
+    #for r,R in MakeFastaThread(listofspecies = specsList, group = grp, frame = frame, stopAfter=stopAfter,gapOpen =  gapOpen,gapExtend = gapExtend, task="needleall", startAt = startAt+i*numPerThread).run():
         #########
-        if r is None:
-            sys.stderr.write("Failed to process group {}\n".format(str(R)))
-            continue
-        else:
-            if r[2] == "SKIP":
-                    outfileGroup = frame._srofa+".".join([R,"skipped","fa"])
-                    outfilesGroups[R] = open(outfileGroup, 'a')
-            else:
-                outfileGroup = frame._srofa+".".join([R,"fa"])
-                outfilesGroups[R] = open(outfileGroup, 'a')
-            for s in specsList:
-                tmp = r[1]
-                ok  = [x for x in tmp if x in s.cds]
-                if ok:
-                    ok = ok[0]
-                    if not r[2] =="SKIP":
-                        outfiles[s.name].write(r[0][ok].toFasta())
+                if r is None:
+                    sys.stderr.write("Failed to process group {}\n".format(str(R)))
+                    continue
+                else:
+                    if r[2] == "SKIP":
+                            outfileGroup = frame._srofa+".".join([R,"skipped","fa"])
+                            outfilesGroups[R] = open(outfileGroup, 'a')
                     else:
-                        outfiles[s.name+".skipped"].write(r[0][ok].toFasta())
-                    outfilesGroups[R].write(r[0][ok].toFasta())
-            cnt+=1
-            outfilesGroups[R].close()
+                        outfileGroup = frame._srofa+".".join([R,"fa"])
+                        outfilesGroups[R] = open(outfileGroup, 'a')
+                    for s in specsList:
+                        tmp = r[1]
+                        ok  = [x for x in tmp if x in s.cds]
+                        if ok:
+                            ok = ok[0]
+                            if not r[2] =="SKIP":
+                                outfiles[s.name].write(r[0][ok].toFasta())
+                            else:
+                                outfiles[s.name+".skipped"].write(r[0][ok].toFasta())
+                            outfilesGroups[R].write(r[0][ok].toFasta())
+                    cnt+=1
+                    outfilesGroups[R].close()
+            except queue.Empty:
+                break
+###########################################
+    #for t in tList:
+    #    t.join()
+
     if cleanUp:
         frame.cleanUp()
 
@@ -566,10 +642,11 @@ def main():
     gapOpen=str(10)
     gapExtend =str(0.5)
     isUsingConfig = False
+    numThreads = None
     ##################################
 
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], "C:i:g:o:s:d:a:O:E:RGMcvh",
+        opts, args = getopt.gnu_getopt(sys.argv[1:], "C:i:g:o:s:d:a:O:E:N:RGMcvh",
                                         ["config=",
                                         "in_dir=",
                                         "groups=",
@@ -578,6 +655,7 @@ def main():
                                         "delim=", "asID=",
                                         "gap_open=",
                                         "gap_extend=",
+                                        "num_cores = ",
                                         "sl_ref",
                                         "sl_glob",
                                         "mx_sum",
@@ -623,7 +701,8 @@ def main():
             gapOpen = a
         elif o in ("-E", "--gap_extend"):
             gapExtend = a
-
+        elif o in ("-N", "--num_cores"):
+            numThreads = int(a)
         elif o in ("-h", "--help"):
             usage()
         else:
@@ -667,7 +746,7 @@ def main():
         runScythe(groups=groups, delim=delim,
                   asID=asID, faFileList=faFileList,
                   namesList=namesList, cleanUp=cleanUp,
-                  stopAfter=stopAfter, inDir=faDir, outDir=outDir, gapOpen=gapOpen, gapExtend=gapExtend, locDir = locDir, faDir=faDir)
+                  stopAfter=stopAfter, inDir=faDir, outDir=outDir, gapOpen=gapOpen, gapExtend=gapExtend, locDir = locDir, faDir=faDir, numThreads = numThreads)
 
 #----------------------------------------------------------------#
 
