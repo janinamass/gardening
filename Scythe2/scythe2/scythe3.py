@@ -19,13 +19,14 @@ from helpers.scythecore import ScytheFrame
 from helpers.scythecore import AutoViviDict
 
 from helpers.fastahelper import FastaParser
-from helpers.algomod import AlgoHandler
-from helpers.algomod import EmptyScoringDctException,EmptySequenceDctException
+from algo.algomod import AlgoHandler
+from algo.algomod import EmptyScoringDctException,EmptySequenceDctException
 
 import threading
 import time
 import queue
 import multiprocessing #import Process, Queue, BoundedSemaphore
+import random
 #----/import------------------#
 
 logo = """
@@ -521,10 +522,10 @@ class ConsumerProc(multiprocessing.Process):
         proc_name = self.name
         while True:
             next_task = self.task_queue.get()
-            if next_task is None:
+            if next_task == "done":
                  print("exit", self.name)
                  break
-            r,R = next_task #makeFasta(listofspecies = self.listofspecies, group = self.group, frame = self.frame,
+            r,R = next_task.call() #makeFasta(listofspecies = self.listofspecies, group = self.group, frame = self.frame,
                     #stopAfter = self.stopAfter,  gapOpen = self.gapOpen,  gapExtend = self.gapExtend,
                     #task = self.task, startAt =self.startAt)
             self.result_queue.put((r,R))
@@ -552,6 +553,7 @@ class Task(object):
         #        task = self.task,
         #        startAt = self.startAt)
         print("call")
+        time.sleep(0.3*random.randint(1,9))
         R = self.group
         r = self.startAt
         return(r,R)
@@ -687,8 +689,8 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
     #numPerThread = round((float(numGrps)/float(numThreads))+0.5)
     #print("debug", startAt,stopAfter, numGrps, numPerThread, numThreads, "NT" )
     ###########
-    taskQueue = multiprocessing.Queue()
-    resQueue = multiprocessing.Queue()
+    taskQueue = multiprocessing.JoinableQueue()
+    resQueue = multiprocessing.JoinableQueue()
 
     qList = []
     tList = []
@@ -710,6 +712,13 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
     for i in range(0,num_jobs):
         print(i,  i, "<- start", (i+1), "<-stop")
         taskQueue.put(Task(listofspecies = specsList, group = grp, frame = frame, stopAfter=i+1,gapOpen =  gapOpen,gapExtend = gapExtend, task="needleall", startAt = i))
+
+    for i in range(0,num_consumers):
+                taskQueue.put("done")
+
+    resQueue.join()
+    taskQueue.close()
+    print(num_jobs,"nj")
     while num_jobs:
         result = resQueue.get()
         print('Result:', result)
