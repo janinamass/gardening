@@ -19,13 +19,13 @@ from helpers.scythecore import ScytheFrame
 from helpers.scythecore import AutoViviDict
 
 from helpers.fastahelper import FastaParser
-from algo.algomod import AlgoHandler
-from algo.algomod import EmptyScoringDctException,EmptySequenceDctException
+from helpers.algomod import AlgoHandler
+from helpers.algomod import EmptyScoringDctException,EmptySequenceDctException
 
 import threading
 import time
 import queue
-from multiprocessing import Process, Queue, BoundedSemaphore
+import multiprocessing #import Process, Queue, BoundedSemaphore
 #----/import------------------#
 
 logo = """
@@ -356,23 +356,29 @@ def adddyn(listoftuples, pairwisedist, actualdict, allkeys, sequencesdct):
 #    #            +"\n# trash: "+uncoll+"\n# collected: "+coll)
 #    return(seqDct, coll, species2id)
 
-def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  startAt = None, queue = None):
+def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  startAt = None):
     print("DEBUg makeFasta")
+    groupList = [g for i,g in enumerate(group.groups) if int(i) <stopAfter and int(g)>= startAt]
+    print(groupList, "GRList")
     singles = {}
     skip = {}
     allSpec = set()
     pattern  = re.compile(r"""(.*)\s+([a-zA-Z0-9_.]*)\s+[a-zA-Z0-9_.]*\s+\((.*)\)""")
     outfile = None
     sp = {}
+    ah = AlgoHandler()
+    global outDctOg
+
     for l in listofspecies:
         sp[l.name] = l
-    for g in group.groups:
+    for g in groupList: #group.groups:
         seqDct = {}
-        if stopAfter and g > stopAfter:
-            break
-        if startAt and g < startAt:
+        #if stopAfter and g > stopAfter:
+        #    break
+        #if startAt and g < startAt:
             #print("continue", g)
-            continue
+        #    pass
+        #else:
         spl = list(group.groups[g])
         allSpec = set(spl)
         singles[g] = set()
@@ -398,17 +404,20 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  
             skip[g] = False
         #SKIP
         if skip[g]:
-            frame.writeLog("debug","#-- Skipping group "+str(g)+"--#")
+            print("put skip")
+            #frame.writeLog("debug","#-- Skipping group "+str(g)+"--#")
             #yield((seqDct,set([x.name for x in seqDct.values()]),"SKIP"),str(g))
-            queue.put(((seqDct,set([x.name for x in seqDct.values()]),"SKIP"),str(g)))
+            #print(queue.qsize()," QS\n")
+            #queue.put(((seqDct,set([x.name for x in seqDct.values()]),"SKIP"),str(g)))
+            print("SKIP",g)
         else:
             avd = None
             avd = AutoViviDict()
-            if stopAfter and g > stopAfter:
-                break
-            frame.writeLog("debug","#-- Processing group "+str(g)+"--#")
-            spl = list(group.groups[g])
-            ah = AlgoHandler()
+            #if stopAfter and g > stopAfter:
+            #    break
+            #frame.writeLog("debug","#-- Processing group "+str(g)+"--#")
+            spl = list(set(group.groups[g]))
+            print("DEBUG", spl)
             for i in range(0,len(spl)-1):
                 for j in range(i+1,len(spl)):
                     outfile = frame._fat+".".join([str(g),spl[i],"fa"])
@@ -417,7 +426,7 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  
                     fileB = outfile
                     outfile=frame._sr+".".join([str(g),spl[i],spl[i+1],"needle"])
                     try:
-                        print("CALLING NEEDLE ",g, spl[i],spl[i+1])
+                        print("CALLING NEEDLE ",g, fileA,fileB, spl[i], spl[j])
                         task = frame.callNeedleAll(fileA, fileB, outfile = outfile,stdout=True, gapOpen=gapOpen, gapExtend=gapExtend)
                         fulldata = task.stdout.read()
                         #print(fulldata)
@@ -429,7 +438,8 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  
                         sys.stderr.write("WARNING:", fileA, fileB,"excluded")
                         frame.writeLog("error","WARNING:"+fileA+" "+fileB+" excluded, AssertionError")
                         #yield((None,None))
-                        queue.put((None,None))
+                        print("put none")
+                        #queue.put((None,None))
                     data  =  fulldata.decode("utf-8")
                     for l in data.split("\n"):
                         if l.startswith("#"):
@@ -442,13 +452,114 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  
                                 avd[res[0]][res[1]]=score
                                 avd[res[1]][res[0]]=score
             if GLOBSUM:
+                pass
                 #yield(algo_globsum(avd, seqDct, defaultForms),str(g))
-                queue.put((algo_globsum(avd, seqDct, defaultForms),str(g)))
+                #queue.put((algo_globsum(avd, seqDct, defaultForms),str(g)))
             else:
                 #yield(ah.sl_ref(scoringDct = avd, sequenceDct = seqDct), str(g))
-                queue.put((ah.sl_ref(scoringDct = avd, sequenceDct = seqDct), str(g)))
-class MakeFastaThread(Process):
-    def __init__(self,listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,startAt, queue):
+                print("put res",g)
+                r, R = ah.sl_ref(scoringDct = avd, sequenceDct = seqDct), str(g)
+        #        print(r, "r\n")
+        #        if r is None:
+        #            sys.stderr.write("Failed to process group {}\n".format(str(R)))
+        #            print("errrr")
+        #            continue
+        #        else:
+#                if r[2] == "SKIP":
+#                    outfileGroup = frame._srofa+".".join([R,"skipped","fa"])
+#                    outDctOg[outfileGroup] = []
+#                        #outfilesGroups[R] = open(outfileGroup, 'a')
+#                else:
+                outfileGroup = frame._srofa+".".join([R,"fa"])
+                outDctOg[outfileGroup] = []#.append("") #??
+#                    #outfilesGroups[R] = open(outfileGroup, 'a')
+#
+                for s in listofspecies:
+                    tmp = r[1]
+                    ok  = [x for x in tmp if x in s.cds]
+                    if ok:
+                        ok = ok[0]
+#                        if not r[2] =="SKIP":
+#                            #outfiles[s.name].write(r[0][ok].toFasta())
+                        outDctSp[frame._srfa+".".join([s.name,"fa"])].append(r[0][ok].toFasta())
+                        outDctOg[frame._srofa+".".join([R,"fa"])].append(r[0][ok].toFasta())
+#                        else:
+#                            #outfiles[s.name+".skipped"].write(r[0][ok].toFasta())
+#                         outDctSp[frame._srfa+".".join([s.name,"skipped.fa"])].append(r[0][ok].toFasta())
+#                        #outfilesGroups[R].write(r[0][ok].toFasta())
+#                         outDctOg[frame._srofa+".".join([R,"skipped","fa"])].append(r[0][ok].toFasta())
+#                #outfilesGroups[R].close()
+#                #oneq.task_done()
+#        except queue.Empty:
+#            print("EMPTY")
+#            break
+    #QUEUE.join()
+#############
+
+    for s in outDctSp:
+        print(s)
+    for o in outDctOg:
+        print(o)
+        with open(o,'w') as oh:
+            for tmp in outDctOg[o]:
+                oh.write(tmp)
+
+                #QUEUE.put((ah.sl_ref(scoringDct = avd, sequenceDct = seqDct), str(g)))
+               # print(avd)
+                #print(QUEUE.qsize()," QS\n")
+    #queue.task_done()
+
+class ConsumerProc(multiprocessing.Process):
+    def __init__(self, task_queue, result_queue):
+        multiprocessing.Process.__init__(self)
+        self.task_queue = task_queue
+        self.result_queue = result_queue
+        global SEMAPHORE
+
+    def run(self):
+        SEMAPHORE.acquire()
+        proc_name = self.name
+        while True:
+            next_task = self.task_queue.get()
+            if next_task is None:
+                 print("exit", self.name)
+                 break
+            r,R = next_task #makeFasta(listofspecies = self.listofspecies, group = self.group, frame = self.frame,
+                    #stopAfter = self.stopAfter,  gapOpen = self.gapOpen,  gapExtend = self.gapExtend,
+                    #task = self.task, startAt =self.startAt)
+            self.result_queue.put((r,R))
+        SEMAPHORE.release()
+        return()
+
+class Task(object):
+    def __init__(self, listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,startAt):
+        self.listofspecies = listofspecies
+        self.group = group
+        self.frame = frame
+        self.stopAfter = stopAfter
+        self.gapOpen = gapOpen
+        self.gapExtend = gapExtend
+        self.task = task
+        self.startAt = startAt
+
+    def call(self):
+        #r,R = makeFasta(listofspecies = self.listofspecies,
+        #        group = self.group,
+        #        frame = self.frame,
+        #        stopAfter = self.stopAfter,
+        #        gapOpen = self.gapOpen,
+        #        gapExtend = self.gapExtend
+        #        task = self.task,
+        #        startAt = self.startAt)
+        print("call")
+        R = self.group
+        r = self.startAt
+        return(r,R)
+
+
+
+class MakeFastaThread(multiprocessing.Process):
+    def __init__(self,listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,startAt):
         super(MakeFastaThread, self).__init__()
         self.listofspecies = listofspecies
         self.group = group
@@ -458,25 +569,28 @@ class MakeFastaThread(Process):
         self.gapExtend = gapExtend
         self.task = task
         self.startAt = startAt
-        self.queue = queue
+
     def run(self):
         print("DEBUG, RUUN")
         global SEMAPHORE
+        global QUEUE
+
         SEMAPHORE.acquire()
         try:
             makeFasta(listofspecies = self.listofspecies, group = self.group, frame = self.frame,
                     stopAfter = self.stopAfter,  gapOpen = self.gapOpen,  gapExtend = self.gapExtend,
-                    task = self.task, startAt =self.startAt, queue = self.queue)
+                    task = self.task, startAt =self.startAt)
         except Exception as e:
-            sys.stderr.write(e)
+            sys.stderr.write(str(e))
             sys.exit(1)
-        print("semaphore release")
-        SEMAPHORE.release()
-
+        finally:
+            print("semaphore release")
+            SEMAPHORE.release()
+            print("released")#, QUEUE.qsize())
 def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, inDir, outDir, gapOpen, gapExtend, locDir=None, faDir=None, numThreads=None, startAt =0):
     global SEMAPHORE
     print("NUMTHREADS", numThreads)
-    SEMAPHORE=BoundedSemaphore(numThreads)
+    SEMAPHORE=multiprocessing.BoundedSemaphore(numThreads)
     print(delim, asID, locDir, faDir,inDir)
     stopAfter=int(stopAfter)
     specsList = []
@@ -543,17 +657,21 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
     outfiles = {}
     outfilesGroups = {}
 ###june
+
+    global outDctOg
+    global outDctSp
     outDctSp = {}#key output filename, value scytheSeq
     outDctOg = {}#same but for orthogroup
 ###
     cnt = 0
     for s in specsList:
 #### species output ####
-
         outfile = frame._srfa+".".join([s.name,"fa"])
-        outfiles[s.name] = open(outfile, 'a')
+        outDctSp[frame._srfa+".".join([s.name,"fa"])] = []
+        #outfiles[s.name] = open(outfile, 'a')
         outfile = frame._srfa+".".join([s.name,"skipped.fa"])
-        outfiles[s.name+".skipped"] = open(outfile, 'a')
+        outDctSp[frame._srfa+".".join([s.name,"skipped.fa"])] = []
+        #outfiles[s.name+".skipped"] = open(outfile, 'a')
 ######################################### parallel
     if stopAfter:
         maxNumGrp = stopAfter
@@ -566,75 +684,105 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
         minNumGrp = 0
     numGrps = maxNumGrp - minNumGrp
 #todo keep track of what has already started
-    numPerThread = round((float(numGrps)/float(numThreads))+0.5)
-    print("debug", startAt,stopAfter, numGrps, numPerThread, numThreads, "NT" )
+    #numPerThread = round((float(numGrps)/float(numThreads))+0.5)
+    #print("debug", startAt,stopAfter, numGrps, numPerThread, numThreads, "NT" )
+    ###########
+    taskQueue = multiprocessing.Queue()
+    resQueue = multiprocessing.Queue()
+
     qList = []
     tList = []
-    oneq = Queue()
-    global SEMAPHORE
+    num_consumers = numThreads
+    consumers = [ ConsumerProc(taskQueue, resQueue) for i in range(num_consumers) ]
+    for c in consumers:
+        c.start()
 
-    for i in range(0, numThreads):#, len(grp.groups)-1):
+    num_jobs =  len(grp.groups)-1
+    num_jobs = 10
+    print("NUMJOBS", num_jobs)
+
         #gr = [g for g in grp.groups if g == i]
         #print(gr)
         #print(grp)
         #sys.exit(1)
         #SEMAPHORE.acquire(blocking = True)
         #qList.append(queue.Queue())
-        print(i,  startAt+i*numPerThread, "<- start", startAt+(i+1)*numPerThread, "stop")
-        tList.append(MakeFastaThread(listofspecies = specsList, group = grp, frame = frame, stopAfter=(i+1)*max(grp.groups)/4,gapOpen =  gapOpen,gapExtend = gapExtend, task="needleall", startAt =(i*max(grp.groups)/4), queue = oneq))
-    for t in tList:
-        t.start()
-        print("trun")
-        while True:
-            try:
-                tmp = oneq.get(True,20)
-                print("get")
-        #for k in qList:
-        #    while True:
-        #        print("true")
-        #        try:
-        #            tmp = k.get(True, 15)
-                R = tmp[1]
-                print("QQ R", R)
-                r = tmp[0]
-                print(r, "r\n")
+    for i in range(0,num_jobs):
+        print(i,  i, "<- start", (i+1), "<-stop")
+        taskQueue.put(Task(listofspecies = specsList, group = grp, frame = frame, stopAfter=i+1,gapOpen =  gapOpen,gapExtend = gapExtend, task="needleall", startAt = i))
+    while num_jobs:
+        result = resQueue.get()
+        print('Result:', result)
+        num_jobs -= 1
+        #tList.append(MakeFastaThread(listofspecies = specsList, group = grp, frame = frame, stopAfter=startAt+(i+1)*numPerThread,gapOpen =  gapOpen,gapExtend = gapExtend, task="needleall", startAt = startAt+i*numPerThread))
+    #for t in tList:
+    #    t.start()
+    #    print("trun")
+
+    #for t in tList:
+    #    t.join()
+    #    print(t,"joined", t.is_alive())
+    #while True:
+    #    print("QSIZE", QUEUE.qsize())
+    #    try:
+    #        tmp = QUEUE.get(True,2)
+    #        print("get", QUEUE.qsize())
+    #for k in qList:
+    #    while True:
+    #        print("true")
+    #        try:
+    #            tmp = k.get(True, 15)
+    #        R = tmp[1]
+    #        print("QQ R", R)
+    #        r = tmp[0]
+    #        print(r, "r\n")
 #for r,R in MakeFastaThread(listofspecies = specsList, group = grp, frame = frame, stopAfter=stopAfter,gapOpen =  gapOpen,gapExtend = gapExtend, task="needleall", startAt = startAt+i*numPerThread).run():
 #########
-                if r is None:
-                    sys.stderr.write("Failed to process group {}\n".format(str(R)))
-                    print("errrr")
-                    continue
-                else:
-                    if r[2] == "SKIP":
-                            outfileGroup = frame._srofa+".".join([R,"skipped","fa"])
-                            outfilesGroups[R] = open(outfileGroup, 'a')
-                    else:
-                        outfileGroup = frame._srofa+".".join([R,"fa"])
-                        outfilesGroups[R] = open(outfileGroup, 'a')
-                    for s in specsList:
-                        tmp = r[1]
-                        ok  = [x for x in tmp if x in s.cds]
-                        if ok:
-                            ok = ok[0]
-                            if not r[2] =="SKIP":
-                                outfiles[s.name].write(r[0][ok].toFasta())
-                            else:
-                                outfiles[s.name+".skipped"].write(r[0][ok].toFasta())
-                            outfilesGroups[R].write(r[0][ok].toFasta())
-                    cnt+=1
-                    outfilesGroups[R].close()
-            except queue.Empty:
-                print("EMPTY")
-                break
+#            if r is None:
+#                sys.stderr.write("Failed to process group {}\n".format(str(R)))
+#                print("errrr")
+#                continue
+#            else:
+#                if r[2] == "SKIP":
+#                    outfileGroup = frame._srofa+".".join([R,"skipped","fa"])
+#                    outDctOg[outfileGroup] = []
+#                        #outfilesGroups[R] = open(outfileGroup, 'a')
+#                else:
+#                    outfileGroup = frame._srofa+".".join([R,"fa"])
+#                    outDctOg[outfileGroup] = []#.append("") #??
+#                    #outfilesGroups[R] = open(outfileGroup, 'a')
+#
+#                for s in specsList:
+#                    tmp = r[1]
+#                    ok  = [x for x in tmp if x in s.cds]
+#                    if ok:
+#                        ok = ok[0]
+#                        if not r[2] =="SKIP":
+#                            #outfiles[s.name].write(r[0][ok].toFasta())
+#                            outDctSp[frame._srfa+".".join([s.name,"fa"])].append(r[0][ok].toFasta())
+#                            outDctOg[frame._srofa+".".join([R,"fa"])].append(r[0][ok].toFasta())
+#                        else:
+#                            #outfiles[s.name+".skipped"].write(r[0][ok].toFasta())
+#                            outDctSp[frame._srfa+".".join([s.name,"skipped.fa"])].append(r[0][ok].toFasta())
+#                        #outfilesGroups[R].write(r[0][ok].toFasta())
+#                            outDctOg[frame._srofa+".".join([R,"skipped","fa"])].append(r[0][ok].toFasta())
+#                #outfilesGroups[R].close()
+#                #oneq.task_done()
+#        except queue.Empty:
+#            print("EMPTY")
+#            break
+    #QUEUE.join()
+    for k in outDctOg:
+        print(k)
 ###########################################
-    for t in tList:
-        t.join()
+    #for t in tList:
+    #    t.join()
 
     if cleanUp:
         frame.cleanUp()
 
-    for out in outfiles.values():
-        out.close()
+    #for out in outfiles.values():
+    #    out.close()
     print("\ndone.")
 
 def main():
