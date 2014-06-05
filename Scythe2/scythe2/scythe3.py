@@ -20,7 +20,7 @@ from helpers.scythecore import AutoViviDict
 
 from helpers.fastahelper import FastaParser
 from algo.algomod import AlgoHandler
-from algo.algomod import EmptyScoringDctException,EmptySequenceDctException
+from algo.algomod import EmptyScoringDctException, EmptySequenceDctException
 
 import threading
 import time
@@ -163,7 +163,7 @@ def parseConfig(pathconfig):
               namesList=namesList, cleanUp=cleanUp,
               stopAfter=stopAfter, inDir=inDir, outDir=outDir,
               gapOpen=gapOpen, gapExtend=gapExtend,
-              locDir=locDir,faDir=faDir, numThreads = None)
+              locDir=locDir,faDir=faDir, numThreads = 1)
 
 #----/parse configuration----#
 
@@ -240,125 +240,8 @@ def adddyn(listoftuples, pairwisedist, actualdict, allkeys, sequencesdct):
 #    first = proc[0]
 #    #proc = [f for f in first[0]]
 #    return(seqDct, first, species2id)
-#def findGlobalMax(avd, seqDct, singles, all, coll, uncoll, defaultForms):
-#    """Find the best scoring pair. In case of a tie, prefer default models. """
-#    globMax = -1
-#    globMaxIds = ""
-#    globMaxSps = ""
-#    if avd =={}:
-#        #print("avd empty")
-#        return(None,None)
-#
-#    for u in uncoll: #uncollected species
-#        tmpspec = seqDct[u].species
-#
-#        if avd[u]:
-#            skl=list(avd[u].keys())
-#            scorel=list(avd[u].values())
-#            tmpMax = max(scorel)
-#            if tmpMax > globMax:
-#                globMax = tmpMax
-#                globMaxIds = (skl[scorel.index(tmpMax)], u)
-#                tieList = [n for (n, e) in enumerate(scorel) if e == tmpMax]
-#                #print(u,"tmpmax: ", [(n,e) for (n, e) in enumerate(scorel) if e == tmpMax],tieList)
-#                if len(tieList) >1:
-#                    pass
-#                    #print("tmpMax ties", [(n,e,skl[n],u ) for (n, e) in enumerate(scorel) if e == tmpMax])
-#                #favoring defaults:
-#                fav = [(skl[n],u)  for n in tieList if (skl[n] in defaultForms and u in defaultForms)]
-#                fav1 = [(skl[n],u)  for n in tieList if (skl[n] in defaultForms or u in defaultForms)]
-#                if fav:
-#                    #print("fav ", fav)
-#                    globMaxSps = (seqDct[fav[0][0]].species, seqDct[fav[0][1]].species)
-#                    globMaxIds = (fav[0][0],fav[0][1])
-#                elif fav1:
-#                    #print("fav1", fav1)
-#                    fav1tmp = fav1[0] #tuple
-#                    globMaxSps = (seqDct[fav1tmp[0]].species, seqDct[fav1tmp[1]].species)
-#                   #################what about globmaxids??
-#                    globMaxIds =  (fav1tmp[0], fav1tmp[1])
-#                else:
-#                    globMaxSps = (seqDct[globMaxIds[0]].species, seqDct[u].species)
-#                    globMaxIds = (globMaxIds[0], u)
-#
-#            else:
-#                pass
-#    return(globMaxIds, globMaxSps)
-#
-#def algo(avd, seqDct, singles, all, defaultForms):
-#    #print("AVD",avd)
-#    if avd =={}:
-#        return(None)
-#    """Process distance matrix"""
-#    # avd is a two dimensional dictionary with sequence identifiers as indices
-#    # it represents the distance / scoring matrix
-#    # the seqDct maps identifiers to the actual ScytheSequence objects
-#    # so that checking for their species etc becomes more convenient
-#    processed, unprocessed, coll, uncoll, species2id  = initCollProc(avd, seqDct)#, singles, all)
-#    if not GLOBMAX:
-#        processed, unprocessed, coll, uncoll, species2id = checkSingle(avd, seqDct, singles, all)
-#    #singles round
-#        #frame.writeLog("debug","# After singles check:","\n#\t unprocessed "+unprocessed+
-#              #"\n#\t processed "+processed+"\n#\t collected "+coll+"\n#\t uncollected "+uncoll+"\n# "+species2id)
-#
-#    if not coll or GLOBMAX:
-#        globMaxIds, globMaxSps = findGlobalMax(avd, seqDct, singles, all, coll, uncoll, defaultForms)
-#        #print("# global max pair:", globMaxIds, globMaxSps)
-#        #print("GLM",globMaxIds)
-#        coll.add(globMaxIds[0])
-#        coll.add(globMaxIds[1])
-#        processed.add(globMaxSps[0])
-#        processed.add(globMaxSps[1])
-#        uncoll.remove(globMaxIds[0])
-#        uncoll.remove(globMaxIds[1])
-#        unprocessed.remove(globMaxSps[0])
-#        unprocessed.remove(globMaxSps[1])
-#
-#    while(unprocessed):
-#        if coll: #already collected
-#            #print(avd)
-#            for c in coll:
-#                cmax = -1
-#                cmaxid = ""
-#                cmaxsp = ""
-#                for up in unprocessed:#not yet processed
-#                    for uc in species2id[up]:
-#                        #print(uc)
-#                        if uc in avd: # is in distance dict
-#                            try:
-#                                tmp = int(avd[uc][c])
-#                            except TypeError as e:
-#                                tmp = -1
-#                            #print("TMP ",tmp, "uc ",uc,"c", c  )
-#                            if (tmp >cmax or (tmp == cmax and uc in defaultForms)) :
-#                                # tie resolved
-#                                cmax = int(avd[uc][c])
-#                                #frame.writeLog("debug","new max "+avd[uc][c]+" "+uc+" "+c)
-#                                cmaxid = uc
-#                                cmaxsp = up
-#                                cmax=tmp
-#                        if c in avd:
-#                            try:
-#                                tmp = int(avd[c][uc])
-#                            except TypeError as e:
-#                                    tmp = -1
-#                            if (tmp >cmax or (tmp == cmax and uc in defaultForms)):
-#                                cmax = int(avd[c][uc])
-#                                cmaxid = uc
-#                                cmaxsp = up
-#                                cmax=tmp
-#            uncoll.remove(cmaxid)
-#            unprocessed.remove(cmaxsp)
-#            coll.add(cmaxid)
-#            processed.add(cmaxsp)
-#        else:
-#            print("?")
-#    #frame.writeLog("debug","#to do: "+unprocessed+"\n# processed: "+processed\
-#    #            +"\n# trash: "+uncoll+"\n# collected: "+coll)
-#    return(seqDct, coll, species2id)
 
 def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  startAt = None):
-    print("DEBUg makeFasta")
     groupList = [g for i,g in enumerate(group.groups) if int(i) <stopAfter and int(i)>= startAt]
     print(groupList, "GRList")
     singles = {}
@@ -368,18 +251,10 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  
     outfile = None
     sp = {}
     ah = AlgoHandler()
-    global outDctOg
-
     for l in listofspecies:
         sp[l.name] = l
-    for g in groupList: #group.groups:
+    for g in groupList:
         seqDct = {}
-        #if stopAfter and g > stopAfter:
-        #    break
-        #if startAt and g < startAt:
-            #print("continue", g)
-        #    pass
-        #else:
         spl = list(group.groups[g])
         allSpec = set(spl)
         singles[g] = set()
@@ -397,6 +272,7 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  
                         seqDct[sp[s].sequences[locus].name]=sp[s].sequences[locus]
                     except KeyError as ke:
                         print ("Are all gene models in your fasta files? - KeyError for ",ke)
+                        return(None,None)
             out.close()
         if len(singles[g]) == len(spl):
             print("SKIP ",g)
@@ -411,15 +287,14 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  
             #print(queue.qsize()," QS\n")
             #queue.put(((seqDct,set([x.name for x in seqDct.values()]),"SKIP"),str(g)))
             print("SKIP",g)
-            return(None,None)
+            return((seqDct,set([x.name for x in seqDct.values()]),"SKIP"),str(g))
         else:
             avd = None
             avd = AutoViviDict()
-            #if stopAfter and g > stopAfter:
-            #    break
             #frame.writeLog("debug","#-- Processing group "+str(g)+"--#")
             spl = list(set(group.groups[g]))
-            print("DEBUG", spl)
+            #print("DEBUG", spl)
+            #setup needleall input
             for i in range(0,len(spl)-1):
                 for j in range(i+1,len(spl)):
                     outfile = frame._fat+".".join([str(g),spl[i],"fa"])
@@ -442,6 +317,7 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  
                         #yield((None,None))
                         print("put none")
                         #queue.put((None,None))
+                        return(None,None)
                     data  =  fulldata.decode("utf-8")
                     for l in data.split("\n"):
                         if l.startswith("#"):
@@ -454,7 +330,6 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  
                                 avd[res[0]][res[1]]=score
                                 avd[res[1]][res[0]]=score
             if GLOBSUM:
-                pass
                 return(algo_globsum(avd, seqDct, defaultForms),str(g))
                 #yield(algo_globsum(avd, seqDct, defaultForms),str(g))
                 #queue.put((algo_globsum(avd, seqDct, defaultForms),str(g)))
@@ -501,19 +376,6 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  
     #QUEUE.join()
 #############
 
-    for s in outDctSp:
-        print(s)
-    for o in outDctOg:
-        print(o)
-        with open(o,'w') as oh:
-            for tmp in outDctOg[o]:
-                oh.write(tmp)
-
-                #QUEUE.put((ah.sl_ref(scoringDct = avd, sequenceDct = seqDct), str(g)))
-               # print(avd)
-                #print(QUEUE.qsize()," QS\n")
-    #queue.task_done()
-
 class ConsumerProc(multiprocessing.Process):
     def __init__(self, task_queue, result_queue):
         multiprocessing.Process.__init__(self)
@@ -548,6 +410,7 @@ class Task(object):
         self.startAt = startAt
 
     def call(self):
+        print("call")
         r,R = makeFasta(listofspecies = self.listofspecies,
                 group = self.group,
                 frame = self.frame,
@@ -556,43 +419,11 @@ class Task(object):
                 gapExtend = self.gapExtend,
                 task = self.task,
                 startAt = self.startAt)
-        print("call")
 #        time.sleep(0.3*random.randint(1,9))
         #R = self.group
         #r = self.startAt
         return(r,R)
 
-
-
-#class MakeFastaThread(multiprocessing.Process):
-#    def __init__(self,listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,startAt):
-#        super(MakeFastaThread, self).__init__()
-#        self.listofspecies = listofspecies
-#        self.group = group
-#        self.frame = frame
-#        self.stopAfter = stopAfter
-#        self.gapOpen = gapOpen
-#        self.gapExtend = gapExtend
-#        self.task = task
-#        self.startAt = startAt
-#
-#    def run(self):
-#        print("DEBUG, RUUN")
-#        global SEMAPHORE
-#        global QUEUE
-#
-#        SEMAPHORE.acquire()
-#        try:
-#            makeFasta(listofspecies = self.listofspecies, group = self.group, frame = self.frame,
-#                    stopAfter = self.stopAfter,  gapOpen = self.gapOpen,  gapExtend = self.gapExtend,
-#                    task = self.task, startAt =self.startAt)
-#        except Exception as e:
-#            sys.stderr.write(str(e))
-#            sys.exit(1)
-#        finally:
-#            print("semaphore release")
-#            SEMAPHORE.release()
-#            print("released")#, QUEUE.qsize())
 def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, inDir, outDir, gapOpen, gapExtend, locDir=None, faDir=None, numThreads=None, startAt =0):
     global SEMAPHORE
     print("NUMTHREADS", numThreads)
@@ -662,14 +493,11 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
 
     outfiles = {}
     outfilesGroups = {}
-###june
 
     global outDctOg
     global outDctSp
     outDctSp = {}#key output filename, value scytheSeq
     outDctOg = {}#same but for orthogroup
-###
-    cnt = 0
     for s in specsList:
 #### species output ####
         outfile = frame._srfa+".".join([s.name,"fa"])
@@ -689,66 +517,53 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
     else:
         minNumGrp = 0
     numGrps = maxNumGrp - minNumGrp
-#todo keep track of what has already started
-    #numPerThread = round((float(numGrps)/float(numThreads))+0.5)
-    #print("debug", startAt,stopAfter, numGrps, numPerThread, numThreads, "NT" )
-    ###########
+
     taskQueue = multiprocessing.JoinableQueue()
     resQueue = multiprocessing.JoinableQueue()
-
-    qList = []
-    tList = []
     num_consumers = numThreads
     consumers = [ ConsumerProc(taskQueue, resQueue) for i in range(num_consumers) ]
+
     for c in consumers:
         c.start()
 
     num_jobs =  len(grp.groups)-1
-    #num_jobs = 10
-    print("NUMJOBS", num_jobs)
+    print("NUM_JOBS", num_jobs)
 
-        #gr = [g for g in grp.groups if g == i]
-        #print(gr)
-        #print(grp)
-        #sys.exit(1)
-        #SEMAPHORE.acquire(blocking = True)
-        #qList.append(queue.Queue())
     for i in range(0,num_jobs):
         print(i,  i, "<- start", (i+1), "<-stop")
         taskQueue.put(Task(listofspecies = specsList, group = grp, frame = frame, stopAfter=i+1,gapOpen =  gapOpen,gapExtend = gapExtend, task="needleall", startAt = i))
 
+    #finish
     for i in range(0,num_consumers):
                 taskQueue.put("done")
 
     resQueue.join()
     taskQueue.close()
-    print(num_jobs,"nj")
     while num_jobs:
-        result = resQueue.get()
-        print('Result:', result)
+        r,R = resQueue.get()
+        print('Result:', R)
         num_jobs -= 1
-        #tList.append(MakeFastaThread(listofspecies = specsList, group = grp, frame = frame, stopAfter=startAt+(i+1)*numPerThread,gapOpen =  gapOpen,gapExtend = gapExtend, task="needleall", startAt = startAt+i*numPerThread))
-    #for t in tList:
-    #    t.start()
-    #    print("trun")
-
-    #for t in tList:
-    #    t.join()
-    #    print(t,"joined", t.is_alive())
-    #while True:
-    #    print("QSIZE", QUEUE.qsize())
-    #    try:
-    #        tmp = QUEUE.get(True,2)
-    #        print("get", QUEUE.qsize())
-    #for k in qList:
-    #    while True:
-    #        print("true")
-    #        try:
-    #            tmp = k.get(True, 15)
-    #        R = tmp[1]
-    #        print("QQ R", R)
-    #        r = tmp[0]
-    #        print(r, "r\n")
+        if r[2] == "SKIP":
+            outfileGroup = frame._srofa+".".join([R,"skipped","fa"])
+            outDctOg[outfileGroup] = []
+        else:
+            outfileGroup = frame._srofa+".".join([R,"fa"])
+            outDctOg[outfileGroup] = []
+        print(r, "r\n")
+        for s in specsList:
+            tmp = r[1]
+            ok  = [x for x in tmp if x in s.cds]
+            if ok:
+                ok = ok[0]
+                if not r[2] =="SKIP":
+                    #outfiles[s.name].write(r[0][ok].toFasta())
+                    outDctSp[frame._srfa+".".join([s.name,"fa"])].append(r[0][ok].toFasta())
+                    outDctOg[frame._srofa+".".join([R,"fa"])].append(r[0][ok].toFasta())
+                else:
+#                   outfiles[s.name+".skipped"].write(r[0][ok].toFasta())
+                    outDctSp[frame._srfa+".".join([s.name,"skipped.fa"])].append(r[0][ok].toFasta())
+#                    outfilesGroups[R].write(r[0][ok].toFasta())
+                    outDctOg[frame._srofa+".".join([R,"skipped","fa"])].append(r[0][ok].toFasta())
 #for r,R in MakeFastaThread(listofspecies = specsList, group = grp, frame = frame, stopAfter=stopAfter,gapOpen =  gapOpen,gapExtend = gapExtend, task="needleall", startAt = startAt+i*numPerThread).run():
 #########
 #            if r is None:
@@ -785,8 +600,17 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
 #            print("EMPTY")
 #            break
     #QUEUE.join()
-    for k in outDctOg:
-        print(k)
+    for g in outDctOg:
+        print(g)
+        with open(g,'w') as gh:
+            for e in outDctOg[g]:
+                gh.write(e)
+    for g in outDctSp:
+        print(g)
+        with open(g,'w') as gh:
+            for e in outDctSp[g]:
+                gh.write(e)
+
 ###########################################
     #for t in tList:
     #    t.join()
