@@ -359,7 +359,7 @@ def adddyn(listoftuples, pairwisedist, actualdict, allkeys, sequencesdct):
 
 def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  startAt = None):
     print("DEBUg makeFasta")
-    groupList = [g for i,g in enumerate(group.groups) if int(i) <stopAfter and int(g)>= startAt]
+    groupList = [g for i,g in enumerate(group.groups) if int(i) <stopAfter and int(i)>= startAt]
     print(groupList, "GRList")
     singles = {}
     skip = {}
@@ -411,6 +411,7 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  
             #print(queue.qsize()," QS\n")
             #queue.put(((seqDct,set([x.name for x in seqDct.values()]),"SKIP"),str(g)))
             print("SKIP",g)
+            return(None,None)
         else:
             avd = None
             avd = AutoViviDict()
@@ -454,12 +455,15 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  
                                 avd[res[1]][res[0]]=score
             if GLOBSUM:
                 pass
+                return(algo_globsum(avd, seqDct, defaultForms),str(g))
                 #yield(algo_globsum(avd, seqDct, defaultForms),str(g))
                 #queue.put((algo_globsum(avd, seqDct, defaultForms),str(g)))
             else:
                 #yield(ah.sl_ref(scoringDct = avd, sequenceDct = seqDct), str(g))
                 print("put res",g)
                 r, R = ah.sl_ref(scoringDct = avd, sequenceDct = seqDct), str(g)
+                print("return")
+                return((r,R))
         #        print(r, "r\n")
         #        if r is None:
         #            sys.stderr.write("Failed to process group {}\n".format(str(R)))
@@ -471,19 +475,19 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  
 #                    outDctOg[outfileGroup] = []
 #                        #outfilesGroups[R] = open(outfileGroup, 'a')
 #                else:
-                outfileGroup = frame._srofa+".".join([R,"fa"])
-                outDctOg[outfileGroup] = []#.append("") #??
+                #outfileGroup = frame._srofa+".".join([R,"fa"])
+                #outDctOg[outfileGroup] = []#.append("") #??
 #                    #outfilesGroups[R] = open(outfileGroup, 'a')
 #
-                for s in listofspecies:
-                    tmp = r[1]
-                    ok  = [x for x in tmp if x in s.cds]
-                    if ok:
-                        ok = ok[0]
+                #for s in listofspecies:
+                #    tmp = r[1]
+                #    ok  = [x for x in tmp if x in s.cds]
+                #    if ok:
+                #        ok = ok[0]
 #                        if not r[2] =="SKIP":
 #                            #outfiles[s.name].write(r[0][ok].toFasta())
-                        outDctSp[frame._srfa+".".join([s.name,"fa"])].append(r[0][ok].toFasta())
-                        outDctOg[frame._srofa+".".join([R,"fa"])].append(r[0][ok].toFasta())
+                #        outDctSp[frame._srfa+".".join([s.name,"fa"])].append(r[0][ok].toFasta())
+                #        outDctOg[frame._srofa+".".join([R,"fa"])].append(r[0][ok].toFasta())
 #                        else:
 #                            #outfiles[s.name+".skipped"].write(r[0][ok].toFasta())
 #                         outDctSp[frame._srfa+".".join([s.name,"skipped.fa"])].append(r[0][ok].toFasta())
@@ -544,51 +548,51 @@ class Task(object):
         self.startAt = startAt
 
     def call(self):
-        #r,R = makeFasta(listofspecies = self.listofspecies,
-        #        group = self.group,
-        #        frame = self.frame,
-        #        stopAfter = self.stopAfter,
-        #        gapOpen = self.gapOpen,
-        #        gapExtend = self.gapExtend
-        #        task = self.task,
-        #        startAt = self.startAt)
+        r,R = makeFasta(listofspecies = self.listofspecies,
+                group = self.group,
+                frame = self.frame,
+                stopAfter = self.stopAfter,
+                gapOpen = self.gapOpen,
+                gapExtend = self.gapExtend,
+                task = self.task,
+                startAt = self.startAt)
         print("call")
-        time.sleep(0.3*random.randint(1,9))
-        R = self.group
-        r = self.startAt
+#        time.sleep(0.3*random.randint(1,9))
+        #R = self.group
+        #r = self.startAt
         return(r,R)
 
 
 
-class MakeFastaThread(multiprocessing.Process):
-    def __init__(self,listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,startAt):
-        super(MakeFastaThread, self).__init__()
-        self.listofspecies = listofspecies
-        self.group = group
-        self.frame = frame
-        self.stopAfter = stopAfter
-        self.gapOpen = gapOpen
-        self.gapExtend = gapExtend
-        self.task = task
-        self.startAt = startAt
-
-    def run(self):
-        print("DEBUG, RUUN")
-        global SEMAPHORE
-        global QUEUE
-
-        SEMAPHORE.acquire()
-        try:
-            makeFasta(listofspecies = self.listofspecies, group = self.group, frame = self.frame,
-                    stopAfter = self.stopAfter,  gapOpen = self.gapOpen,  gapExtend = self.gapExtend,
-                    task = self.task, startAt =self.startAt)
-        except Exception as e:
-            sys.stderr.write(str(e))
-            sys.exit(1)
-        finally:
-            print("semaphore release")
-            SEMAPHORE.release()
-            print("released")#, QUEUE.qsize())
+#class MakeFastaThread(multiprocessing.Process):
+#    def __init__(self,listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,startAt):
+#        super(MakeFastaThread, self).__init__()
+#        self.listofspecies = listofspecies
+#        self.group = group
+#        self.frame = frame
+#        self.stopAfter = stopAfter
+#        self.gapOpen = gapOpen
+#        self.gapExtend = gapExtend
+#        self.task = task
+#        self.startAt = startAt
+#
+#    def run(self):
+#        print("DEBUG, RUUN")
+#        global SEMAPHORE
+#        global QUEUE
+#
+#        SEMAPHORE.acquire()
+#        try:
+#            makeFasta(listofspecies = self.listofspecies, group = self.group, frame = self.frame,
+#                    stopAfter = self.stopAfter,  gapOpen = self.gapOpen,  gapExtend = self.gapExtend,
+#                    task = self.task, startAt =self.startAt)
+#        except Exception as e:
+#            sys.stderr.write(str(e))
+#            sys.exit(1)
+#        finally:
+#            print("semaphore release")
+#            SEMAPHORE.release()
+#            print("released")#, QUEUE.qsize())
 def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, inDir, outDir, gapOpen, gapExtend, locDir=None, faDir=None, numThreads=None, startAt =0):
     global SEMAPHORE
     print("NUMTHREADS", numThreads)
@@ -700,7 +704,7 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
         c.start()
 
     num_jobs =  len(grp.groups)-1
-    num_jobs = 10
+    #num_jobs = 10
     print("NUMJOBS", num_jobs)
 
         #gr = [g for g in grp.groups if g == i]
