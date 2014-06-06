@@ -295,7 +295,7 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  
             spl = list(set(group.groups[g]))
             #print("DEBUG", spl)
             #setup needleall input
-            for i in range(0,len(spl)-1):
+            for i in range(0,len(spl)):
                 for j in range(i+1,len(spl)):
                     outfile = frame._fat+".".join([str(g),spl[i],"fa"])
                     fileA = outfile
@@ -330,9 +330,19 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  
                                 avd[res[0]][res[1]]=score
                                 avd[res[1]][res[0]]=score
             if GLOBSUM:
-                return(algo_globsum(avd, seqDct, defaultForms),str(g))
+                print(avd)
+                r = ah.mx_sum(scoringDct = avd,sequenceDct =  seqDct)
+                print("GLOBSUM r", r)
+                R = str(g)
+                print(r,R, "MX")
+                return((r,R))
                 #yield(algo_globsum(avd, seqDct, defaultForms),str(g))
                 #queue.put((algo_globsum(avd, seqDct, defaultForms),str(g)))
+            elif GLOBMAX:
+                r = ah.sl_glob(scoringDct = avd, sequenceDct = seqDct)
+                R = str(g)
+                print("GLOMAX r", r)
+                return((r,R))
             else:
                 #yield(ah.sl_ref(scoringDct = avd, sequenceDct = seqDct), str(g))
                 print("put res",g)
@@ -526,7 +536,7 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
     for c in consumers:
         c.start()
 
-    num_jobs =  len(grp.groups)-1
+    num_jobs =  len(grp.groups)
     print("NUM_JOBS", num_jobs)
 
     for i in range(0,num_jobs):
