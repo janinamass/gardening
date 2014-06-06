@@ -1,3 +1,4 @@
+from itertools import chain
 class AlgoHandler(object):
     def __init__(self):
         pass
@@ -148,15 +149,46 @@ class AlgoHandler(object):
             raise EmptyScoringDctException("sth wrong during sl_glob")
         if not sequenceDct:
             raise EmptyScoringDctException("sth wrong during sl_glob")
-        self.sl_ref(scoringDct = scoringDct, sequenceDct = sequenceDct, referenceAlgo=True)
+        return(self.sl_ref(scoringDct = scoringDct, sequenceDct = sequenceDct, referenceAlgo=True))
 
-    def mx_sum(scoringDct = {},sequenceDct = {}):
+    def mx_sum(self,scoringDct, sequenceDct):
         print("debug", "mx_sum")
         if not scoringDct:
             raise EmptyScoringDctException("sth wrong during mx_sum")
         if not sequenceDct:
             raise EmptyScoringDctException("sth wrong during mx_sum")
-        raise Exception("Not implemented yet")
+        #raise Exception("Not implemented yet")
+
+        processed, unprocessed, coll, uncoll, species2id  = self.initCollProc(scoringDct = scoringDct, sequenceDct = sequenceDct)
+        pairwise,allkeys = getPairwiseAsTuples(scoringDct) #TODO
+        actual = pairwise.copy()
+        lot = actual.keys()
+        keylengths = [len(key) for key in lot]
+        while(max(keylengths) < len(unprocessed)): #proxy for num of spec
+            newdct = adddyn(lot, pairwise, actual, allkeys, sequenceDct)
+            actual = newdct
+            lot = newdct.keys()
+            keylengths = [len(key) for key in lot]
+        tupkeys = []
+        scores = []
+        for k,v in actual.items():
+            tupkeys.append(k)
+            scores.append(v)
+        tmax=max(scores)
+        tieList = [(tupkeys[n],e,n) for (n, e) in enumerate(scores) if e == tmax]
+#    #prefer defaults
+        defaults = [u for u in uncoll if sequenceDct[u].isReference]
+        tiedef = {}
+        for tie in tieList:
+            tiedef[tie[0]]=sum([1 for x in tie[0] if x in defaults])
+        maxDefaults = max(tiedef.values())
+        proc = [k for k, v in tiedef.items() if v == maxDefaults]
+        first = proc[0]
+        #proc = [f for f in first[0]]
+        #return(first, species2id)
+        print(sequenceDct, first,{})
+
+        return(first,None)
 
 class EmptyScoringDctException(Exception):
     pass
@@ -182,6 +214,53 @@ def append_add(dct, key, val, unique = False):
 
 
 
+
+
+def getPairwiseAsTuples(avd):
+    firstdim = avd.keys()
+    secdim = []
+    pwdict={}
+    listofkeys =[]
+    for f in firstdim:
+         if f not in listofkeys:
+             listofkeys.append(f)
+         for s in avd[f].keys():
+            if s not in listofkeys:
+                 listofkeys.append(s)
+            pwdict[(f,s)]=  avd[f][s]
+    return(pwdict.copy(), listofkeys)
+
+def adddyn(listoftuples, pairwisedist, actualdict, allkeys, sequencesdct):
+    tmdct = actualdict.copy()
+    lenot = [len(t) for t  in listoftuples]
+    maxlen = max(lenot)
+    listoftuples = [t for t in listoftuples if len(t) == maxlen]
+    for t in listoftuples:#start with pairwise dist (i,j)
+         #print("TUPLE ",t)
+         specdone=[sequencesdct[e].species for e in t]
+         for k in allkeys: #should be single keys
+            #print("ALLKEYS k",k)
+            if sequencesdct[k].species not in specdone:
+                #if k not in t: #and species not in etc
+                newtup=tuple(chain.from_iterable([t,[k]]))
+                if newtup not in tmdct:
+                    #print("NEWTUP",newtup)
+                    specdone.append(sequencesdct[k].species)
+                    addscore=0
+                #print(newtup,t)
+                    for l in t:
+                        #print("WILL BE added to ",l)
+                        try:
+                            addscore = addscore+pairwisedist[(l,k)]
+                        except KeyError as ke:
+                            try:
+                                addscore = addscore+pairwisedist[(k,l)]#both di i,j an j,i
+                            except KeyError:
+                                #FixThis
+                                pass
+                                print("KEYERROR",ke)
+                    tmdct[newtup] = tmdct[t]+addscore
+    return(tmdct.copy())
 
 #def algo_globsum(avd, seqDct, defaults):
 #    processed, unprocessed, coll, uncoll, species2id  = initCollProc(avd, seqDct)
