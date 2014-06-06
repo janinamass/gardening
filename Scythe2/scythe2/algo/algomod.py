@@ -143,7 +143,7 @@ class AlgoHandler(object):
 
 
 
-    def sl_glob(scoringDct = {},sequenceDct = {}):
+    def sl_glob(self, scoringDct = {},sequenceDct = {}):
         print("debug", "sl_glob")
         if not scoringDct:
             raise EmptyScoringDctException("sth wrong during sl_glob")
@@ -186,9 +186,8 @@ class AlgoHandler(object):
         first = proc[0]
         #proc = [f for f in first[0]]
         #return(first, species2id)
-        print(sequenceDct, first,{})
-
-        return(first,None)
+        print(first, "FIRST\n")
+        return(sequenceDct,set(first),species2id)
 
 class EmptyScoringDctException(Exception):
     pass
