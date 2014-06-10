@@ -14,7 +14,7 @@ from tkinter import OptionMenu
 from tkinter import Scale
 from tkinter import Listbox
 
-import scythe2 as scythe
+import scythe3 as scythe
 
 #from gui.dialogs import ScytheConvertDialogLoc
 #from gui.dialogs import ScytheConvertDialogGrp
@@ -34,6 +34,7 @@ try:
     root.iconbitmap("@"+wd+os.sep+"gui"+os.sep+"scy.xbm")
 except tk.TclError as e:
     print(e)
+    sys.stderr.write(str(e))
     root.iconbitmap(None)
 
 global SCYTHE_PROCESS
@@ -57,7 +58,6 @@ CF_CLEANUP = "Cleanup"
 CF_CLEANUP_clean_up_directories = "clean_up_directories"
 CF_RUN="Run_options"
 CF_RUN_max_threads ="max_threads"
-CF_RUN_split_input="split_input"
 CF_PENALTIES = "Penalties"
 CF_PENALTIES_gap_open_cost = "gap_open_cost"
 CF_PENALTIES_gap_extend_cost="gap_extend_cost"
@@ -76,7 +76,7 @@ OPTIONS = {}
 #dropdown menus
 yn =["yes","no"]
 for o in [CF_ALGORITHM_use_global_max,CF_ALGORITHM_use_default,
-          CF_ALGORITHM_use_global_sum,CF_RUN_split_input, CF_CLEANUP_clean_up_directories,
+          CF_ALGORITHM_use_global_sum, CF_CLEANUP_clean_up_directories,
           CF_MODE_use_local_files,CF_MODE_use_ensembl]:
     OPTIONS[o]=yn
 
@@ -95,7 +95,7 @@ for i in [CF_PATHS_fasta_directory,CF_PATHS_loc_directory,CF_PATHS_grp_file,CF_P
 for i in [CF_CLEANUP_clean_up_directories]:
     MAXCONFIG.set(CF_CLEANUP,i,"yes")
 #todo multi cpu support
-for i in [CF_RUN_max_threads,CF_RUN_split_input]:
+for i in [CF_RUN_max_threads]:
     MAXCONFIG.set(CF_RUN,i,"1")
 
 for i in [CF_PENALTIES_gap_open_cost,CF_PENALTIES_gap_extend_cost,CF_PENALTIES_substitution_matrix]:
@@ -105,9 +105,10 @@ for i in [CF_PENALTIES_gap_open_cost,CF_PENALTIES_gap_extend_cost,CF_PENALTIES_s
          MAXCONFIG.set(CF_PENALTIES,i,"0.5")
     if i == CF_PENALTIES_substitution_matrix:
         MAXCONFIG.set(CF_PENALTIES,i,"EBLOSUM62")
-#todo clean up algo var names
+
 for i in [CF_ALGORITHM_use_global_max,CF_ALGORITHM_use_default,CF_ALGORITHM_use_global_sum   ]:
     MAXCONFIG.set(CF_ALGORITHM,i,"unset")
+
 for i in [CF_FASTAHEADER_delimiter, CF_FASTAHEADER_part]:
     if i == CF_FASTAHEADER_delimiter:
         MAXCONFIG.set(CF_FASTAHEADER,i,'" "')
@@ -232,7 +233,7 @@ class ScytheConfigEditor():
         for t in self.txt_sec:
             lab_sec.append(tk.Label(fr_paths,text = t))
         for t in self.txt_subsec:
-            print(t,self.txt_subsec[t])
+            #print(t,self.txt_subsec[t])
             for u in self.txt_subsec[t]:
                 if t == CF_MODE:
                     fr = fr_mode
@@ -249,10 +250,10 @@ class ScytheConfigEditor():
 
                 elif t == CF_FASTAHEADER:
                     fr = fr_fastaheader
-                    print("fastaheader_fr")
+                    #print("fastaheader_fr")
                 ################################
                 else:
-                    print("No such section:",t)
+                    sys.stderr.write("No such section:",t)
                 try:
                     lab_subsec[t].append(tk.Label(fr,text = u))
                     self.var_subsec[t].append(tk.StringVar(fr))
@@ -269,26 +270,26 @@ class ScytheConfigEditor():
                         else:
                             dd_subsec[t] = [""]
                     except KeyError as e:
-                        print(e)
+                        sys.stderr.write(str(e))
                         dd_subsec[t].append("")
 
         for t in lab_subsec:
             r=0
             c=0
             for i in  lab_subsec[t]:
-                print(i.cget("text"))
+                #print(i.cget("text"))
                 i.grid(row=r,column=c, sticky=tk.E)
                 r+=1
-                print(r,i.cget("text"))
+                #print(r,i.cget("text"))
         for t in dd_subsec:
             c=1
             r=0
             for i in dd_subsec[t]:
-                print(i)
+                #print(i)
                 if i is not "":
                     i.grid(row=r,column=c,sticky=tk.N)
                 r+=1
-                print(r)
+                #print(r)
         ######################################
         self.st_submat = tk.StringVar()
         self.st_fasta_header_delimiter = tk.StringVar()
@@ -322,11 +323,9 @@ class ScytheConfigEditor():
         self.setFieldsFromConfig()
 
     def onSetConfigApply(self):
-        print("configapply")
         self.setConfigFromFields()
 
     def onSetConfigOK(self,event):
-        print("configapply")
         self.setConfigFromFields()
 
     def onSetConfigCancel(self):
@@ -346,7 +345,6 @@ class ScytheConfigEditor():
         tempconf.set(CF_ALGORITHM, CF_ALGORITHM_use_default,self.var_subsec[CF_ALGORITHM ][1].get())
         tempconf.set(CF_ALGORITHM, CF_ALGORITHM_use_global_sum,self.var_subsec[CF_ALGORITHM][2].get())
         tempconf.set(CF_RUN, CF_RUN_max_threads,str(self.sc_config_numthreads.get()))
-        tempconf.set(CF_RUN, CF_RUN_split_input, self.var_subsec[CF_RUN][1].get())
         #CLEANUP
         tempconf.set(CF_CLEANUP, CF_CLEANUP_clean_up_directories, self.var_subsec[CF_CLEANUP][0].get())
         #Fasta header
