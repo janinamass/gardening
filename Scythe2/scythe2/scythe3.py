@@ -26,7 +26,6 @@ import threading
 import time
 import queue
 import multiprocessing #import Process, Queue, BoundedSemaphore
-import random
 #----/import------------------#
 
 logo = """
@@ -56,6 +55,7 @@ def usage():
     -i, --in_dir=DIR                 folder w/ subfolders "fa" and "loc"
 
     -o, --out_dir=DIR                output directory [default:./]
+    -N, --num_cores=NUM              number of processors to use [default 1]
     -v, --verbose                    be wordy
 
  algorithm options:
@@ -72,8 +72,6 @@ def usage():
     -d, --delim=STRING               split fasta headers at STRING
     -a, --asID=INT                   use INTth part of fasta header as transcript-ID
                                      (default:0)
-  debug options:
-    -s, --stop_after=NUM             stop after NUM groups
 
   further help:
     Please see documentation in the 'docs'-directory.
@@ -420,7 +418,6 @@ class Task(object):
         self.startAt = startAt
 
     def call(self):
-        print("call")
         r,R = makeFasta(listofspecies = self.listofspecies,
                 group = self.group,
                 frame = self.frame,
@@ -429,14 +426,11 @@ class Task(object):
                 gapExtend = self.gapExtend,
                 task = self.task,
                 startAt = self.startAt)
-#        time.sleep(0.3*random.randint(1,9))
-        #R = self.group
-        #r = self.startAt
         return(r,R)
 
 def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, inDir, outDir, gapOpen, gapExtend, locDir=None, faDir=None, numCPU=1, startAt =0):
     global SEMAPHORE
-    print("NUMCPU", numCPU)
+    print("NUM_CPU", numCPU)
     SEMAPHORE=multiprocessing.BoundedSemaphore(numCPU)
     print(delim, asID, locDir, faDir,inDir)
     stopAfter=int(stopAfter)
@@ -475,7 +469,7 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
 
         if len(locFileList) < len(faFileList):
             """less stringend matching"""
-            print("match again", locFileListtmp, locFileList, pf, pf[0:3])
+            #print("match again", locFileListtmp, locFileList, pf, pf[0:3])
             locFileList = [x for x in locFileListtmp if x.startswith(pf[0:3])]
 
         n = n.strip()
@@ -512,16 +506,9 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
 #### species output ####
         outfile = frame._srfa+".".join([s.name,"fa"])
         outDctSp[frame._srfa+".".join([s.name,"fa"])] = []
-        #outfiles[s.name] = open(outfile, 'a')
         outfile = frame._srfa+".".join([s.name,"skipped.fa"])
         outDctSp[frame._srfa+".".join([s.name,"skipped.fa"])] = []
-        #outfiles[s.name+".skipped"] = open(outfile, 'a')
 ######################################### parallel
-    if stopAfter:
-        maxNumGrp = stopAfter
-    else:
-        print(grp, len(grp.groups))
-        maxNumGrp = len(grp.groups)
 
     taskQueue = multiprocessing.JoinableQueue()
     resQueue = multiprocessing.JoinableQueue()
@@ -597,7 +584,6 @@ def main():
     gffList = None
     delim = None
     asID = 0
-    stopAfter = False
     gapOpen=str(10)
     gapExtend =str(0.5)
     isUsingConfig = False
@@ -605,13 +591,13 @@ def main():
     ##################################
 
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], "C:i:g:o:s:d:a:O:E:N:RGMcvh",
+        opts, args = getopt.gnu_getopt(sys.argv[1:], "C:i:g:o:d:a:O:E:N:RGMcvh",
                                         ["config=",
                                         "in_dir=",
                                         "groups=",
                                         "out_dir=",
-                                        "stop_after=",
-                                        "delim=", "asID=",
+                                        "delim=",
+                                        "asID=",
                                         "gap_open=",
                                         "gap_extend=",
                                         "num_cores = ",
@@ -630,7 +616,6 @@ def main():
         if o in ("-C", "--config"):
             print(logo)
             parseConfig(a)
-
             isUsingConfig=True
         elif o in ("-i", "--in_dir"):
             inDir = a
@@ -638,8 +623,6 @@ def main():
                 inDir = inDir+os.sep
         elif o in ("-o", "--outdir"):
             outDir = a
-        elif o in ("-s", "--stop_after"):
-            stopAfter = int(a)
         elif o in ("-d", "--delim"):
             delim = a
         elif o in ("-a", "--asID"):
@@ -705,7 +688,7 @@ def main():
         runScythe(groups=groups, delim=delim,
                   asID=asID, faFileList=faFileList,
                   namesList=namesList, cleanUp=cleanUp,
-                  stopAfter=stopAfter, inDir=faDir, outDir=outDir, gapOpen=gapOpen, gapExtend=gapExtend, locDir = locDir, faDir=faDir, numCPU = numCPU)
+                  inDir=faDir, outDir=outDir, gapOpen=gapOpen, gapExtend=gapExtend, locDir = locDir, faDir=faDir, numCPU = numCPU)
 
 #----------------------------------------------------------------#
 
