@@ -20,9 +20,9 @@ import scythe3 as scythe
 #from gui.dialogs import ScytheConvertDialogGrp
 
 import helpers.mergeSubsets as mergeSubsets
-import helpers.ensembl_ortho_mysql as ensembl_ortho_mysql
+#import helpers.ensembl_ortho_mysql as ensembl_ortho_mysql
 import helpers.ensembl2grp as ensembl2grp
-import helpers.ensembl as ensembl
+#import helpers.ensembl as ensembl
 
 import queue
 
@@ -57,7 +57,7 @@ CF_PATHS_output_directory = "output_directory"
 CF_CLEANUP = "Cleanup"
 CF_CLEANUP_clean_up_directories = "clean_up_directories"
 CF_RUN="Run_options"
-CF_RUN_max_threads ="max_threads"
+CF_RUN_num_CPU ="num_CPU"
 CF_PENALTIES = "Penalties"
 CF_PENALTIES_gap_open_cost = "gap_open_cost"
 CF_PENALTIES_gap_extend_cost="gap_extend_cost"
@@ -95,7 +95,7 @@ for i in [CF_PATHS_fasta_directory,CF_PATHS_loc_directory,CF_PATHS_grp_file,CF_P
 for i in [CF_CLEANUP_clean_up_directories]:
     MAXCONFIG.set(CF_CLEANUP,i,"yes")
 #todo multi cpu support
-for i in [CF_RUN_max_threads]:
+for i in [CF_RUN_num_CPU]:
     MAXCONFIG.set(CF_RUN,i,"1")
 
 for i in [CF_PENALTIES_gap_open_cost,CF_PENALTIES_gap_extend_cost,CF_PENALTIES_substitution_matrix]:
@@ -344,7 +344,7 @@ class ScytheConfigEditor():
         tempconf.set(CF_ALGORITHM, CF_ALGORITHM_use_global_max,self.var_subsec[CF_ALGORITHM][0].get())
         tempconf.set(CF_ALGORITHM, CF_ALGORITHM_use_default,self.var_subsec[CF_ALGORITHM ][1].get())
         tempconf.set(CF_ALGORITHM, CF_ALGORITHM_use_global_sum,self.var_subsec[CF_ALGORITHM][2].get())
-        tempconf.set(CF_RUN, CF_RUN_max_threads,str(self.sc_config_numthreads.get()))
+        tempconf.set(CF_RUN, CF_RUN_num_CPU,str(self.sc_config_numthreads.get()))
         #CLEANUP
         tempconf.set(CF_CLEANUP, CF_CLEANUP_clean_up_directories, self.var_subsec[CF_CLEANUP][0].get())
         #Fasta header
@@ -365,13 +365,12 @@ class ScytheConfigEditor():
         self.var_subsec[CF_CLEANUP][0].set(CURRENTCONFIG.get(CF_CLEANUP,self.txt_subsec[CF_CLEANUP][0]))
         #run
         #slider
-        self.var_subsec[CF_RUN][1].set(CURRENTCONFIG.get(CF_RUN,self.txt_subsec[CF_RUN][1]))
         #algo
         self.var_subsec[CF_ALGORITHM][0].set(CURRENTCONFIG.get(CF_ALGORITHM,self.txt_subsec[CF_ALGORITHM][0]))
         self.var_subsec[CF_ALGORITHM][1].set(CURRENTCONFIG.get(CF_ALGORITHM,self.txt_subsec[CF_ALGORITHM][1]))
         self.var_subsec[CF_ALGORITHM][2].set(CURRENTCONFIG.get(CF_ALGORITHM,self.txt_subsec[CF_ALGORITHM][2]))
 
-        self.var_subsec[CF_FASTAHEADER][0].set(CURRENTCONFIG.get(CF_FASTAHEADER,self.txt_subsec[CF_FASTAHEADER][0]))
+        #self.var_subsec[CF_FASTAHEADER][0].set(CURRENTCONFIG.get(CF_FASTAHEADER,self.txt_subsec[CF_FASTAHEADER][0]))
         self.var_subsec[CF_FASTAHEADER][0].set(CURRENTCONFIG.get(CF_FASTAHEADER,self.txt_subsec[CF_FASTAHEADER][0]))
         self.var_subsec[CF_FASTAHEADER][1].set(CURRENTCONFIG.get(CF_FASTAHEADER,self.txt_subsec[CF_FASTAHEADER][1]))
         self.st_fasta_header_part.set(CURRENTCONFIG.get(CF_FASTAHEADER, CF_FASTAHEADER_part))
@@ -389,11 +388,11 @@ def logged(f):
 class Infobox():
     @logged
     def todo(self):
-        message="Soon (tm)."
+        message="Todo..."
         messagebox.showinfo(title="Todo...", message = message )
     @logged
     def about(self):
-        message="Scythe GUI v0.1.0 (May 2014)\nJ. Mass\nThis is under construction."
+        message="Scythe GUI v0.1.0 (June 2014)\nJ. Mass\nThis is under construction."
         messagebox.showinfo(title="About Scythe", message = message )
 
     def bepatient(self):
@@ -474,12 +473,6 @@ class ScytheMenu(tk.Frame):
     def loadConfigArg(self,arg):
         cfg = self.confighandler.currentconfig.read(arg)
         global CURRENTCONFIG
-
-
-
-
-
-
         CURRENTCONFIG=self.confighandler.currentconfig
         self.scythewizard.st_fastaDir.set(self.confighandler.currentconfig.get(CF_PATHS,CF_PATHS_fasta_directory) )
         self.scythewizard.st_locDir.set(self.confighandler.currentconfig.get(CF_PATHS,CF_PATHS_loc_directory) )
@@ -492,7 +485,6 @@ class ScytheMenu(tk.Frame):
             self.scythewizard.cb_use_local.select()
         self.scythewizard.cb_use_local.configure(state=tk.NORMAL)
         self.scythewizard.cb_use_ensembl.configure(state=tk.NORMAL)
-
         self.onSetOptions()
 
     def onLoadConfig(self):
@@ -574,8 +566,7 @@ class EnsemblSelector(tk.Listbox):
 
             lb = Listbox(self.top,selectmode='multiple',exportselection=0 ,width=40, height=30,)
             self.lb= lb
-            #self.top=top
-            print(data)
+            #print(data)
             for d in data["species"]:
                 print(d["name"])
                 if not d["name"].startswith("Ancestral"):
@@ -613,14 +604,14 @@ class EnsemblSelector(tk.Listbox):
             if (len(tmp)>0):
                 ensembl.getSequencesFromFTP(self.outdir, rel, tmp)
             locpath = self.outdir+os.sep+"loc"
-            print("fasta done",self.outdir)
+            print("fasta download done: {}".format(self.outdir))
             for i in specs:
                 print(i)
                 if not self.fileExists(locpath+os.sep+i+".loc"):
                     try:
                         ensembl.prepareLocFromFasta(fapath+os.sep+i+".fa",locpath+os.sep,i  )
                     except IOError as e:
-                        print(e)
+                        sys.stderr.write(str(e))
                         print("Warning: No such fasta: ",fapath+os.sep+i+".fa")
                 else:
                     print("already there: "+locpath+os.sep+u+".loc")
@@ -635,10 +626,6 @@ class EnsemblSelector(tk.Listbox):
 #todo ensembl_ortho_mysql
             else:
                 listoftsv=ensembl_ortho_mysql.fetchOrthoFromMySQL(specieslist = specs, release=rel[0])
-            #grpstring =""
-            #for i in specs:
-            #    grpstring+=i[0:2]
-
                 ensembl2grp.readTsvFiles(listoftsv=listoftsv, outfile=grpfile)
                 #####update
             outNoSubsets=self.outdir+os.sep+grpstring+".full.grp"
@@ -656,7 +643,6 @@ class EnsemblSelector(tk.Listbox):
             ScytheWizard(root).prepRun(reloadFields=False)
 
         def onEnsQuit(self):
-            #print("onQuit")
             self.top.destroy()
 
         def prepRun(self, itemlist):
@@ -711,7 +697,6 @@ class ScytheWizard(tk.Tk):
         #catch unset outdir
         if not outdir:
             outdir = os.getcwd()
-        #???
         cleanUp="yes"
         scythe.GLOBMAX = False
         scythe.GLOBSUM = False
@@ -768,6 +753,7 @@ class ScytheWizard(tk.Tk):
         stopAfter = False
         gapOpen = CURRENTCONFIG.get(CF_PENALTIES,CF_PENALTIES_gap_open_cost)
         gapExtend = CURRENTCONFIG.get(CF_PENALTIES,CF_PENALTIES_gap_extend_cost)
+        numCPU =  CURRENTCONFIG.get(CF_RUN,CF_RUN_num_CPU)
         faFileList = os.listdir(faDir)
         namesList = os.listdir(faDir)
         namesList = [n[0:3] for n in namesList]
@@ -787,24 +773,25 @@ class ScytheWizard(tk.Tk):
         if (not reloadFields or useLocal=="yes") and len(set(namesList)) >0:
             self.progbar = ttk.Progressbar(root, mode='indeterminate')
             self.progbar.grid(column=0, row=5, sticky = "W")
-            res=tk.messagebox.showinfo("Be patient.", "Will be running Scythe. This could take some time.")
+            res=tk.messagebox.showinfo("Be patient.", "Scythe is running. This could take some time.")
             self.q = queue.Queue()
-            if res:
-                argsdct = {
-                        "groups":groups,
-                        "delim":delim,
-                        "asID":asID,
-                        "faFileList":faFileList,
-                        "namesList":namesList,
-                        "cleanUp":cleanUp,
-                        "stopAfter":stopAfter,
-                        "inDir":inDir,
-                        "outDir":outDir,
-                        "gapOpen":gapOpen,
-                        "gapExtend":gapExtend,
-                        "locDir":locDir,
-                        "faDir":faDir
-                        }
+            #just an infobox, will start without clicking on ok
+            argsdct = {
+                    "groups":groups,
+                    "delim":delim,
+                    "asID":asID,
+                    "faFileList":faFileList,
+                    "namesList":namesList,
+                    "cleanUp":cleanUp,
+                    "stopAfter":stopAfter,
+                    "inDir":inDir,
+                    "outDir":outDir,
+                    "gapOpen":gapOpen,
+                    "gapExtend":gapExtend,
+                    "locDir":locDir,
+                    "faDir":faDir,
+                    "numCPU": numCPU,
+                    }
 ###
                 self.p = scythe.ThreadedScythe(self.q, argsdct)
                 self.p.start()

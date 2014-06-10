@@ -163,7 +163,7 @@ def parseConfig(pathconfig):
               namesList=namesList, cleanUp=cleanUp,
               stopAfter=stopAfter, inDir=inDir, outDir=outDir,
               gapOpen=gapOpen, gapExtend=gapExtend,
-              locDir=locDir,faDir=faDir, numThreads = 1)
+              locDir=locDir,faDir=faDir, numCPU)
 
 #----/parse configuration----#
 
@@ -434,10 +434,10 @@ class Task(object):
         #r = self.startAt
         return(r,R)
 
-def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, inDir, outDir, gapOpen, gapExtend, locDir=None, faDir=None, numThreads=None, startAt =0):
+def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, inDir, outDir, gapOpen, gapExtend, locDir=None, faDir=None, numCPU=1, startAt =0):
     global SEMAPHORE
-    print("NUMTHREADS", numThreads)
-    SEMAPHORE=multiprocessing.BoundedSemaphore(numThreads)
+    print("NUMCPU", numCPU)
+    SEMAPHORE=multiprocessing.BoundedSemaphore(numCPU)
     print(delim, asID, locDir, faDir,inDir)
     stopAfter=int(stopAfter)
     specsList = []
@@ -522,25 +522,18 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
     else:
         print(grp, len(grp.groups))
         maxNumGrp = len(grp.groups)
-    if startAt:
-        minNumGrp = startAt
-    else:
-        minNumGrp = 0
-    numGrps = maxNumGrp - minNumGrp
 
     taskQueue = multiprocessing.JoinableQueue()
     resQueue = multiprocessing.JoinableQueue()
-    num_consumers = numThreads
+    num_consumers = numCPU
     consumers = [ ConsumerProc(taskQueue, resQueue) for i in range(num_consumers) ]
 
     for c in consumers:
         c.start()
 
     num_jobs =  len(grp.groups)
-    print("NUM_JOBS", num_jobs)
-
+    print("{} groups are being processed.\n".format(num_jobs))
     for i in range(0,num_jobs):
-        print(i,  i, "<- start", (i+1), "<-stop")
         taskQueue.put(Task(listofspecies = specsList, group = grp, frame = frame, stopAfter=i+1,gapOpen =  gapOpen,gapExtend = gapExtend, task="needleall", startAt = i))
 
     #finish
@@ -551,7 +544,6 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
     taskQueue.close()
     while num_jobs:
         r,R = resQueue.get()
-        print('Result:', R)
         num_jobs -= 1
         if r[2] == "SKIP":
             outfileGroup = frame._srofa+".".join([R,"skipped","fa"])
@@ -559,78 +551,33 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
         else:
             outfileGroup = frame._srofa+".".join([R,"fa"])
             outDctOg[outfileGroup] = []
-        print(r, "r\n")
         for s in specsList:
             tmp = r[1]
             ok  = [x for x in tmp if x in s.cds]
             if ok:
                 ok = ok[0]
                 if not r[2] =="SKIP":
-                    #outfiles[s.name].write(r[0][ok].toFasta())
                     outDctSp[frame._srfa+".".join([s.name,"fa"])].append(r[0][ok].toFasta())
                     outDctOg[frame._srofa+".".join([R,"fa"])].append(r[0][ok].toFasta())
                 else:
-#                   outfiles[s.name+".skipped"].write(r[0][ok].toFasta())
                     outDctSp[frame._srfa+".".join([s.name,"skipped.fa"])].append(r[0][ok].toFasta())
-#                    outfilesGroups[R].write(r[0][ok].toFasta())
                     outDctOg[frame._srofa+".".join([R,"skipped","fa"])].append(r[0][ok].toFasta())
-#for r,R in MakeFastaThread(listofspecies = specsList, group = grp, frame = frame, stopAfter=stopAfter,gapOpen =  gapOpen,gapExtend = gapExtend, task="needleall", startAt = startAt+i*numPerThread).run():
-#########
-#            if r is None:
-#                sys.stderr.write("Failed to process group {}\n".format(str(R)))
-#                print("errrr")
-#                continue
-#            else:
-#                if r[2] == "SKIP":
-#                    outfileGroup = frame._srofa+".".join([R,"skipped","fa"])
-#                    outDctOg[outfileGroup] = []
-#                        #outfilesGroups[R] = open(outfileGroup, 'a')
-#                else:
-#                    outfileGroup = frame._srofa+".".join([R,"fa"])
-#                    outDctOg[outfileGroup] = []#.append("") #??
-#                    #outfilesGroups[R] = open(outfileGroup, 'a')
-#
-#                for s in specsList:
-#                    tmp = r[1]
-#                    ok  = [x for x in tmp if x in s.cds]
-#                    if ok:
-#                        ok = ok[0]
-#                        if not r[2] =="SKIP":
-#                            #outfiles[s.name].write(r[0][ok].toFasta())
-#                            outDctSp[frame._srfa+".".join([s.name,"fa"])].append(r[0][ok].toFasta())
-#                            outDctOg[frame._srofa+".".join([R,"fa"])].append(r[0][ok].toFasta())
-#                        else:
-#                            #outfiles[s.name+".skipped"].write(r[0][ok].toFasta())
-#                            outDctSp[frame._srfa+".".join([s.name,"skipped.fa"])].append(r[0][ok].toFasta())
-#                        #outfilesGroups[R].write(r[0][ok].toFasta())
-#                            outDctOg[frame._srofa+".".join([R,"skipped","fa"])].append(r[0][ok].toFasta())
-#                #outfilesGroups[R].close()
-#                #oneq.task_done()
-#        except queue.Empty:
-#            print("EMPTY")
-#            break
-    #QUEUE.join()
+    print("Writing files...\n")
     for g in outDctOg:
-        print(g)
         with open(g,'w') as gh:
             for e in outDctOg[g]:
                 gh.write(e)
+    print("...\n")
     for g in outDctSp:
-        print(g)
         with open(g,'w') as gh:
             for e in outDctSp[g]:
                 gh.write(e)
 
-###########################################
-    #for t in tList:
-    #    t.join()
-
+    #remove temporary files
     if cleanUp:
         frame.cleanUp()
 
-    #for out in outfiles.values():
-    #    out.close()
-    print("\ndone.")
+    print("\nDone.")
 
 def main():
     global VERBOSE
@@ -654,7 +601,7 @@ def main():
     gapOpen=str(10)
     gapExtend =str(0.5)
     isUsingConfig = False
-    numThreads = None
+    numCPU = 1
     ##################################
 
     try:
@@ -714,7 +661,7 @@ def main():
         elif o in ("-E", "--gap_extend"):
             gapExtend = a
         elif o in ("-N", "--num_cores"):
-            numThreads = int(a)
+            numCPU = int(a)
         elif o in ("-h", "--help"):
             usage()
         else:
@@ -758,7 +705,7 @@ def main():
         runScythe(groups=groups, delim=delim,
                   asID=asID, faFileList=faFileList,
                   namesList=namesList, cleanUp=cleanUp,
-                  stopAfter=stopAfter, inDir=faDir, outDir=outDir, gapOpen=gapOpen, gapExtend=gapExtend, locDir = locDir, faDir=faDir, numThreads = numThreads)
+                  stopAfter=stopAfter, inDir=faDir, outDir=outDir, gapOpen=gapOpen, gapExtend=gapExtend, locDir = locDir, faDir=faDir, numCPU = numCPU)
 
 #----------------------------------------------------------------#
 
