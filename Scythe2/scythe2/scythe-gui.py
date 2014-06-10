@@ -750,7 +750,6 @@ class ScytheWizard(tk.Tk):
         except ValueError as e:
             print(e)
             asID=None
-        stopAfter = False
         gapOpen = CURRENTCONFIG.get(CF_PENALTIES,CF_PENALTIES_gap_open_cost)
         gapExtend = CURRENTCONFIG.get(CF_PENALTIES,CF_PENALTIES_gap_extend_cost)
         numCPU =  CURRENTCONFIG.get(CF_RUN,CF_RUN_num_CPU)
@@ -783,7 +782,6 @@ class ScytheWizard(tk.Tk):
                     "faFileList":faFileList,
                     "namesList":namesList,
                     "cleanUp":cleanUp,
-                    "stopAfter":stopAfter,
                     "inDir":inDir,
                     "outDir":outDir,
                     "gapOpen":gapOpen,
