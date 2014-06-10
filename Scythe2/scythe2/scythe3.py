@@ -93,7 +93,7 @@ def parseConfig(pathconfig):
     CF_CLEANUP = "Cleanup"
     CF_CLEANUP_clean_up_directories = "clean_up_directories"
     CF_RUN="Run_options"
-    CF_RUN_max_threads ="max_threads"
+    CF_RUN_num_CPU ="num_CPU"
     CF_RUN_split_input="split_input"
     CF_PENALTIES = "Penalties"
     CF_PENALTIES_gap_open_cost = "gap_open_cost"
@@ -149,9 +149,10 @@ def parseConfig(pathconfig):
     fastaList = os.listdir(faDir)
     delim = config.get(CF_FASTAHEADER,CF_FASTAHEADER_delimiter)
     asID = int(config.get(CF_FASTAHEADER,CF_FASTAHEADER_part))
-    stopAfter = False
+    #stopAfter = False
     gapOpen= config.get(CF_PENALTIES,CF_PENALTIES_gap_open_cost)
     gapExtend =config.get(CF_PENALTIES,CF_PENALTIES_gap_extend_cost)
+    numCPU = int(config.get(CF_RUN, CF_RUN_num_CPU))
     faFileList = os.listdir(faDir)
     namesList = os.listdir(faDir)
     namesList = [n[0:3] for n in namesList]
@@ -159,7 +160,7 @@ def parseConfig(pathconfig):
     runScythe(groups=groups, delim=delim.strip('"'),
               asID=asID, faFileList=faFileList,
               namesList=namesList, cleanUp=cleanUp,
-              stopAfter=stopAfter, inDir=inDir, outDir=outDir,
+              inDir=inDir, outDir=outDir,
               gapOpen=gapOpen, gapExtend=gapExtend,
               locDir=locDir,faDir=faDir, numCPU=numCPU)
 
@@ -210,34 +211,6 @@ def adddyn(listoftuples, pairwisedist, actualdict, allkeys, sequencesdct):
                                 print("KEYERROR",ke)
                     tmdct[newtup] = tmdct[t]+addscore
     return(tmdct.copy())
-
-#def algo_globsum(avd, seqDct, defaults):
-#    processed, unprocessed, coll, uncoll, species2id  = initCollProc(avd, seqDct)
-#    pairwise,allkeys = getPairwiseAsTuples(avd)
-#    actual = pairwise.copy()
-#    lot = actual.keys()
-#    keylengths = [len(key) for key in lot]
-#    while(max(keylengths) < len(unprocessed)): #proxy for num of spec
-#        newdct = adddyn(lot, pairwise, actual, allkeys, seqDct)
-#        actual = newdct
-#        lot = newdct.keys()
-#        keylengths = [len(key) for key in lot]
-#    tupkeys = []
-#    scores = []
-#    for k,v in actual.items():
-#        tupkeys.append(k)
-#        scores.append(v)
-#    tmax=max(scores)
-#    tieList = [(tupkeys[n],e,n) for (n, e) in enumerate(scores) if e == tmax]
-#    #prefer defaults
-#    tiedef = {}
-#    for tie in tieList:
-#        tiedef[tie[0]]=sum([1 for x in tie[0] if x in defaults])
-#    maxDefaults = max(tiedef.values())
-#    proc = [k for k, v in tiedef.items() if v == maxDefaults]
-#    first = proc[0]
-#    #proc = [f for f in first[0]]
-#    return(seqDct, first, species2id)
 
 def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  startAt = None):
     groupList = [g for i,g in enumerate(group.groups) if int(i) <stopAfter and int(i)>= startAt]
@@ -301,7 +274,7 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  
                     fileB = outfile
                     outfile=frame._sr+".".join([str(g),spl[i],spl[i+1],"needle"])
                     try:
-                        print("CALLING NEEDLE ",g, fileA,fileB, spl[i], spl[j])
+                        #print("CALLING NEEDLE ",g, fileA,fileB, spl[i], spl[j])
                         task = frame.callNeedleAll(fileA, fileB, outfile = outfile,stdout=True, gapOpen=gapOpen, gapExtend=gapExtend)
                         fulldata = task.stdout.read()
                         #print(fulldata)
@@ -313,7 +286,7 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  
                         sys.stderr.write("WARNING:", fileA, fileB,"excluded")
                         frame.writeLog("error","WARNING:"+fileA+" "+fileB+" excluded, AssertionError")
                         #yield((None,None))
-                        print("put none")
+                        #print("put none")
                         #queue.put((None,None))
                         return(None,None)
                     data  =  fulldata.decode("utf-8")
@@ -328,61 +301,24 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  
                                 avd[res[0]][res[1]]=score
                                 avd[res[1]][res[0]]=score
             if GLOBSUM:
-                print(avd)
+                #print(avd)
                 r = ah.mx_sum(scoringDct = avd,sequenceDct =  seqDct)
-                print("GLOBSUM r", r)
+                #print("GLOBSUM r", r)
                 R = str(g)
-                print(r,R, "MX")
+                #print(r,R, "MX")
                 return((r,R))
                 #yield(algo_globsum(avd, seqDct, defaultForms),str(g))
                 #queue.put((algo_globsum(avd, seqDct, defaultForms),str(g)))
             elif GLOBMAX:
                 r = ah.sl_glob(scoringDct = avd, sequenceDct = seqDct)
                 R = str(g)
-                print("GLOMAX r", r)
                 return((r,R))
             else:
                 #yield(ah.sl_ref(scoringDct = avd, sequenceDct = seqDct), str(g))
-                print("put res",g)
+                #print("put res",g)
                 r, R = ah.sl_ref(scoringDct = avd, sequenceDct = seqDct), str(g)
-                print("return")
+                #print("return")
                 return((r,R))
-        #        print(r, "r\n")
-        #        if r is None:
-        #            sys.stderr.write("Failed to process group {}\n".format(str(R)))
-        #            print("errrr")
-        #            continue
-        #        else:
-#                if r[2] == "SKIP":
-#                    outfileGroup = frame._srofa+".".join([R,"skipped","fa"])
-#                    outDctOg[outfileGroup] = []
-#                        #outfilesGroups[R] = open(outfileGroup, 'a')
-#                else:
-                #outfileGroup = frame._srofa+".".join([R,"fa"])
-                #outDctOg[outfileGroup] = []#.append("") #??
-#                    #outfilesGroups[R] = open(outfileGroup, 'a')
-#
-                #for s in listofspecies:
-                #    tmp = r[1]
-                #    ok  = [x for x in tmp if x in s.cds]
-                #    if ok:
-                #        ok = ok[0]
-#                        if not r[2] =="SKIP":
-#                            #outfiles[s.name].write(r[0][ok].toFasta())
-                #        outDctSp[frame._srfa+".".join([s.name,"fa"])].append(r[0][ok].toFasta())
-                #        outDctOg[frame._srofa+".".join([R,"fa"])].append(r[0][ok].toFasta())
-#                        else:
-#                            #outfiles[s.name+".skipped"].write(r[0][ok].toFasta())
-#                         outDctSp[frame._srfa+".".join([s.name,"skipped.fa"])].append(r[0][ok].toFasta())
-#                        #outfilesGroups[R].write(r[0][ok].toFasta())
-#                         outDctOg[frame._srofa+".".join([R,"skipped","fa"])].append(r[0][ok].toFasta())
-#                #outfilesGroups[R].close()
-#                #oneq.task_done()
-#        except queue.Empty:
-#            print("EMPTY")
-#            break
-    #QUEUE.join()
-#############
 
 class ConsumerProc(multiprocessing.Process):
     def __init__(self, task_queue, result_queue):
@@ -399,9 +335,7 @@ class ConsumerProc(multiprocessing.Process):
             if next_task == "done":
                  print("exit", self.name)
                  break
-            r,R = next_task.call() #makeFasta(listofspecies = self.listofspecies, group = self.group, frame = self.frame,
-                    #stopAfter = self.stopAfter,  gapOpen = self.gapOpen,  gapExtend = self.gapExtend,
-                    #task = self.task, startAt =self.startAt)
+            r,R = next_task.call()
             self.result_queue.put((r,R))
         SEMAPHORE.release()
         return()
@@ -428,12 +362,15 @@ class Task(object):
                 startAt = self.startAt)
         return(r,R)
 
-def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, inDir, outDir, gapOpen, gapExtend, locDir=None, faDir=None, numCPU=1, startAt =0):
+def runScythe(groups, delim, asID, namesList, cleanUp,  faFileList, inDir, outDir, gapOpen, gapExtend, locDir=None, faDir=None, numCPU=1, startAt =0):
     global SEMAPHORE
+    timeStarted = time.time()
+    print("Started {}\n".format(timeStarted))
     print("NUM_CPU", numCPU)
+
     SEMAPHORE=multiprocessing.BoundedSemaphore(numCPU)
     print(delim, asID, locDir, faDir,inDir)
-    stopAfter=int(stopAfter)
+
     specsList = []
     grpMapList = []
     if locDir:
@@ -563,7 +500,10 @@ def runScythe(groups, delim, asID, namesList, cleanUp, stopAfter, faFileList, in
     #remove temporary files
     if cleanUp:
         frame.cleanUp()
-
+    timeEnded = time.time()
+    print("Time done: ",timeEnded,"\n")
+    print("Time taken {}".format(timeEnded-timeStarted))
+    print("clocked: ",time.clock(),"\n")
     print("\nDone.")
 
 def main():

@@ -152,7 +152,7 @@ class AlgoHandler(object):
         return(self.sl_ref(scoringDct = scoringDct, sequenceDct = sequenceDct, referenceAlgo=True))
 
     def mx_sum(self,scoringDct, sequenceDct):
-        print("debug", "mx_sum")
+        #print("debug", "mx_sum")
         if not scoringDct:
             raise EmptyScoringDctException("sth wrong during mx_sum")
         if not sequenceDct:
@@ -186,7 +186,7 @@ class AlgoHandler(object):
         first = proc[0]
         #proc = [f for f in first[0]]
         #return(first, species2id)
-        print(first, "FIRST\n")
+        #print(first, "FIRST\n")
         return(sequenceDct,set(first),species2id)
 
 class EmptyScoringDctException(Exception):
