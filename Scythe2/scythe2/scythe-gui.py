@@ -791,11 +791,11 @@ class ScytheWizard(tk.Tk):
                     "numCPU": numCPU,
                     }
 ###
-                self.p = scythe.ThreadedScythe(self.q, argsdct)
-                self.p.start()
-                self.progbar.start()
-                SCYTHE_PROCESS = self.p
-                self.process_queue()
+            self.p = scythe.ThreadedScythe(self.q, argsdct)
+            self.p.start()
+            self.progbar.start()
+            SCYTHE_PROCESS = self.p
+            self.process_queue()
 
     def process_queue(self):
         if not self.p.is_alive():

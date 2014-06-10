@@ -161,7 +161,7 @@ def parseConfig(pathconfig):
               namesList=namesList, cleanUp=cleanUp,
               stopAfter=stopAfter, inDir=inDir, outDir=outDir,
               gapOpen=gapOpen, gapExtend=gapExtend,
-              locDir=locDir,faDir=faDir, numCPU)
+              locDir=locDir,faDir=faDir, numCPU=numCPU)
 
 #----/parse configuration----#
 
