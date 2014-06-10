@@ -142,7 +142,7 @@ class ConfigHandler():
             except configparser.DuplicateSectionError as e:
                  pass
             for j in MAXCONFIG.options(i):
-                print(i,j)
+                #print(i,j)
                 CURRENTCONFIG.set(i,j,MAXCONFIG.get(i,j))
 
     def backupConf(self):
@@ -219,7 +219,7 @@ class ScytheConfigEditor():
         self.txt_sec=[]
         self.txt_subsec={}
         for section in MAXCONFIG.sections():
-            print( "["+section +"]\n")
+            #print( "["+section +"]\n")
             self.txt_sec.append(section)
             for opt in MAXCONFIG.options(section):
                 try:
@@ -330,8 +330,8 @@ class ScytheConfigEditor():
 
     def onSetConfigCancel(self):
         self.confighandler.restoreConf()
-        print("RESTORED-->CURRENTCONF set")
-        print("Config CANCEL")
+        #print("RESTORED-->CURRENTCONF set")
+        #print("Config CANCEL")
 
     def setConfigFromFields(self):
         tempconf = configparser.ConfigParser()
@@ -805,16 +805,14 @@ class ScytheWizard(tk.Tk):
             msg = self.q.get(0)
             self.progbar.stop()
             #tk.messagebox.showinfo("Process done.",msg)
-            print("ok")
+            #print("ok")
             sys.exit(0)
         except queue.Empty:
-            print(self.p, self.p.is_alive(), self.q)
+            #print(self.p, self.p.is_alive(), self.q)
             self.parent.after(100, self.process_queue)
 
     def debug(self,n):
-        for i in range(0,n):
-            print(i)
-            print("\n")
+        pass
 
 
     def initWizard(self):
