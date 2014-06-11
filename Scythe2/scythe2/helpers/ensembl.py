@@ -51,19 +51,32 @@ def getSequencesFromFTP(outdir, release, specieslist=[]):
             outfa.close()
             xtract(outfaname, path)
             ftp.cwd("/pub/"+ftprelhome)
-
+       #nucleotides
+        for s in specieslist:
+            tmp = [d for d in dirlist if s in d][0]
+            spec = tmp.split(" ")[-1]
+            ftp.cwd(spec)
+            ftp.cwd('cds')
+            falist = []
+            ftp.retrlines('LIST', callback=falist.append)
+            falist = [f for f in falist if "all.fa" in f][0]
+            fafile = falist.split(" ")[-1]
+            outfaname = spec+"cds.all.fa.gz"
+            outfa = open(outfaname,'wb')
+            ftp.retrbinary("RETR "+fafile,outfa.write)
+            outfa.close()
+            xtract(outfaname, path+"_cds")
+            ftp.cwd("/pub/"+ftprelhome)
         ftp.quit()
 
     else:
         print("Releases:")
         for a in zip(release,specieslist):
             print(a)
-        #whoo... recursion
         for a in zip(release,specieslist):
             getSequencesFromFTP(outdir, release=[a[0]], specieslist=[a[1]])
-    #cmp ensembl_fp_fasta
 
-    #out = open(outdir+os.sep+"fa"+os.sep+specname+".fa",'w')
+
 def xtract(cfile, outpath = "."):
 
     if cfile.endswith('.gz'):
