@@ -1,10 +1,11 @@
+#! /usr/bin/python3
 import mysql.connector
-
+import sys
 def q(s):
     return ('"'+s+'"')
 
 def getGenome_Db_Ids(specnames, release):
-    cmd = 'use ensembl_compara_'+str(release)+";" 
+    cmd = 'use ensembl_compara_'+str(release)+";"
     cnx = mysql.connector.connect(user='anonymous', host='ensembldb.ensembl.org' )
     curA = cnx.cursor(buffered=True)
     curA.execute(cmd)
@@ -17,7 +18,7 @@ def getGenome_Db_Ids(specnames, release):
     return(res)
 
 def getSpecies_Set_Ids(genomedb_ids, release):
-    cmd = 'use ensembl_compara_'+str(release)+";" 
+    cmd = 'use ensembl_compara_'+str(release)+";"
     cnx = mysql.connector.connect(user='anonymous', host='ensembldb.ensembl.org' )
     curA = cnx.cursor(buffered=True)
     curA.execute(cmd)
@@ -33,7 +34,7 @@ def getSpecies_Set_Ids(genomedb_ids, release):
     return (res)
 
 def getMethodLinkSpecies_Set_Ids(speciesSet_ids, release):
-    cmd = 'use ensembl_compara_'+str(release)+";" 
+    cmd = 'use ensembl_compara_'+str(release)+";"
     cnx = mysql.connector.connect(user='anonymous', host='ensembldb.ensembl.org' )
     curA = cnx.cursor(buffered=True)
     curA.execute(cmd)
@@ -50,7 +51,7 @@ def getMethodLinkSpecies_Set_Ids(speciesSet_ids, release):
     return (res)
 
 def getHomologyId(method_link_species_set_ids, release=71):
-    cmd = 'use ensembl_compara_'+str(release)+";" 
+    cmd = 'use ensembl_compara_'+str(release)+";"
     cnx = mysql.connector.connect(user='anonymous', host='ensembldb.ensembl.org' )
     curA = cnx.cursor(buffered=True)
     curA.execute(cmd)
@@ -67,7 +68,7 @@ def getHomologyId(method_link_species_set_ids, release=71):
     return (res)
 
 def getHomologyMemberId(homology_ids, release):
-    cmd = 'use ensembl_compara_'+str(release)+";" 
+    cmd = 'use ensembl_compara_'+str(release)+";"
     cnx = mysql.connector.connect(user='anonymous', host='ensembldb.ensembl.org' )
     curA = cnx.cursor(buffered=True)
     curA.execute(cmd)
@@ -87,7 +88,7 @@ def fetch1to1orthologs(method_link_species_set_ids,release):
     """Return (homology_id, genome_db_id, stable_id)"""
     method_link_species_set_ids=[str(s) for s in method_link_species_set_ids]
 
-    cmd = 'use ensembl_compara_'+str(release)+";" 
+    cmd = 'use ensembl_compara_'+str(release)+";"
     cnx = mysql.connector.connect(user='anonymous', host='ensembldb.ensembl.org' )
     curA = cnx.cursor(buffered=True)
     curA.execute(cmd)
@@ -127,11 +128,11 @@ def makeTable(genomeDB_ids, orthoSpec2stableIds, orthoIds, outfile):
         print(res[r][0],res[r][1])
         if not ((res[r][0],res[r][1])) in specset:
                  specset[(res[r][0],res[r][1])]=[(orthoSpec2stableIds[(r,res[r][0])],orthoSpec2stableIds[(r,res[r][1] )]) ]
-    
+
         else:
              specset[(res[r][0],res[r][1])].append((orthoSpec2stableIds[(r,res[r][0])],orthoSpec2stableIds[(r,res[r][1])]))
-    
-    print(specset) 
+
+    print(specset)
     for s in specset:
         st = SPECID[s[0]]+"__"+SPECID[s[1]]
         print(st)
@@ -164,10 +165,10 @@ def fetchOrthoFromMySQL(specieslist = ["homo_sapiens","pan_troglodytes","mus_mus
     for k,v in name2genomeDB_ids.items():
         SPECID[k] = v
         SPECID[v] = k[1:-1]
-    orthoIds = [] 
+    orthoIds = []
     orthoSpec2stableIds = dict()
     members = dict()
-    
+
     genomeDB_ids = name2genomeDB_ids.values()
     print(genomeDB_ids)
     speciesSet_ids = getSpecies_Set_Ids(genomeDB_ids,release)
@@ -175,18 +176,20 @@ def fetchOrthoFromMySQL(specieslist = ["homo_sapiens","pan_troglodytes","mus_mus
     methodLinkSpeciesSet_ids = getMethodLinkSpecies_Set_Ids(speciesSet_ids, release)
     print(methodLinkSpeciesSet_ids)
     res = fetch1to1orthologs(methodLinkSpeciesSet_ids, release=release)
-    
+
     for r in res:
         print("res",r)
         if not (r[0],r[1]) in orthoSpec2stableIds:
             #r[0] is shared between orthologous genes from different species
-            #r[1] is the genome_id 
+            #r[1] is the genome_id
             #r[2] is the stable_id of the gene
             if not r[0] in orthoIds:
                 orthoIds.append(r[0])
             orthoSpec2stableIds[(r[0],r[1])]=r[2]#[0]
-    
-    
+
+
     makeTable(genomeDB_ids, orthoSpec2stableIds, orthoIds, outfile)
     return(OUTFILES)
 #fetchOrthoFromMySQL()
+if __name__ == "__main__":
+    fetchOrthoFromMySQL(specieslist = sys.argv[1].split(","), release = 75 )
