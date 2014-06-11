@@ -214,7 +214,7 @@ def adddyn(listoftuples, pairwisedist, actualdict, allkeys, sequencesdct):
 
 def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  startAt = None):
     groupList = [g for i,g in enumerate(group.groups) if int(i) <stopAfter and int(i)>= startAt]
-    print(groupList, "GRList")
+    print("group" ,groupList)
     singles = {}
     skip = {}
     allSpec = set()
@@ -466,9 +466,11 @@ def runScythe(groups, delim, asID, namesList, cleanUp,  faFileList, inDir, outDi
 
     resQueue.join()
     taskQueue.close()
+    inMem = 0
     while num_jobs:
         r,R = resQueue.get()
         num_jobs -= 1
+        inMem +=1
         if r[2] == "SKIP":
             outfileGroup = frame._srofa+".".join([R,"skipped","fa"])
             outDctOg[outfileGroup] = []
@@ -486,6 +488,24 @@ def runScythe(groups, delim, asID, namesList, cleanUp,  faFileList, inDir, outDi
                 else:
                     outDctSp[frame._srfa+".".join([s.name,"skipped.fa"])].append(r[0][ok].toFasta())
                     outDctOg[frame._srofa+".".join([R,"skipped","fa"])].append(r[0][ok].toFasta())
+        #flush memory
+        if (inMem>=5):
+            inMem = 0
+            print("Writing files\n")
+            for g in outDctOg:
+                with open(g,'w') as gh:
+                    for e in outDctOg[g]:
+                        gh.write(e)
+            print("...\n")
+            for g in outDctSp:
+                with open(g,'a') as gh:
+                    for e in outDctSp[g]:
+                        gh.write(e)
+            outDctOg.clear()
+            for k in outDctSp:
+                outDctSp[k] = []
+
+    #writing the last files
     print("Writing files...\n")
     for g in outDctOg:
         with open(g,'w') as gh:
@@ -632,9 +652,9 @@ def main():
 
 #----------------------------------------------------------------#
 
-class ThreadedScythe(threading.Thread):
+class ThreadedScythe(multiprocessing.Process):
     def __init__(self, queue, argdct):
-        threading.Thread.__init__(self)
+        multiprocessing.Process.__init__(self)
         self.queue = queue
         self.argdct = argdct
 
@@ -643,7 +663,8 @@ class ThreadedScythe(threading.Thread):
             runScythe(**self.argdct)
             self.queue.put(1)
         except Exception as e:
-            print(e)
+
+            sys.stderr.write(str(e))
             sys.exit(1)
 
 if __name__ == "__main__":

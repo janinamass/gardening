@@ -20,10 +20,11 @@ import scythe3 as scythe
 #from gui.dialogs import ScytheConvertDialogGrp
 
 import helpers.mergeSubsets as mergeSubsets
-#import helpers.ensembl_ortho_mysql as ensembl_ortho_mysql
+import helpers.ensembl_ortho_mysql as ensembl_ortho_mysql
 import helpers.ensembl2grp as ensembl2grp
-#import helpers.ensembl as ensembl
+import helpers.ensembl as ensembl
 
+import multiprocessing
 import queue
 
 wd = os.path.join(os.path.dirname(__file__))
@@ -353,6 +354,15 @@ class ScytheConfigEditor():
         tempconf.set(CF_FASTAHEADER, CF_FASTAHEADER_part,self.st_fasta_header_part.get())
         tempconf.set(CF_FASTAHEADER, CF_FASTAHEADER_delimiter,self.st_fasta_header_delimiter.get())
 
+
+        ##todo
+
+        tempconf.set(CF_PATHS, CF_PATHS_output_directory,self.ent_outDir.get())
+        tempconf.set(CF_PATHS, CF_PATHS_fasta_directory,self.ent_fastaDir.get())
+        tempconf.set(CF_PATHS, CF_PATHS_loc_directory,self.ent_locDir.get())
+        tempconf.set(CF_PATHS, CF_PATHS_grp_file,self.ent_grpFile.get())
+
+
         self.confighandler.setCurrentConf(tempconf)
 
     def setFieldsFromConfig(self):
@@ -518,6 +528,7 @@ class ScytheMenu(tk.Frame):
         return tmp
 
     def onSaveConfig(self):
+        self.scythewizard.setConfigFromFields()
         formats = [('Scythe configuration','*.scy')]
         tmp= tk.filedialog.asksaveasfilename(parent=self.parent,filetypes=formats ,title="Save configuration as...")
         global CURRENTCONFIG
@@ -535,6 +546,7 @@ class ScytheMenu(tk.Frame):
         Infobox().about()
 
     def onShowOptions(self):
+        self.scythewizard.setConfigFromFields()
         Infobox().showConfig()
 
     def onSetOptions(self):
@@ -667,6 +679,8 @@ class ScytheWizard(tk.Tk):
         self.initWizard()
         self.confighandler = ConfigHandler()
     def quit(self):
+        print("terminate")
+        SCYTHE_PROCESS.terminate()
         root.destroy()
     def setConfigFromFields(self):
         tempconf = configparser.ConfigParser()
@@ -752,7 +766,7 @@ class ScytheWizard(tk.Tk):
             asID=None
         gapOpen = CURRENTCONFIG.get(CF_PENALTIES,CF_PENALTIES_gap_open_cost)
         gapExtend = CURRENTCONFIG.get(CF_PENALTIES,CF_PENALTIES_gap_extend_cost)
-        numCPU =  CURRENTCONFIG.get(CF_RUN,CF_RUN_num_CPU)
+        numCPU = int(CURRENTCONFIG.get(CF_RUN,CF_RUN_num_CPU))
         faFileList = os.listdir(faDir)
         namesList = os.listdir(faDir)
         namesList = [n[0:3] for n in namesList]
@@ -772,8 +786,8 @@ class ScytheWizard(tk.Tk):
         if (not reloadFields or useLocal=="yes") and len(set(namesList)) >0:
             self.progbar = ttk.Progressbar(root, mode='indeterminate')
             self.progbar.grid(column=0, row=5, sticky = "W")
-            res=tk.messagebox.showinfo("Be patient.", "Scythe is running. This could take some time.")
-            self.q = queue.Queue()
+            tk.messagebox.showinfo("Be patient.", "Scythe is running. This could take some time.")
+            self.q = multiprocessing.Queue()
             #just an infobox, will start without clicking on ok
             argsdct = {
                     "groups":groups,
