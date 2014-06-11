@@ -357,10 +357,10 @@ class ScytheConfigEditor():
 
         ##todo
 
-        tempconf.set(CF_PATHS, CF_PATHS_output_directory,self.ent_outDir.get())
-        tempconf.set(CF_PATHS, CF_PATHS_fasta_directory,self.ent_fastaDir.get())
-        tempconf.set(CF_PATHS, CF_PATHS_loc_directory,self.ent_locDir.get())
-        tempconf.set(CF_PATHS, CF_PATHS_grp_file,self.ent_grpFile.get())
+        #tempconf.set(CF_PATHS, CF_PATHS_output_directory,self.ent_outDir.get())
+        #tempconf.set(CF_PATHS, CF_PATHS_fasta_directory,self.ent_fastaDir.get())
+        #tempconf.set(CF_PATHS, CF_PATHS_loc_directory,self.ent_locDir.get())
+        #tempconf.set(CF_PATHS, CF_PATHS_grp_file,self.ent_grpFile.get())
 
 
         self.confighandler.setCurrentConf(tempconf)
@@ -603,6 +603,9 @@ class EnsemblSelector(tk.Listbox):
             return(True)
 
         def onEnsOK(self):
+            res = tk.messagebox.showinfo("Be patient.", "Download data. This could take some time.")
+            if not res:
+                self.top.destroy()
             specs,rel = self.readListBox()
             print("wait...", self.outdir, specs, rel)
             self.b_ensOK.configure(state=tk.DISABLED)
@@ -680,7 +683,8 @@ class ScytheWizard(tk.Tk):
         self.confighandler = ConfigHandler()
     def quit(self):
         print("terminate")
-        SCYTHE_PROCESS.terminate()
+        if SCYTHE_PROCESS:
+            SCYTHE_PROCESS.terminate()
         root.destroy()
     def setConfigFromFields(self):
         tempconf = configparser.ConfigParser()
@@ -786,9 +790,7 @@ class ScytheWizard(tk.Tk):
         if (not reloadFields or useLocal=="yes") and len(set(namesList)) >0:
             self.progbar = ttk.Progressbar(root, mode='indeterminate')
             self.progbar.grid(column=0, row=5, sticky = "W")
-            tk.messagebox.showinfo("Be patient.", "Scythe is running. This could take some time.")
             self.q = multiprocessing.Queue()
-            #just an infobox, will start without clicking on ok
             argsdct = {
                     "groups":groups,
                     "delim":delim,
@@ -808,6 +810,7 @@ class ScytheWizard(tk.Tk):
             self.p = scythe.ThreadedScythe(self.q, argsdct)
             self.p.start()
             self.progbar.start()
+            tk.messagebox.showinfo("Be patient.", "Scythe is running. This could take some time.")
             SCYTHE_PROCESS = self.p
             self.process_queue()
 
