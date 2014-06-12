@@ -1,6 +1,8 @@
 #! /usr/bin/python3
 import mysql.connector
 import sys
+import getopt
+
 def q(s):
     return ('"'+s+'"')
 
@@ -125,32 +127,25 @@ def makeTable(genomeDB_ids, orthoSpec2stableIds, orthoIds, outfile):
                 else:
                     res[o].append(i)
     for r in res:
-        print(res[r][0],res[r][1])
+        #print(res[r][0],res[r][1])
         if not ((res[r][0],res[r][1])) in specset:
                  specset[(res[r][0],res[r][1])]=[(orthoSpec2stableIds[(r,res[r][0])],orthoSpec2stableIds[(r,res[r][1] )]) ]
 
         else:
              specset[(res[r][0],res[r][1])].append((orthoSpec2stableIds[(r,res[r][0])],orthoSpec2stableIds[(r,res[r][1])]))
 
-    print(specset)
+    #print(specset)
     for s in specset:
         st = SPECID[s[0]]+"__"+SPECID[s[1]]
         print(st)
-        #try:
-        #    if not outfile:
         outfile = st
         out = open(outfile,"w")
-        #    else:
-        #        out = open(outfile,"w")
-        #except IOError as e:
-        #    print(e)
-        #    exit(1)
-        print(outfile,"OUTFILE")
+        print("writing to {}".format(outfile))
         OUTFILES.append(outfile)
         tuplist = specset[s]
         for tup in tuplist:
             tup = str(tup[0])+"\t"+str(tup[1])
-            print(tup)
+            #print(tup)
             out.write(tup)
             out.write("\n")
         out.close()
@@ -160,8 +155,9 @@ OUTFILES = []
 ################
 def fetchOrthoFromMySQL(specieslist = ["homo_sapiens","pan_troglodytes","mus_musculus"], release=74, outfile=None):
     print(specieslist)
+    print("...")
     name2genomeDB_ids = getGenome_Db_Ids(specieslist, release)
-    print(name2genomeDB_ids)
+    #print(name2genomeDB_ids)
     for k,v in name2genomeDB_ids.items():
         SPECID[k] = v
         SPECID[v] = k[1:-1]
@@ -170,15 +166,14 @@ def fetchOrthoFromMySQL(specieslist = ["homo_sapiens","pan_troglodytes","mus_mus
     members = dict()
 
     genomeDB_ids = name2genomeDB_ids.values()
-    print(genomeDB_ids)
+    #print(genomeDB_ids)
     speciesSet_ids = getSpecies_Set_Ids(genomeDB_ids,release)
-    print(speciesSet_ids,"specsetids")
+    #print(speciesSet_ids,"specsetids")
     methodLinkSpeciesSet_ids = getMethodLinkSpecies_Set_Ids(speciesSet_ids, release)
-    print(methodLinkSpeciesSet_ids)
+    #print(methodLinkSpeciesSet_ids)
     res = fetch1to1orthologs(methodLinkSpeciesSet_ids, release=release)
-
+    print("...")
     for r in res:
-        print("res",r)
         if not (r[0],r[1]) in orthoSpec2stableIds:
             #r[0] is shared between orthologous genes from different species
             #r[1] is the genome_id
@@ -187,9 +182,48 @@ def fetchOrthoFromMySQL(specieslist = ["homo_sapiens","pan_troglodytes","mus_mus
                 orthoIds.append(r[0])
             orthoSpec2stableIds[(r[0],r[1])]=r[2]#[0]
 
-
+    print("writing table\n")
     makeTable(genomeDB_ids, orthoSpec2stableIds, orthoIds, outfile)
     return(OUTFILES)
-#fetchOrthoFromMySQL()
-if __name__ == "__main__":
-    fetchOrthoFromMySQL(specieslist = sys.argv[1].split(","), release = 75 )
+
+def usage():
+    """Usage"""
+    print("""
+
+    usage: scythe_ensembl_ortho_mysql.py -s species_1,species_2 -r INT
+
+    options:
+    -s, --species=sp_1,sp_2,sp_3    comma-separated list of species names (eg homo_sapiens,gorilla_gorilla)
+    -r, --release NUM   ensembl version (eg 75)
+    -h, --help          prints this
+    """)
+    sys.exit(2)
+
+def main():
+    speciesList = None
+    release = None
+
+    try:
+        opts, args = getopt.gnu_getopt(sys.argv[1:], "s:r:h",["species=","release=","help"])
+    except getopt.GetoptError as err:
+        sys.stderr.write(str(err))
+        usage()
+    for o, a in opts:
+        if o in ("-s", "--species"):
+            speciesList = a.split(",")
+        elif o in ("-r", "--release"):
+            release = int(a)
+        elif o in ("-h", "--help"):
+            usage()
+        else:
+            assert False, "unhandled option"
+    if not speciesList:
+        usage()
+    if not release:
+        usage()
+
+    fetchOrthoFromMySQL(specieslist = speciesList, release = release )
+
+if __name__=="__main__":
+    main()
+
