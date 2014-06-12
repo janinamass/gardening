@@ -10,13 +10,13 @@ def usage():
     #####################################################
     #  rmSubSetsFromGrp.py -g groups.grp -o new.grp -r  #
     #####################################################
-   
+
     options:
-    -g, --grp=FILE.grp     
+    -g, --grp=FILE.grp
     -o, --output=OUTFILE.grp output file [default: FILE.allspec.grp]
-    [-r, --rename discard old orthogroup ids and start numbering from 0]    
-    -h, --help         prints this    
-    [-n, --numspec=N    min number of species ] 
+    [-r, --rename discard old orthogroup ids and start numbering from 0]
+    -h, --help         prints this
+    [-n, --numspec=N    min number of species ]
     ------------
     .grp format: GroupID\tgeneIDiSp1\tgeneIDjSp2\t...geneIDkSpn
     """)
@@ -52,7 +52,7 @@ class Orthogroup(object):
         tmpset = set(tmplist)
         newlist=list(tmpset)
         newid= str(self._id)+"_"+str(other._id)
-        
+
         initlist=[newid]
         for i in newlist:
             initlist.append(i)
@@ -64,10 +64,10 @@ class Orthogroup(object):
     def toString(self):
         s = "\t".join(self._list)
         return(s)
-    
 
 
- 
+
+
 def mergeSubsets(grp, outfile, rename=False):
     write = True
     if outfile==None:
@@ -86,7 +86,7 @@ def mergeSubsets(grp, outfile, rename=False):
             tmp = l.split("\t")
             #print(tmp)
             newOrtho= Orthogroup(tmp)
-            for t in tmp[1:]:                
+            for t in tmp[1:]:
                 if t in knownGenes:
                     tmplist = []
                     for o in godict[t]:
@@ -112,17 +112,17 @@ def mergeSubsets(grp, outfile, rename=False):
         l = l.rstrip()
         tmp = l.split("\t")
         for t in tmp[1:]:
-            
+
             nmm = [l for l in godict[t] if  l._isSubset !=True and l._ignore==False]
             #nmm = [l for l in godict[t] if  l._isSubset ==False and l._ignore==False]
-            
+
             out=None
             #print(nmm)
             if nmm !=[]:
                 out = nmm[-1]
                 if out._id not in proc:
                     processed.append(out._id+"\t"+out.toString())
-                  
+
                 proc.add(out._id)
     g.close()
     if write:
@@ -131,9 +131,9 @@ def mergeSubsets(grp, outfile, rename=False):
             o = open(outfile,'w')
         except IOError as e:
             print(e)
-        
+
         seen = set()
-        
+
         cnt = 0
         ok = 0
         redundant = 0
@@ -178,7 +178,7 @@ def filterGroups(grp, outfile, numspec=None,rename=False):
     except IOError as e:
         print(e)
         usage()
-    
+
     if numspec:
         max = numspec
     if not numspec:
@@ -190,7 +190,7 @@ def filterGroups(grp, outfile, numspec=None,rename=False):
                 max = tmp
         g.close()
     numspec=max
-    
+
     if write:
         try:
             g = open(grp,'r')
@@ -202,7 +202,7 @@ def filterGroups(grp, outfile, numspec=None,rename=False):
         except IOError as e:
             print(e)
             usage()
-         
+
         cnt=0
         for l in g:
             ln = l.rstrip()
@@ -220,6 +220,7 @@ def main():
     outNoSubsets = None
     rename=False
     numspec = None
+    grp = None
     ###################################
     try:
         opts, args = getopt.gnu_getopt(sys.argv[1:], "g:n:o:hr", ["grp=","numspec=","output=", "help","rename"])
@@ -235,7 +236,7 @@ def main():
             numspec = int(a)
         elif o in ("-o", "--output"):
             out = a
-            tmp=a    
+            tmp=a
         elif o in ("-r", "--rename"):
             rename = True
         else:
@@ -252,14 +253,25 @@ def main():
     ########################################
     print("# Output: ", out)
     print("# Output: ", outNoSubsets)
-   
+
     if not numspec:
         numspec= filterGroups(grp,None, None, rename)
     print(numspec)
     mergeSubsets(grp,outNoSubsets, rename)
     filterGroups(outNoSubsets, out, numspec, True)
-   
 
-    
+
+
 if __name__=="__main__":
     main()
+
+
+
+
+
+#            outNoSubsets=self.outdir+os.sep+grpstring+".full.grp"
+#            out = self.outdir+os.sep+grpstring+".shared_by_all.grp"
+##todo mergeSubsets
+#            numspec= mergeSubsets.filterGroups(grpfile,None, None, False)
+#            mergeSubsets.mergeSubsets(grpfile,outNoSubsets, True)
+#            mergeSubsets.filterGroups(outNoSubsets, out, numspec, False)
