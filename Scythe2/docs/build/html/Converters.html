@@ -36,9 +36,6 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
           <a href="ConfigurationFiles.html" title="Configuration Files"
              accesskey="N">next</a> |</li>
         <li class="right" >
@@ -72,7 +69,7 @@ See also <a class="reference internal" href="Format.html#format"><em>Format</em>
 <div class="highlight-python"><div class="highlight"><pre>scythe_loc_tsv.py -f FILE.tsv
 </pre></div>
 </div>
-<p>See also: <a class="reference internal" href="Format.html#loc-format"><em>loc</em></a>.</p>
+<p>See also: <a class="reference internal" href="Format.html#loc-format"><em>loc format</em></a>.</p>
 </div>
 <div class="section" id="grp">
 <h2>grp<a class="headerlink" href="#grp" title="Permalink to this headline">¶</a></h2>
@@ -93,15 +90,44 @@ Scripts to convert the following formats to <cite>grp</cite> are included:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">scythe_grp_tsv</span><span class="o">.</span><span class="n">py</span>
 </pre></div>
 </div>
-<p>See also <a class="reference internal" href="Format.html#grp-format"><em>grp</em></a>.</p>
-<span class="target" id="module-scythe2.convert"></span><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">undoc-members:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
+<p>See also <a class="reference internal" href="Format.html#grp-format"><em>grp format</em></a>.</p>
+</div>
+</div>
+<div class="section" id="downloading-from-ensembl-without-the-gui">
+<h1>Downloading from ENSEMBL without the GUI<a class="headerlink" href="#downloading-from-ensembl-without-the-gui" title="Permalink to this headline">¶</a></h1>
+<p>To download sequences (pep and cds fasta files) from ENSEMBL without the graphical user interface, use ... TODO
+TODO example
+&#8212;&#8212;&#8212;&#8212;-</p>
+<div class="highlight-python"><div class="highlight"><pre>sthsth.py -s homo_sapiens,mus_musculus -r 75
+</pre></div>
+</div>
+<p>TODO: -h output</p>
+<p>Use <cite>scythe_ensembl_ortho_mysql.py</cite> to download pairwise orthology information.
+scythe_ensembl_ortho_mysql.py example
+&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;-</p>
+<div class="highlight-python"><div class="highlight"><pre>scythe_ensembl_ortho_mysql.py -s A,B,C,D,E -r 75
+</pre></div>
+</div>
+<p>TODO:rename to scythe_ensembl_ortho_mysql.py
+TODO: output of -h</p>
+</div>
+<div class="section" id="manual-merge-of-tab-separated-files-to-one-grp-file">
+<h1>Manual merge of tab-separated files  to one  <cite>.grp</cite> file<a class="headerlink" href="#manual-merge-of-tab-separated-files-to-one-grp-file" title="Permalink to this headline">¶</a></h1>
+<p>If you have pairwise (two-species) files ready and want to
+merge them into a multi-species <cite>.grp</cite> file you can do so via the
+<cite>scythe_ensembl2grp</cite>  and <cite>scythe_mergeSubsets</cite> scripts.</p>
+<p>TODO rename both
+scythe_ensembl2grp example
+&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8211;</p>
+<div class="highlight-python"><div class="highlight"><pre>scythe_ensembl2grp.py TODO
+</pre></div>
+</div>
+<div class="section" id="scythe-mergesubsets-example">
+<h2>scythe_mergeSubsets example<a class="headerlink" href="#scythe-mergesubsets-example" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>::</dt>
+<dd>scythe_mergeSubsets.py TODO</dd>
+</dl>
 <div class="highlight-text"><div class="highlight"><pre>    #------------ loc output format ---------------------------#
 
     LOCUS0	TRANSCRIPT0_0	TRANSCRIPT0_1	...	TRANSCRIPT0_n
@@ -203,6 +229,11 @@ Scripts to convert the following formats to <cite>grp</cite> are included:</p>
 <li><a class="reference internal" href="#grp">grp</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#downloading-from-ensembl-without-the-gui">Downloading from ENSEMBL without the GUI</a></li>
+<li><a class="reference internal" href="#manual-merge-of-tab-separated-files-to-one-grp-file">Manual merge of tab-separated files  to one  <cite>.grp</cite> file</a><ul>
+<li><a class="reference internal" href="#scythe-mergesubsets-example">scythe_mergeSubsets example</a></li>
+</ul>
+</li>
 </ul>
 
   <h4>Previous topic</h4>
@@ -239,9 +270,6 @@ Scripts to convert the following formats to <cite>grp</cite> are included:</p>
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
         <li class="right" >
           <a href="ConfigurationFiles.html" title="Configuration Files"
              >next</a> |</li>

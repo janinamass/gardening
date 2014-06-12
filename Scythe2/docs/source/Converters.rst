@@ -48,6 +48,44 @@ run ::
 See also :ref:`grp_format`.
 
 
+Downloading from ENSEMBL without the GUI
+=====================================
+To download sequences (pep and cds fasta files) from ENSEMBL without the graphical user interface, use ... TODO
+TODO example
+-------------
+::
+    sthsth.py -s homo_sapiens,mus_musculus -r 75
+
+TODO: -h output
+
+Use `scythe_ensembl_ortho_mysql.py` to download pairwise orthology information. 
+scythe_ensembl_ortho_mysql.py example
+-------------------------------------
+::
+     scythe_ensembl_ortho_mysql.py -s A,B,C,D,E -r 75
+
+TODO:rename to scythe_ensembl_ortho_mysql.py
+TODO: output of -h
+
+Manual merge of tab-separated files  to one  `.grp` file
+======================================================
+If you have pairwise (two-species) files ready and want to
+merge them into a multi-species `.grp` file you can do so via the 
+`scythe_ensembl2grp`  and `scythe_mergeSubsets` scripts.
+
+TODO rename both
+scythe_ensembl2grp example
+--------------------------
+::
+    scythe_ensembl2grp.py TODO
+
+scythe_mergeSubsets example
+-----------------------
+::
+    scythe_mergeSubsets.py TODO
+
+
+
 .. automodule:: scythe2.convert
     
     :undoc-members:

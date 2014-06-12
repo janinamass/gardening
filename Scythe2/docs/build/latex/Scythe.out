@@ -1,0 +1,25 @@
+\BOOKMARK [0][-]{chapter.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{section.1.1}{Algorithms and Application}{chapter.1}% 2
+\BOOKMARK [0][-]{chapter.2}{Tutorial}{}% 3
+\BOOKMARK [1][-]{section.2.1}{Installation}{chapter.2}% 4
+\BOOKMARK [1][-]{section.2.2}{Using Scythe}{chapter.2}% 5
+\BOOKMARK [0][-]{chapter.3}{Format}{}% 6
+\BOOKMARK [1][-]{section.3.1}{loc format}{chapter.3}% 7
+\BOOKMARK [1][-]{section.3.2}{grp format}{chapter.3}% 8
+\BOOKMARK [0][-]{chapter.4}{Converters}{}% 9
+\BOOKMARK [1][-]{section.4.1}{loc}{chapter.4}% 10
+\BOOKMARK [1][-]{section.4.2}{grp}{chapter.4}% 11
+\BOOKMARK [0][-]{chapter.5}{Configuration Files}{}% 12
+\BOOKMARK [1][-]{section.5.1}{Example file}{chapter.5}% 13
+\BOOKMARK [1][-]{section.5.2}{[Fasta\137header]}{chapter.5}% 14
+\BOOKMARK [1][-]{section.5.3}{[Run\137options]}{chapter.5}% 15
+\BOOKMARK [1][-]{section.5.4}{[Algorithm]}{chapter.5}% 16
+\BOOKMARK [0][-]{chapter.6}{Modules}{}% 17
+\BOOKMARK [1][-]{section.6.1}{convert}{chapter.6}% 18
+\BOOKMARK [1][-]{section.6.2}{gui}{chapter.6}% 19
+\BOOKMARK [1][-]{section.6.3}{helpers}{chapter.6}% 20
+\BOOKMARK [1][-]{section.6.4}{algo}{chapter.6}% 21
+\BOOKMARK [0][-]{chapter.7}{Indices and tables}{}% 22
+\BOOKMARK [0][-]{chapter*.46}{Bibliography}{}% 23
+\BOOKMARK [0][-]{section*.49}{Python Module Index}{}% 24
+\BOOKMARK [0][-]{section*.50}{Index}{}% 25

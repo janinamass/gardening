@@ -7,8 +7,6 @@ Welcome to Scythe's documentation!
 ==================================
 Scythe -- Selection of Conserved Transcripts by Homology Evaluation
 
-This documentation is under construction!
-
 Contents:
 
 .. toctree::
@@ -18,15 +16,18 @@ Contents:
 
    Tutorial
 
-   Trouble
-
    Format
 
-   Converters 
- 
-   ConfigurationFiles
+.. automodule:: scythe2.convert
+    :undoc-members:
 
-   Modules
+.. automodule:: scythe2.convert.scythe_loc_gff
+    :members:
+    :undoc-members:
+
+.. automodule:: scythe2.convert.scythe_loc_tsv
+    :undoc-members:
+    :members:
 
 Indices and tables
 ==================

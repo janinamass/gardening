@@ -1,0 +1,85 @@
+\begin{theindex}
+\def\bigletter#1{{\Large\sffamily#1}\nopagebreak\vspace{1mm}}
+
+  \bigletter C
+  \item checkGff3() (in module scythe2.convert.scythe\_loc\_gff), \hyperpage{17}
+
+  \indexspace
+  \bigletter E
+  \item expand() (scythe2.helpers.mergeSubsets.Orthogroup method), \hyperpage{18}
+
+  \indexspace
+  \bigletter F
+  \item fetch1to1orthologs() (in module scythe2.helpers.ensembl\_ortho\_mysql), \hyperpage{17}
+  \item fetchOrthoFromMySQL() (in module scythe2.helpers.ensembl\_ortho\_mysql), \hyperpage{18}
+  \item filterGroups() (in module scythe2.helpers.mergeSubsets), \hyperpage{18}
+  \item formatHelp() (in module scythe2.convert.scythe\_loc\_gff), \hyperpage{17}
+  \item formatHelp() (in module scythe2.convert.scythe\_loc\_tsv), \hyperpage{17}
+
+  \indexspace
+  \bigletter G
+  \item getGenome\_Db\_Ids() (in module scythe2.helpers.ensembl\_ortho\_mysql), \hyperpage{18}
+  \item getHomologyId() (in module scythe2.helpers.ensembl\_ortho\_mysql), \hyperpage{18}
+  \item getHomologyMemberId() (in module scythe2.helpers.ensembl\_ortho\_mysql), \hyperpage{18}
+  \item getMethodLinkSpecies\_Set\_Ids() (in module scythe2.helpers.ensembl\_ortho\_mysql), 
+		\hyperpage{18}
+  \item getSpecies\_Set\_Ids() (in module scythe2.helpers.ensembl\_ortho\_mysql), \hyperpage{18}
+
+  \indexspace
+  \bigletter H
+  \item howTo() (in module scythe2.convert.scythe\_loc\_tsv), \hyperpage{17}
+
+  \indexspace
+  \bigletter M
+  \item main() (in module scythe2.convert.scythe\_loc\_gff), \hyperpage{17}
+  \item main() (in module scythe2.convert.scythe\_loc\_tsv), \hyperpage{17}
+  \item main() (in module scythe2.helpers.ensembl2grp), \hyperpage{17}
+  \item main() (in module scythe2.helpers.mergeSubsets), \hyperpage{18}
+  \item makeTable() (in module scythe2.helpers.ensembl\_ortho\_mysql), \hyperpage{18}
+  \item mergeSubsets() (in module scythe2.helpers.mergeSubsets), \hyperpage{18}
+
+  \indexspace
+  \bigletter O
+  \item Orthogroup (class in scythe2.helpers.mergeSubsets), \hyperpage{18}
+
+  \indexspace
+  \bigletter Q
+  \item q() (in module scythe2.helpers.ensembl\_ortho\_mysql), \hyperpage{18}
+
+  \indexspace
+  \bigletter R
+  \item read\_gene\_mrna() (in module scythe2.convert.scythe\_loc\_gff), \hyperpage{17}
+  \item read\_gff2loc() (in module scythe2.convert.scythe\_loc\_gff), \hyperpage{17}
+  \item read\_gff\_attrib() (in module scythe2.convert.scythe\_loc\_gff), \hyperpage{17}
+  \item readTsv() (in module scythe2.convert.scythe\_loc\_tsv), \hyperpage{17}
+  \item readTsvFiles() (in module scythe2.helpers.ensembl2grp), \hyperpage{17}
+
+  \indexspace
+  \bigletter S
+  \item scythe2.convert (module), \hyperpage{11}, \hyperpage{17}
+  \item scythe2.convert.scythe\_loc\_gff (module), \hyperpage{17}
+  \item scythe2.convert.scythe\_loc\_tsv (module), \hyperpage{17}
+  \item scythe2.gui (module), \hyperpage{17}
+  \item scythe2.helpers (module), \hyperpage{17}
+  \item scythe2.helpers.ensembl2grp (module), \hyperpage{17}
+  \item scythe2.helpers.ensembl\_ortho\_mysql (module), \hyperpage{17}
+  \item scythe2.helpers.mergeSubsets (module), \hyperpage{18}
+
+  \indexspace
+  \bigletter T
+  \item toString() (scythe2.helpers.mergeSubsets.Orthogroup method), \hyperpage{18}
+
+  \indexspace
+  \bigletter U
+  \item usage() (in module scythe2.convert.scythe\_loc\_gff), \hyperpage{17}
+  \item usage() (in module scythe2.convert.scythe\_loc\_tsv), \hyperpage{17}
+  \item usage() (in module scythe2.helpers.ensembl2grp), \hyperpage{17}
+  \item usage() (in module scythe2.helpers.mergeSubsets), \hyperpage{18}
+
+  \indexspace
+  \bigletter W
+  \item writeLoc() (in module scythe2.convert.scythe\_loc\_gff), \hyperpage{17}
+  \item writeLoc() (in module scythe2.convert.scythe\_loc\_tsv), \hyperpage{17}
+  \item WrongNumberOfColumnsException, \hyperpage{17}
+
+\end{theindex}
