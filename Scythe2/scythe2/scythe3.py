@@ -321,15 +321,18 @@ def makeFasta(listofspecies, group, frame, stopAfter, gapOpen, gapExtend,task,  
                 return((r,R))
 
 class ConsumerProc(multiprocessing.Process):
+    counter = 0
     def __init__(self, task_queue, result_queue):
         multiprocessing.Process.__init__(self)
         self.task_queue = task_queue
         self.result_queue = result_queue
         global SEMAPHORE
-
+        ConsumerProc.counter +=1
     def run(self):
         SEMAPHORE.acquire()
+
         proc_name = self.name
+        print("started\n", ConsumerProc.counter)
         while True:
             next_task = self.task_queue.get()
             if next_task == "done":
@@ -393,7 +396,7 @@ def runScythe(groups, delim, asID, namesList, cleanUp,  faFileList, inDir, outDi
     else:
         usage()
     for n,f in zip(namesList,faFileList):
-        print(namesList, faFileList,"match")
+        print(n, f,"match")
         """Find matching .loc and .fa files"""
         if locDir:
             locFileList = os.listdir(locDir)
@@ -489,7 +492,7 @@ def runScythe(groups, delim, asID, namesList, cleanUp,  faFileList, inDir, outDi
                     outDctSp[frame._srfa+".".join([s.name,"skipped.fa"])].append(r[0][ok].toFasta())
                     outDctOg[frame._srofa+".".join([R,"skipped","fa"])].append(r[0][ok].toFasta())
         #flush memory
-        if (inMem>=5):
+        if (inMem>=10):
             inMem = 0
             print("Writing files\n")
             for g in outDctOg:
@@ -513,18 +516,17 @@ def runScythe(groups, delim, asID, namesList, cleanUp,  faFileList, inDir, outDi
                 gh.write(e)
     print("...\n")
     for g in outDctSp:
-        with open(g,'w') as gh:
+        with open(g,'a') as gh:
             for e in outDctSp[g]:
                 gh.write(e)
-
+    print("Cleaning up... \n")
     #remove temporary files
     if cleanUp:
         frame.cleanUp()
     timeEnded = time.time()
-    print("Time done: ",timeEnded,"\n")
-    print("Time taken {}".format(timeEnded-timeStarted))
-    print("clocked: ",time.clock(),"\n")
-    print("\nDone.")
+    print("Time: ",timeEnded,"\n")
+    print("Time taken: {}\n".format(timeEnded-timeStarted))
+    print("Done.\n")
 
 def main():
     global VERBOSE
