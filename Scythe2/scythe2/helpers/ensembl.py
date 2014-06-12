@@ -9,7 +9,7 @@ import tarfile
 import zipfile
 import gzip
 from helpers.fastahelper import FastaParser
-
+import os
 ####19.12
 def getSequencesFromFTP(outdir, release, specieslist=[]):
     path=outdir+os.sep+"fa"
@@ -61,10 +61,14 @@ def getSequencesFromFTP(outdir, release, specieslist=[]):
             ftp.retrlines('LIST', callback=falist.append)
             falist = [f for f in falist if "all.fa" in f][0]
             fafile = falist.split(" ")[-1]
-            outfaname = spec+"cds.all.fa.gz"
+            outfaname = spec+".cds.all.fa.gz"
+            print(outfaname, "cds\n")
+            print(falist, "falist\n")
             outfa = open(outfaname,'wb')
             ftp.retrbinary("RETR "+fafile,outfa.write)
             outfa.close()
+            if not os.path.exists(path+"_cds"):
+                    os.makedirs(path+"_cds")
             xtract(outfaname, path+"_cds")
             ftp.cwd("/pub/"+ftprelhome)
         ftp.quit()
